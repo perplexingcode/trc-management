@@ -45,11 +45,16 @@
         </div>
         <button @click="createTask" id="btn-add-task">Add Task</button>
       </div>
+      <div class="dev">
+        <p>Dev zone</p>
+        <button @click="createTaskF">Fake Task</button>
+      </div>
     </div>
     <Suspense>
       <template #default>
         <table>
           <tr>
+            <td></td>
             <td>ID</td>
             <td>Completed</td>
             <td>Task</td>
@@ -59,6 +64,7 @@
             <td>Group</td>
           </tr>
           <tr v-for="task in tasks" :key="task.id">
+            <td><input type="checkbox" /></td>
             <td>{{ task.id }}</td>
             <td><input type="checkbox" :checked="task.done" /></td>
             <td>{{ task.title }}</td>
@@ -77,16 +83,29 @@
 </template>
 <script setup>
 import moment from 'moment';
-import { unwrap } from '/static/globalMethods.js';
+// import { unwrap } from '/static/globalMethods.js';
+import axios from 'axios';
+import { faker } from '@faker-js/faker';
+import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 /*
 Data: name, tasks, today, calDuration
 */
+// Import and preprocess tasks
 let tasks = useFetch('http://localhost:3141/tasks/all').data;
-console.log(tasks);
-let name = 'TodayPage';
-const today = moment(new Date()).format('yyyy-MM-DD');
+tasks.value = tasks.value.map((task) => (task.selected = false));
 
-const newTaskId = computed(() => tasks.value.length + 1);
+// Ultilities
+const today = moment(new Date()).format('yyyy-MM-DD');
+const calDuration = function (start, end) {
+  start = moment(start, 'YYYY-MM-DD hh:mm');
+  end = moment(end, 'YYYY-MM-DD hh:mm');
+  return moment.duration(end.diff(start)).asMinutes();
+};
+
+const unwrap = (obj) => JSON.parse(JSON.stringify(obj));
+
+// Create new task
+const newTaskId = computed(() => 'E' + (tasks.value.length + 1).toString(16));
 let newTask = reactive({
   id: newTaskId,
   title: '',
@@ -112,17 +131,46 @@ const clearInput = function () {
   newTask.grp = '';
 };
 
-const createTask = function () {
-  tasks.value.push(unwrap(newTask));
-  console.log('what', tasks.value);
-  clearInput();
-
-  console.log(tasks);
+// Generate new task data
+const createTaskF = function () {
+  newTask.id = newTaskId;
+  newTask.title = faker.word.verb() + ' ' + faker.word.noun();
+  newTask.des = faker.lorem.sentence();
+  newTask.done = false;
+  newTask.start = moment(
+    faker.date.between('2023-08-08 00:00', '2023-08-08 12:00')
+  ).format('YYYY-MM-DD hh:mm');
+  newTask.end = moment(
+    faker.date.between('2023-08-08 12:00', '2023-08-09 00:00')
+  ).format('YYYY-MM-DD hh:mm');
+  newTask.isRep = false;
+  newTask.cat = faker.commerce.department();
+  newTask.prj = faker.word.noun();
+  newTask.grp = faker.word.noun();
 };
-const calDuration = function (start, end) {
-  start = moment(start, 'YYYY-MM-DD hh:mm');
-  end = moment(end, 'YYYY-MM-DD hh:mm');
-  return moment.duration(end.diff(start)).asMinutes();
+
+const createTask = async function () {
+  const task = unwrap(newTask);
+  tasks.value.push(task);
+  console.log('botay.com', task);
+  let config = {
+    method: 'post',
+    url: 'http://192.168.1.8:3141/tasks/create',
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    },
+    data: task,
+  };
+
+  axios(config)
+    .then(function (response) {
+      console.log(JSON.stringify(response.data));
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
+  clearInput();
 };
 </script>
 
