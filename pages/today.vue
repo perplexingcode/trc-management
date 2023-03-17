@@ -1,8 +1,8 @@
 <template>
-  <div>
+  <div @keyup.enter="confirmChanges">
     <h1>Today</h1>
     <p>Today's date is {{ today }}</p>
-    <p>{{ newTask }}</p>
+    <p>isEditing: {{ isEditing }}</p>
 
     <div class="add-task-form bg-secondary card">
       <h2>Add Task</h2>
@@ -22,6 +22,10 @@
         <div class="add-task-form__input task-des">
           <label>Description</label>
           <input type="text" v-model="newTask.des" />
+        </div>
+        <div class="add-task-form__input task-tag">
+          <label>Tags</label>
+          <input type="text" v-model="newTask.tag" />
         </div>
         <div class="add-task-form__input task-start">
           <label>Start</label>
@@ -45,9 +49,12 @@
         </div>
         <button @click="createTask" id="btn-add-task">Add Task</button>
       </div>
-      <div class="dev">
-        <p>Dev zone</p>
-        <button @click="createTaskF">Fake Task</button>
+      <div class="action-form bg-secondary card">
+        <h2>Actions</h2>
+        <button @click="generateTestTask">Generate Random Task</button>
+        <button @click="createTestTask">Create Random Task</button>
+        <button @click="deleteTasks" id="btn-action-delete">Delete</button>
+        <button @click="toggleEditMode">Toggle Edit</button>
       </div>
     </div>
     <Suspense>
@@ -63,15 +70,43 @@
             <td>Project</td>
             <td>Group</td>
           </tr>
-          <tr v-for="task in tasks" :key="task.id">
-            <td><input type="checkbox" /></td>
+          <tr
+            v-for="(task, index) in tasks"
+            :key="task.id"
+            @click="editTask(index)"
+          >
+            <td>
+              <input
+                type="checkbox"
+                :checked="task.state.isSelected"
+                @click.stop="selectTask(index, task.state.isSelected)"
+              />
+            </td>
             <td>{{ task.id }}</td>
-            <td><input type="checkbox" :checked="task.done" /></td>
-            <td>{{ task.title }}</td>
+            <td>
+              <input
+                type="checkbox"
+                :checked="task.done"
+                @click.stop="task.done = !task.done"
+                :disabled="!editingCondition(index)"
+              />
+            </td>
+            <td>
+              <input
+                v-model="task.title"
+                :disabled="!editingCondition(index)"
+              />
+            </td>
             <td>{{ calDuration(task.start, task.end) }}</td>
-            <td>{{ task.cat }}</td>
-            <td>{{ task.prj }}</td>
-            <td>{{ task.grp }}</td>
+            <td>
+              <input v-model="task.cat" :disabled="!editingCondition(index)" />
+            </td>
+            <td>
+              <input v-model="task.prj" :disabled="!editingCondition(index)" />
+            </td>
+            <td>
+              <input v-model="task.grp" :disabled="!editingCondition(index)" />
+            </td>
           </tr>
         </table>
       </template>
@@ -87,12 +122,11 @@ import moment from 'moment';
 import axios from 'axios';
 import { faker } from '@faker-js/faker';
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
+import { v4 } from 'uuid';
+import settings from '/static/settings.js';
 /*
 Data: name, tasks, today, calDuration
 */
-// Import and preprocess tasks
-let tasks = useFetch('http://localhost:3141/tasks/all').data;
-tasks.value = tasks.value.map((task) => (task.selected = false));
 
 // Ultilities
 const today = moment(new Date()).format('yyyy-MM-DD');
@@ -104,10 +138,91 @@ const calDuration = function (start, end) {
 
 const unwrap = (obj) => JSON.parse(JSON.stringify(obj));
 
+// Request
+const request = async function (url, method, data) {
+  let config = {
+    method: method,
+    url: url,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    },
+    data: data,
+  };
+
+  axios(config)
+    .then(function (response) {
+      console.log(JSON.stringify(response.data));
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
+};
+
+// Import and preprocess tasks
+let data = (await useFetch('http://localhost:3141/tasks/all')).data;
+
+//Pre-process
+// let _tasks = unwrap(data)._value;
+
+// _tasks.forEach((t) => (t.isSelected = false));
+
+// let tasks = ref(_tasks);
+// console.log(tasks);
+
+//Test
+// console.log(JSON.parse(data));
+// let _tasks = data.forEach((t) => (t.isSelected = false));
+let tasks = data;
+
+//Test
+function newTaskId() {
+  return v4().replaceAll('-', '').slice(0, 12);
+}
+
+// Actions
+onMounted(() => {
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      isEditing.value = false;
+    }
+  });
+});
+
+// Task logics
+//// Global vars
+let isEditing = ref(false);
+let taskBeingEdited = ref(null);
+////
+const editingCondition = (index) => {
+  return tasks.value[index].state.isBeingEdited && isEditing.value;
+};
+const toggleEditMode = () => {
+  isEditing.value = !isEditing.value;
+};
+
 // Create new task
-const newTaskId = computed(() => 'E' + (tasks.value.length + 1).toString(16));
+class TaskState {
+  isBeingEdited = false;
+  isSelected = false;
+}
+
+// class Task {
+//   id = '';
+//   title = '';
+//   des = '';
+//   done = false;
+//   start = '';
+//   end = '';
+//   isRep = false;
+//   cat = '';
+//   prj = '';
+//   grp = '';
+//   state = new TaskState();
+// }
+
 let newTask = reactive({
-  id: newTaskId,
+  id: newTaskId(),
   title: '',
   des: '',
   done: false,
@@ -117,9 +232,11 @@ let newTask = reactive({
   cat: '',
   prj: '',
   grp: '',
+  tag: '',
+  state: new TaskState(),
 });
 
-const clearInput = function () {
+const clearInput = () => {
   newTask.title = '';
   newTask.des = '';
   newTask.done = false;
@@ -129,11 +246,19 @@ const clearInput = function () {
   newTask.cat = '';
   newTask.prj = '';
   newTask.grp = '';
+  newTask.tag = '';
+};
+
+const createTask = async function () {
+  const task = unwrap(newTask);
+  tasks.value.push(task);
+  request('http://localhost:3141/tasks/create', 'post', task);
+  clearInput();
 };
 
 // Generate new task data
-const createTaskF = function () {
-  newTask.id = newTaskId;
+const generateTestTask = () => {
+  newTask.id = newTaskId();
   newTask.title = faker.word.verb() + ' ' + faker.word.noun();
   newTask.des = faker.lorem.sentence();
   newTask.done = false;
@@ -147,31 +272,72 @@ const createTaskF = function () {
   newTask.cat = faker.commerce.department();
   newTask.prj = faker.word.noun();
   newTask.grp = faker.word.noun();
+  newTask.tag = faker.word.noun();
 };
 
-const createTask = async function () {
-  const task = unwrap(newTask);
-  tasks.value.push(task);
-  console.log('botay.com', task);
-  let config = {
-    method: 'post',
-    url: 'http://192.168.1.8:3141/tasks/create',
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-    },
-    data: task,
-  };
-
-  axios(config)
-    .then(function (response) {
-      console.log(JSON.stringify(response.data));
-    })
-    .catch(function (error) {
-      console.log(error);
-    });
-  clearInput();
+const createTestTask = () => {
+  generateTestTask();
+  createTask();
 };
+
+const selectTask = (index) => {
+  if (!isEditing) {
+    tasks.value[index].state.isSelected = true;
+  }
+};
+
+const editTask = (index, isSelected) => {
+  taskBeingEdited.value = index;
+  console.log(taskBeingEdited);
+  if (isEditing && !isSelected) {
+    isEditing.value = false;
+    tasks.value.forEach((t) => (t.state.isBeingEdited = false));
+  }
+  isEditing.value = true;
+  tasks.value[index].state.isBeingEdited = true;
+  newTask.id = tasks.value[index].id;
+  newTask.title = computed(() => tasks.value[index].title);
+  newTask.des = computed(() => tasks.value[index].des);
+  newTask.done = computed(() => tasks.value[index].done);
+  newTask.start = computed(() => tasks.value[index].start);
+  newTask.end = computed(() => tasks.value[index].end);
+  newTask.isRep = computed(() => tasks.value[index].isRep);
+  newTask.cat = computed(() => tasks.value[index].cat);
+  newTask.prj = computed(() => tasks.value[index].prj);
+  newTask.grp = computed(() => tasks.value[index].grp);
+  newTask.tag = computed(() => tasks.value[index].tag);
+  newTask.state.isSelected = computed(
+    () => tasks.value[index].state.isSelected
+  );
+};
+
+watch(isEditing, (newValue, oldValue) => {
+  if (oldValue === true && newValue === false) {
+    updateTask(taskBeingEdited.value);
+  }
+});
+
+const updateTask = (index) => {
+  console.log(index);
+  let data = tasks._rawValue[index];
+  request('http://localhost:3141/tasks/update', 'post', JSON.stringify(data));
+  console.log(data);
+  document.activeElement.blur();
+};
+
+const deleteTasks = async () => {
+  let deleteTaskList = [];
+  for (let i = 0; i < tasks.value.length; i++) {
+    if (tasks.value[i].isSelected) {
+      deleteTaskList.push(tasks.value[i].id);
+      tasks.value.splice(i, 1);
+      i--;
+    }
+  }
+  request('http://localhost:3141/tasks/delete', 'post', deleteTaskList);
+};
+
+//
 </script>
 
 <style>
@@ -218,7 +384,12 @@ const createTask = async function () {
 
 .task-des {
   grid-column: 3;
-  grid-row: 2/4;
+  grid-row: 2;
+}
+
+.task-tag {
+  grid-column: 3;
+  grid-row: 3;
 }
 
 .task-start {

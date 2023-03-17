@@ -1,0 +1,7 @@
+- Handling isSelected
+- Hover states: input,
+- Loading
+- nav : report, today, calendar (today, week, month, quarter, phase, decade), categories
+- strict mode (harder to change task info)
+- Tasks: tags
+- Project view, Group view

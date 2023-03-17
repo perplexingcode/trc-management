@@ -3,6 +3,9 @@ export default defineNuxtConfig({
   build: {
     transpile: ['moment'],
   },
-  // modules: ['@nuxtjs/axios'],
+  modules: ['@pinia/nuxt'],
   css: ['~/assets/css/app.css', '~/assets/css/components.css'],
+  pinia: {
+    autoImports: ['taskStore'],
+  },
 });
