@@ -6,8 +6,8 @@
         <li><NuxtLink to="/">Home</NuxtLink></li>
         <li><NuxtLink to="/test">Test</NuxtLink></li>
         <li><NuxtLink to="/today">Today</NuxtLink></li>
-        <li><NuxtLink to="/categories">Categories</NuxtLink></li>
-        <li><NuxtLink to="/projects">Projects</NuxtLink></li>
+        <li><NuxtLink to="/category">Categories</NuxtLink></li>
+        <li><NuxtLink to="/project">Projects</NuxtLink></li>
         <li class="menu-parent-item">
           <NuxtLink to="/navigation">Navigation</NuxtLink>
           <ul class="menu-drop-down">
@@ -24,6 +24,24 @@
     <NuxtPage />
   </div>
 </template>
+<script setup>
+import { useTaskStore } from '~/stores/task.js';
+import { useProjectStore } from '~/stores/project.js';
+import { fetchWrapper } from '~/static/request';
+
+const taskStore = useTaskStore();
+const tasks = reactive(await taskStore.fetchTasks());
+provide('tasks', tasks);
+
+const projectStore = useProjectStore();
+const projects = reactive(fetchWrapper(await projectStore.fetchProjects()));
+provide('projects', projects);
+
+// Ultilities
+Array.prototype.random = function () {
+  return this[Math.floor(Math.random() * this.length)];
+};
+</script>
 
 <style>
 .main_wrap h1 {

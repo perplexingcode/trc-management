@@ -6,6 +6,10 @@ export default defineNuxtConfig({
   modules: ['@pinia/nuxt'],
   css: ['~/assets/css/app.css', '~/assets/css/components.css'],
   pinia: {
-    autoImports: ['taskStore'],
+    autoImports: ['defineStore'],
+  },
+  components: {
+    global: true,
+    dirs: ['~/components'],
   },
 });

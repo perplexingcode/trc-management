@@ -1,4 +1,6 @@
-- Handling isSelected
+- Implement base URL
+- Handling isSele
+- cted
 - Hover states: input,
 - Loading
 - nav : report, today, calendar (today, week, month, quarter, phase, decade), categories
