@@ -12,6 +12,7 @@
     "@aws-sdk/util-dynamodb": "^3.284.0",
     "@faker-js/faker": "^7.6.0",
     "@pinia/nuxt": "^0.4.7",
+    "@types/node": "^18.15.10",
     "nuxt": "^3.2.3"
   },
   "dependencies": {

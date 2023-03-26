@@ -2,10 +2,14 @@
   <div @keyup.enter="confirmChanges">
     <h1>Today</h1>
     <p>Today's date is {{ today }}</p>
-    <p>isEditing: {{ isEditing }}</p>
-    <p>{{ selectedTasks }}</p>
-    <p>{{ newTask.end }}</p>
-    <p>{{ tasks }}</p>
+    <div id="#dev-panel">
+      <h2>Dev zone</h2>
+      <p>isEditing: {{ isEditing }}</p>
+      <p>{{ selectedTasks }}</p>
+      <p>{{ newTask.end }}</p>
+      <p>{{ tasks }}</p>
+      <Test />
+    </div>
 
     <div id="action-form" class="bg-secondary card">
       <h2>Actions</h2>
@@ -191,7 +195,71 @@ const categories = [
 ];
 
 let tasks = inject('tasks');
+let columns = {
+  id: {
+    name: 'ID',
+    type: 'text',
+    editable: false,
+  },
+  done: {
+    name: 'Completed',
+    type: 'checkbox',
+    editable: true,
+  },
+  isRep: {
+    name: 'Repeat',
+    type: 'checkbox',
+    editable: true,
+  },
+  name: {
+    name: 'Task',
+    type: 'text',
+    editable: true,
+  },
+  des: {
+    name: 'Description',
+    type: 'text',
+    editable: true,
+  },
+  start: {
+    name: 'Start',
+    type: 'text',
+    editable: true,
+  },
+  end: {
+    name: 'End',
+    type: 'text',
+    editable: true,
+  },
+  duration: {
+    name: 'Duration',
+    type: 'text',
+    editable: false,
+    value: 100,
+  },
+  cat: {
+    name: 'Category',
+    type: 'select',
+    editable: true,
+  },
+  prj: {
+    name: 'Project',
+    type: 'text',
+    editable: true,
+  },
+  grp: {
+    name: 'Group',
+    type: 'text',
+    editable: true,
+  },
+  tag: {
+    name: 'Tag',
+    type: 'text',
+    editable: true,
+  },
+};
 provide('tasks', tasks);
+provide('columns', columns);
 
 const error = reactive({
   // Date & time
