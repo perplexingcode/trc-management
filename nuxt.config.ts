@@ -4,7 +4,11 @@ export default defineNuxtConfig({
     transpile: ['moment'],
   },
   modules: ['@pinia/nuxt'],
-  css: ['~/assets/css/app.css', '~/assets/css/components.css'],
+  css: [
+    '~/assets/css/app.css',
+    '~/assets/css/components.css',
+    '~/assets/css/text.css',
+  ],
   pinia: {
     autoImports: ['defineStore'],
   },

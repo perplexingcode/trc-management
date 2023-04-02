@@ -32,6 +32,64 @@ import { fetchWrapper } from '~/static/request';
 const taskStore = useTaskStore();
 const tasks = reactive(await taskStore.fetchTasks());
 provide('tasks', tasks);
+let taskColumns = [
+  {
+    type: 'is-selected',
+    name: '',
+    key: '',
+    disabled: true,
+    attrs: { type: 'text' },
+  },
+  {
+    type: 'input',
+    name: 'ID',
+    key: 'id',
+    disabled: true,
+    attrs: { type: 'text' },
+  },
+  {
+    type: 'checkbox',
+    name: 'Completed',
+    key: 'done',
+    disabled: false,
+    attrs: { type: 'checkbox' },
+  },
+  {
+    type: 'input',
+    name: 'Row',
+    key: 'name',
+    disabled: false,
+    attrs: { type: 'text' },
+  },
+  {
+    type: 'text-area',
+    name: 'Description',
+    key: 'des',
+    disabled: false,
+    attrs: { type: 'text' },
+  },
+  {
+    type: 'input',
+    name: 'Start',
+    key: 'start',
+    disabled: false,
+    attrs: { type: 'text' },
+  },
+  {
+    type: 'input',
+    name: 'End',
+    key: 'end',
+    disabled: false,
+    attrs: { type: 'text' },
+  },
+  {
+    type: 'p',
+    name: 'Duration',
+    key: 'duration',
+    disabled: false,
+  },
+];
+provide('taskColumns', taskColumns);
 
 const projectStore = useProjectStore();
 const projects = reactive(fetchWrapper(await projectStore.fetchProjects()));
@@ -47,11 +105,6 @@ Array.prototype.random = function () {
 .main_wrap h1 {
   text-align: center;
 }
-
-body {
-  font-family: 'Comfortaa', cursive;
-}
-
 .menu-parent-item {
   position: relative;
 }

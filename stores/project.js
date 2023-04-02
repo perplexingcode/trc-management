@@ -7,7 +7,6 @@ export const useProjectStore = defineStore('project', () => {
   };
   const fetchProjects = async () => {
     const data = (await useFetch('http://localhost:3141/project/all')).data;
-    console.log('khachat', data);
     return data;
   };
   return { addTask, fetchProjects };

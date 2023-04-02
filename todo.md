@@ -1,6 +1,9 @@
+- Fix props
+- Exit editing condition
+- Reset state
 - Implement base URL
-- Handling isSele
-- cted
+- Implement upsert
+- Handling isSelected
 - Hover states: input,
 - Loading
 - nav : report, today, calendar (today, week, month, quarter, phase, decade), categories

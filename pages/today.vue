@@ -2,13 +2,12 @@
   <div @keyup.enter="confirmChanges">
     <h1>Today</h1>
     <p>Today's date is {{ today }}</p>
-    <div id="#dev-panel">
+    <div id="dev-panel" class="card bg-secondary">
       <h2>Dev zone</h2>
       <p>isEditing: {{ isEditing }}</p>
       <p>{{ selectedTasks }}</p>
       <p>{{ newTask.end }}</p>
       <p>{{ tasks }}</p>
-      <Test />
     </div>
 
     <div id="action-form" class="bg-secondary card">
@@ -108,7 +107,7 @@
                   <input
                     type="checkbox"
                     :checked="task.done"
-                    @click.stop="task.done = !task.done"
+                    @click.stop="task.done = $event.target.checked"
                     :disabled="!editingCondition(index)"
                   />
                 </td>
@@ -165,7 +164,7 @@
             </tbody>
           </table>
 
-          <Table table-data="tasks" />
+          <Table table-data="rows" />
         </div>
       </template>
       <template #fallback>
@@ -195,70 +194,78 @@ const categories = [
 ];
 
 let tasks = inject('tasks');
-let columns = {
-  id: {
-    name: 'ID',
-    type: 'text',
-    editable: false,
-  },
-  done: {
-    name: 'Completed',
-    type: 'checkbox',
-    editable: true,
-  },
-  isRep: {
-    name: 'Repeat',
-    type: 'checkbox',
-    editable: true,
-  },
-  name: {
-    name: 'Task',
-    type: 'text',
-    editable: true,
-  },
-  des: {
-    name: 'Description',
-    type: 'text',
-    editable: true,
-  },
-  start: {
-    name: 'Start',
-    type: 'text',
-    editable: true,
-  },
-  end: {
-    name: 'End',
-    type: 'text',
-    editable: true,
-  },
-  duration: {
-    name: 'Duration',
-    type: 'text',
-    editable: false,
-    value: 100,
-  },
-  cat: {
-    name: 'Category',
-    type: 'select',
-    editable: true,
-  },
-  prj: {
-    name: 'Project',
-    type: 'text',
-    editable: true,
-  },
-  grp: {
-    name: 'Group',
-    type: 'text',
-    editable: true,
-  },
-  tag: {
-    name: 'Tag',
-    type: 'text',
-    editable: true,
-  },
-};
-provide('tasks', tasks);
+let columns = [
+  'ID',
+  'Completed',
+  'Task',
+  'Description',
+  'Start',
+  'End',
+  'Duration',
+  'Category',
+  'Project',
+  'Group',
+  'Tags',
+];
+
+let rows = computed(() =>
+  h(
+    'tbody',
+    tasks.value.map((task) => {
+      return h('tr', [
+        h(
+          'td',
+          h('input', {
+            type: 'checkbox',
+            checked: task.state.isSelected,
+            onClick: (e) => {
+              task.state.isSelected = e.target.checked;
+            },
+          })
+        ),
+        h(
+          'td',
+          h('input', {
+            type: 'text',
+            value: task.id,
+            disabled: true,
+          })
+        ),
+        h(
+          'td',
+          h('input', {
+            type: 'checkbox',
+            checked: task.done,
+            onClick: (e) => {
+              task.done = e.target.checked;
+            },
+          })
+        ),
+        h(
+          'td',
+          h('input', {
+            type: 'text',
+            value: task.name,
+            onInput: (e) => {
+              task.name = e.target.value;
+            },
+          })
+        ),
+        h(
+          'td',
+          h('input', {
+            type: 'text',
+            value: task.des,
+            onInput: (e) => {
+              task.des = e.target.value;
+            },
+          })
+        ),
+      ]);
+    })
+  )
+);
+provide('rows', rows);
 provide('columns', columns);
 
 const error = reactive({
@@ -432,7 +439,6 @@ const selectTask = (index) => {
 
 const editTask = (index, isSelected) => {
   taskBeingEdited.value = index;
-  console.log(taskBeingEdited);
   if (isEditing && !isSelected) {
     isEditing.value = false;
     tasks.value.forEach((t) => (t.state.isBeingEdited = false));
@@ -462,10 +468,8 @@ watch(isEditing, (newValue, oldValue) => {
 });
 
 const updateTask = (index) => {
-  console.log(index);
   let data = tasks._rawValue[index];
   request('http://localhost:3141/task/update', 'post', JSON.stringify(data));
-  console.log(data);
   document.activeElement.blur();
 };
 
@@ -494,12 +498,3 @@ const selectedTasks = computed(() => {
 
 //
 </script>
-
-<style>
-:is(h1, h2, h3, h4, h5, h6) {
-  margin: 0;
-}
-.card {
-  padding: 2rem;
-}
-</style>
