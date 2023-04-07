@@ -314,4 +314,67 @@ button.add-row {
 .table-row.is-being-edited {
   background-color: #f5f5f5;
 }
+
+input.name {
+  width: 16rem;
+}
+
+input.date {
+  width: 4.5rem;
+}
+
+input.duration {
+  width: 2.5rem;
+}
+
+input.cat,
+input.prj,
+input.grp {
+  width: 8rem;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+tr {
+  height: 36px;
+}
+.cols-name th,
+td {
+  border: solid 1px #ccc2;
+  text-align: center;
+}
+input.name {
+  width: 16rem;
+}
+
+input.date {
+  width: 4.5rem;
+}
+
+input.duration {
+  width: 2.5rem;
+}
+
+input.cat,
+input.prj,
+input.grp {
+  width: 8rem;
+}
+
+table {
+  border-collapse: collapse;
+  padding: 1rem;
+  outline: 1px solid #000;
+}
+
+tr {
+  height: 36px;
+}
+.cols-name th,
+td {
+  border: solid 1px #ccc2;
+  text-align: center;
+}
 </style>
