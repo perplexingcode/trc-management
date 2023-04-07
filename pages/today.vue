@@ -405,7 +405,7 @@ const clearInput = () => {
 const createTask = async function () {
   const task = unwrap(newTask);
   tasks.value.push(task);
-  request('http://localhost:3141/task/create', 'post', task);
+  request('http://localhost:3141/task/upsert', 'post', task);
   clearInput();
 };
 
@@ -469,7 +469,7 @@ watch(isEditing, (newValue, oldValue) => {
 
 const updateTask = (index) => {
   let data = tasks._rawValue[index];
-  request('http://localhost:3141/task/update', 'post', JSON.stringify(data));
+  request('http://localhost:3141/task/upsert', 'post', JSON.stringify(data));
   document.activeElement.blur();
 };
 

@@ -16,4 +16,9 @@ export default defineNuxtConfig({
     global: true,
     dirs: ['~/components'],
   },
+  runtimeConfig: {
+    public: {
+      rootDir: process.env.ASSET_DIR,
+    },
+  },
 });

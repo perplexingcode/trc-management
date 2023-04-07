@@ -28,69 +28,102 @@
 import { useTaskStore } from '~/stores/task.js';
 import { useProjectStore } from '~/stores/project.js';
 import { fetchWrapper } from '~/static/request';
+import moment from 'moment';
 
-const taskStore = useTaskStore();
-const tasks = reactive(await taskStore.fetchTasks());
-provide('tasks', tasks);
+//  #TASKS
 let taskColumns = [
   {
-    type: 'is-selected',
     name: '',
-    key: '',
+    key: 'is-selected',
+    type: 'is-selected',
     disabled: true,
     attrs: { type: 'text' },
   },
   {
-    type: 'input',
-    name: 'ID',
-    key: 'id',
-    disabled: true,
-    attrs: { type: 'text' },
-  },
-  {
-    type: 'checkbox',
-    name: 'Completed',
-    key: 'done',
+    name: 'Action',
+    key: 'action',
+    type: 'button',
     disabled: false,
+  },
+  {
+    name: 'Task',
+    key: 'name',
+    type: 'input',
+    disabled: false,
+    attrs: { type: 'text' },
+  },
+  {
+    name: 'Done',
+    key: 'done',
+    type: 'checkbox',
+    disabled: false,
+    default: false,
     attrs: { type: 'checkbox' },
   },
   {
-    type: 'input',
-    name: 'Row',
-    key: 'name',
-    disabled: false,
-    attrs: { type: 'text' },
-  },
-  {
-    type: 'text-area',
     name: 'Description',
     key: 'des',
+    type: 'text-area',
     disabled: false,
     attrs: { type: 'text' },
   },
   {
+    name: 'Date',
+    key: 'date',
     type: 'input',
-    name: 'Start',
-    key: 'start',
     disabled: false,
+    default: moment().format('YYYY-MM-DD'),
     attrs: { type: 'text' },
   },
   {
-    type: 'input',
-    name: 'End',
-    key: 'end',
-    disabled: false,
-    attrs: { type: 'text' },
-  },
-  {
-    type: 'p',
     name: 'Duration',
     key: 'duration',
+    type: 'input',
     disabled: false,
+    attrs: { type: 'text' },
+  },
+  {
+    name: 'Category',
+    key: 'cat',
+    type: 'input',
+    disabled: false,
+    attrs: { type: 'text' },
+  },
+  {
+    name: 'Project',
+    key: 'prj',
+    type: 'input',
+    disabled: false,
+    attrs: { type: 'text' },
+  },
+  {
+    name: 'Group',
+    key: 'grp',
+    type: 'input',
+    disabled: false,
+    attrs: { type: 'text' },
+  },
+  {
+    name: 'Tags',
+    key: 'tags',
+    type: 'input',
+    disabled: false,
+    attrs: { type: 'text' },
   },
 ];
 provide('taskColumns', taskColumns);
 
+const taskStore = useTaskStore();
+const tasks = reactive(await taskStore.fetchTasks());
+provide('tasks', tasks);
+for (let i = 0; i < tasks.value.length; i++) {
+  tasks.value[i].state = reactive({
+    isBeingEdited: false,
+    isSelected: false,
+  });
+}
+
+// #PROJECTS
 const projectStore = useProjectStore();
 const projects = reactive(fetchWrapper(await projectStore.fetchProjects()));
 provide('projects', projects);

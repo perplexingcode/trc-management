@@ -28,3 +28,7 @@ body {
 .text-accent {
   color: var(--accent-color);
 }
+
+.d-none {
+  display: none !important;
+}
