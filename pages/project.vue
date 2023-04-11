@@ -63,7 +63,7 @@ function createProject() {
 
 async function deleteProjects() {
   let deleteProjectList = [];
-  for (let i = 0; i < tasks.value.length; i++) {
+  for (let i = 0; i < projects.value.length; i++) {
     if (projects.value[i].state.isSelected) {
       deleteProjectList.push(projects.value[i].id);
       projects.value.splice(i, 1);

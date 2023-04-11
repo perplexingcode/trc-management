@@ -25,13 +25,13 @@
   </div>
 </template>
 <script setup>
-import { useTaskStore } from '~/stores/task.js';
+import { useMoveStore } from '~/stores/move.js';
 import { useProjectStore } from '~/stores/project.js';
 import { fetchWrapper } from '~/static/request';
 import moment from 'moment';
 
-//  #TASKS
-let taskColumns = [
+//  #MOVES
+let moveColumns = [
   {
     name: '',
     key: 'is-selected',
@@ -46,7 +46,7 @@ let taskColumns = [
     disabled: false,
   },
   {
-    name: 'Task',
+    name: 'Move',
     key: 'name',
     type: 'input',
     disabled: false,
@@ -111,17 +111,65 @@ let taskColumns = [
     attrs: { type: 'text' },
   },
 ];
-provide('taskColumns', taskColumns);
+provide('moveColumns', moveColumns);
 
-const taskStore = useTaskStore();
-const tasks = reactive(await taskStore.fetchTasks());
-provide('tasks', tasks);
-for (let i = 0; i < tasks.value.length; i++) {
-  tasks.value[i].state = reactive({
-    isBeingEdited: false,
-    isSelected: false,
-  });
-}
+const moveStore = useMoveStore();
+const moves = await moveStore.fetchMoves();
+provide('moves', moves);
+
+const wasteChoreColumns = [
+  {
+    name: '',
+    key: 'is-selected',
+    type: 'is-selected',
+    disabled: true,
+    attrs: { type: 'text' },
+  },
+  {
+    name: 'Duration',
+    key: 'duration',
+    type: 'input',
+    disabled: false,
+    attrs: { type: 'text' },
+  },
+  {
+    name: 'Move',
+    key: 'name',
+    type: 'input',
+    disabled: false,
+    attrs: { type: 'text' },
+  },
+  {
+    name: 'Date',
+    key: 'date',
+    type: 'input',
+    disabled: false,
+    default: moment().format('YYYY-MM-DD'),
+    attrs: { type: 'text' },
+  },
+];
+provide('wasteChoreColumns', wasteChoreColumns);
+const wasteMoves = (
+  await useFetch('http://localhost:3141/db/all', {
+    headers: { table: 'management_waste' },
+  })
+).data;
+provide('waste', wasteMoves);
+// const choreMoves = (
+//   await useFetch('http://localhost:3141/db/management_chore/all')
+// ).data;
+// provide('chore', choreMoves);
+
+// const wasteMovesToday = wasteMoves.value.filter((move) => {
+//   return move.date === moment().format('YYYY-MM-DD');
+// });
+// console.log('cac', wasteMovesToday);
+// provide('wasteToday', wasteMovesToday);
+// const choreMovesToday = choreMoves.filter((move) => {
+//   return move.date === moment().format('YYYY-MM-DD');
+// });
+// provide('choreToday', choreMovesToday);
+//
 
 // #PROJECTS
 const projectStore = useProjectStore();
@@ -138,6 +186,17 @@ Array.prototype.random = function () {
 .main_wrap h1 {
   text-align: center;
 }
+
+nav {
+  display: flex;
+  justify-content: center;
+}
+nav ul {
+  display: flex;
+  gap: 20px;
+  list-style-type: none;
+}
+
 .menu-parent-item {
   position: relative;
 }

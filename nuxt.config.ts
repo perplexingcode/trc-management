@@ -3,8 +3,15 @@ export default defineNuxtConfig({
   build: {
     transpile: ['moment'],
   },
+  postcss: {
+    plugins: {
+      tailwindcss: {},
+      autoprefixer: {},
+    },
+  },
   modules: ['@pinia/nuxt'],
   css: [
+    '~/assets/css/main.css',
     '~/assets/css/app.css',
     '~/assets/css/components.css',
     '~/assets/css/text.css',

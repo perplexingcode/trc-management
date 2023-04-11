@@ -1,4 +1,4 @@
-export async function request(url, method, data) {
+export async function request(url, method, data, header) {
   let config = {
     method: method,
     body: data,
@@ -8,7 +8,9 @@ export async function request(url, method, data) {
     },
     data: data,
   };
-
+  if (header) {
+    config.headers = { ...config.headers, ...header };
+  }
   useFetch(url, config);
 }
 

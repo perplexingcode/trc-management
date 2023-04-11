@@ -1,5 +1,5 @@
 <template>
-  <div id="dev-panel" class="card bg-secondary">
+  <div v-if="props.dev === 'true'" id="dev-panel" class="card bg-secondary">
     <h2>Dev zone</h2>
     <p>isEditing: {{ isEditing }}</p>
     <p>{{ selectedRows }}</p>
@@ -32,11 +32,18 @@
 import { request } from '~/static/request';
 import { deepClone, dir } from '~/static/utils';
 import { v4 } from 'uuid';
+import { upsert } from '~/static/db';
 
 // #SETUP
 //Table data
-const props = defineProps(['rows', 'itemName', 'columns']);
+const props = defineProps(['rows', 'itemName', 'columns', 'dev']);
 const rows = inject(props.rows, []);
+for (let i = 0; i < rows.value.length; i++) {
+  rows.value[i].state = reactive({
+    isBeingEdited: false,
+    isSelected: false,
+  });
+}
 const columns = inject(props.columns, []);
 const itemName = props.itemName;
 
@@ -255,25 +262,14 @@ function editRow(index, itemsArray, element) {
 }
 
 function createRow() {
-  let newRow = deepClone(newItem);
-  let item = deepClone(newItem);
-  rows.value.push(item);
-  delete newRow.state;
-  request(
-    'http://localhost:3141/' + itemName + '/upsert',
-    'post',
-    JSON.stringify(newRow)
-  );
+  rows.value.push(deepClone(newItem));
+  upsert('http://localhost:3141/' + itemName + '/upsert', newItem);
 }
 
 function upsertRow(index) {
-  let data = deepClone(rows._rawValue[index]);
-  delete data.state;
-  request(
-    'http://localhost:3141/' + itemName + '/upsert',
-    'post',
-    JSON.stringify(data)
-  );
+  const rowToUpsert = rows._rawValue[index];
+  upsert('http://localhost:3141/' + itemName + '/upsert', rowToUpsert);
+  rows.value[index].state.isBeingEdited = false;
   document.activeElement.blur();
 }
 const selectedRows = computed(() => {
@@ -308,23 +304,8 @@ async function deleteRows(index) {
 </script>
 
 <style>
-button.add-row {
-  width: 100%;
-}
 .table-row.is-being-edited {
   background-color: #f5f5f5;
-}
-
-input.name {
-  width: 16rem;
-}
-
-input.date {
-  width: 4.5rem;
-}
-
-input.duration {
-  width: 2.5rem;
 }
 
 input.cat,
@@ -350,11 +331,12 @@ input.name {
 }
 
 input.date {
-  width: 4.5rem;
+  width: 6.5rem;
 }
 
 input.duration {
-  width: 2.5rem;
+  width: 4rem;
+  text-align: center;
 }
 
 input.cat,
