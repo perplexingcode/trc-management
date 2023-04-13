@@ -23,7 +23,8 @@ input:not([type='checkbox']):not([type='radio']) {
   border: 1px solid #ccc;
   border-radius: 5px;
   font-size: 0.95rem;
-  padding: 0.3rem 0.6rem;
+  line-height: 2.25;
+  padding: 0.3rem 0.6rem 0rem 0.6rem;
   margin: 0 0.25rem;
   height: 2rem;
 }
@@ -33,7 +34,7 @@ textarea {
   border-radius: 5px;
   padding: 0.3rem;
   margin: 0.25rem;
-  height: 2rem;
+  height: 1rem;
   overflow-y: hidden;
 }
 
@@ -43,4 +44,20 @@ textarea {
 }
 .input-date {
   width: 6.5rem;
+}
+
+/* Select */
+
+select {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 0.95rem;
+  padding: 0.3rem 0.6rem;
+  margin: 0 0.25rem;
+  height: 2rem;
+  background: #fff;
+}
+
+option[disabled] {
+  display: none;
 }

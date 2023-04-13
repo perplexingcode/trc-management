@@ -4,7 +4,8 @@
     <p>Today's date is {{ today }}</p>
     <div id="dev-panel" class="card bg-secondary">
       <h2>Dev zone</h2>
-      <p>{{ doneTodayMoves }}</p>
+      <!-- <p>{{ doneTodayMoves }}</p> -->
+      <p>{{ newWasteMove }}</p>
     </div>
     <div class="adjustment-panel card bg-secondary flex">
       <div class="report w-1/2">
@@ -40,8 +41,14 @@
               </button>
             </div>
           </div>
-          <div v-if="showWasteMoves" class="waste_moves pl-7">
-            <Table rows="waste" columns="wasteChoreColumns" item-name="chore" />
+          <div v-show="showWasteMoves" class="waste_moves pl-7">
+            <Table
+              rows="waste"
+              columns="wasteChoreColumns"
+              item-name="waste"
+              :new-item="newWasteMove"
+              :events="wasteEvents"
+            />
           </div>
         </div>
         <div class="chore">
@@ -71,16 +78,14 @@
               </button>
             </div>
           </div>
-          <div v-if="showChoreMoves" class="chore_moves">
-            <div v-for="move in choreMoves" :key="move.name" class="chore_move">
-              <input class="input-as-label" v-model="move.action" type="text" />
-              <input
-                class="wasted_hour"
-                v-model="move.duration"
-                type="text"
-                @keyup.enter="addChoreMove"
-              />
-            </div>
+          <div v-show="showChoreMoves" class="chore_moves pl-7">
+            <Table
+              rows="chore"
+              columns="wasteChoreColumns"
+              item-name="chore"
+              :new-item="newChoreMove"
+              :events="choreEvents"
+            />
           </div>
         </div>
       </div>
@@ -93,10 +98,11 @@
       <template #default>
         <div>
           <Table
-            rows="moves"
+            rows="movesToday"
             columns="moveColumns"
             item-name="move"
-            dev="false"
+            dev="true"
+            addRow="true"
           />
         </div>
       </template>
@@ -112,43 +118,36 @@ import { sumTime } from '~/static/time';
 import { upsert } from '~~/static/db';
 import { deepClone, newId } from '~~/static/utils';
 const today = moment(new Date()).format('YYYY-MM-DD');
-const moves = inject('moves', []);
+const movesToday = inject('movesToday', []);
+// const groups = inject('groups', []);
+// const projects = inject('projects', []);
 
 const showWasteMoves = ref(false);
-const showChoreMoves = ref(false);
-
 class WasteMove {
   id = ref(newId());
-  action = ref('');
+  name = ref('');
   duration = ref('');
   date = ref(today);
 }
-const wasteMoves = ref([]);
+const wasteMoves = inject('waste', []);
 const newWasteMove = ref(new WasteMove());
+const wasteEvents = { addRow: ref(false) };
 function addWasteMove() {
-  wasteMoves.value.push(deepClone(newWasteMove.value));
-  upsert(
-    'http://localhost:3141/db/management_waste/upsert',
-    newChoreMove.value
-  );
+  wasteEvents.addRow.value = !wasteEvents.addRow.value;
 }
 
+const showChoreMoves = ref(false);
 class ChoreMove {
   id = ref(newId());
-  action = ref('');
+  name = ref('');
   duration = ref('');
   date = ref(today);
 }
-const choreMoves = ref([]);
-
+const choreMoves = inject('chore', []);
 const newChoreMove = ref(new ChoreMove());
-
+const choreEvents = { addRow: ref(false) };
 function addChoreMove() {
-  choreMoves.value.push(deepClone(newChoreMove.value));
-  upsert(
-    'http://localhost:3141/db/management_chore/upsert',
-    newChoreMove.value
-  );
+  choreEvents.addRow.value = !choreEvents.addRow.value;
 }
 
 const todayWaste = computed(() => {
@@ -160,7 +159,7 @@ const todayChore = computed(() => {
 });
 
 const todayDoneMoves = computed(() => {
-  return moves.value.filter((move) => move.done && move.date === today);
+  return movesToday.value.filter((move) => move.done && move.date === today);
 });
 
 const todayDone = computed(() => {

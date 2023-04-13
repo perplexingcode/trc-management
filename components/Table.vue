@@ -1,17 +1,19 @@
 <template>
   <div v-if="props.dev === 'true'" id="dev-panel" class="card bg-secondary">
     <h2>Dev zone</h2>
+    <p>Log: {{ log }}</p>
     <p>isEditing: {{ isEditing }}</p>
-    <p>{{ selectedRows }}</p>
+    <p>Selected rows: {{ selectedRows }}</p>
+    <!-- <p>{{ rows }}</p> -->
     <p>{{ newItem }}</p>
     <img src="~/assets/img/icon/add.png" />
   </div>
   <Suspense>
     <template #default>
-      <div>
+      <div class="p-3">
         <table :class="'table-' + itemName">
           <thead v-if="columns.length">
-            <new-row />
+            <new-row v-if="props.addRow === 'true'" />
             <tr class="cols-name">
               <th v-for="col in columns" :key="col">
                 {{ col.name }}
@@ -30,13 +32,23 @@
 
 <script setup>
 import { request } from '~/static/request';
-import { deepClone, dir } from '~/static/utils';
-import { v4 } from 'uuid';
+import { deepClone, dir, newId } from '~/static/utils';
 import { upsert } from '~/static/db';
+
+let log = ref('');
 
 // #SETUP
 //Table data
-const props = defineProps(['rows', 'itemName', 'columns', 'dev']);
+const props = defineProps([
+  'rows',
+  'itemName',
+  'columns',
+  'dev',
+  'addRow',
+  'newItem',
+  'events',
+]);
+
 const rows = inject(props.rows, []);
 for (let i = 0; i < rows.value.length; i++) {
   rows.value[i].state = reactive({
@@ -44,6 +56,7 @@ for (let i = 0; i < rows.value.length; i++) {
     isSelected: false,
   });
 }
+
 const columns = inject(props.columns, []);
 const itemName = props.itemName;
 
@@ -83,30 +96,48 @@ watch(isEditing, (newValue, oldValue) => {
 const hTd = function (hClass, ...args) {
   return h('td', { class: ['cell', hClass] }, h(...args));
 };
+
+let id = ref(newId());
 // Add new row
-const newItem = reactive(
+//If new item is passed as prop, use it
+let newItem = props.newItem;
+props.newItem
+  ? (props.newItem.state = reactive({ isBeingEdited: null, isSelected: null }))
+  : null;
+//If not, create a new one
+newItem ||= reactive(
   (() => {
     let item = {};
     columns.forEach((col) => {
-      if (!col.key) return;
+      if (!col.name || col.noSave) return;
       if (col.default !== null && col.default !== undefined)
         item[col.key] = col.default;
       else item[col.key] = '';
     });
     item.state = new State();
-    item.id = v4().replaceAll('-', '').slice(0, 12);
+    // item.id = v4().replaceAll('-', '').slice(0, 12);
+    item.id = id;
     item.state.isBeingEdited = null;
     item.state.isSelected = null;
     return item;
   })()
 );
-
+if (props.events) {
+  watch(props.events.addRow, () => {
+    createRow();
+  });
+}
 let newRow = computed(() =>
   h(
     'tr',
     {
       class: 'new-row',
       id: 'row-' + newItem.id,
+      onKeyup: (e) => {
+        if (e.key === 'Enter') {
+          createRow();
+        }
+      },
     },
     columns.map((col) => {
       if (col.type === 'is-selected') {
@@ -157,17 +188,14 @@ let tableBody = computed(() =>
         },
         columns.map((col) => {
           if (col.key === 'action') {
-            return hTd(
-              'cell-action',
-              'button',
-              {
-                class: 'action-delete',
-                onClick: (e) => {
-                  deleteRows(index);
-                },
+            return hTd('cell-action flex justify-center', 'img', {
+              src: dir('assets/img/icon/minus.png'),
+              title: 'Delete row',
+              class: 'action-delete py-1',
+              onClick: (e) => {
+                deleteRows(item.id);
               },
-              'Delete row'
-            );
+            });
           }
           return renderElement(col, item, false);
         })
@@ -197,6 +225,7 @@ function renderElement(element, item, isNewRow) {
         type: 'text',
         class: element.key,
         value: isNewRow ? element.default : item[element.key],
+        required: element.attrs.required,
         disabled:
           element.disabled ||
           (!(item.state.isBeingEdited && isEditing.value) && !isNewRow),
@@ -227,6 +256,31 @@ function renderElement(element, item, isNewRow) {
           );
         },
       });
+    case 'select':
+      return hTd(
+        'cell-' + element.key,
+        'select',
+        {
+          class: element.key,
+          disabled:
+            element.disabled ||
+            (!(item.state.isBeingEdited && isEditing.value) && !isNewRow),
+          onInput: (e) => {
+            item[element.key] = e.target.value;
+          },
+        },
+        ['', ...element.options].map((option) => {
+          return h(
+            'option',
+            {
+              value: option?.value || option,
+              selected: option?.value || option === item[element.key],
+              disabled: option === '',
+            },
+            option?.name || option
+          );
+        })
+      );
     case 'checkbox':
       return hTd('cell-' + element.key, 'input', {
         type: 'checkbox',
@@ -261,20 +315,40 @@ function editRow(index, itemsArray, element) {
   });
 }
 
+function validateColumns(items) {
+  let validated = true;
+  const requiredFields = [];
+  for (let col in columns) {
+    if (columns[col]?.attrs?.required && !items[columns[col].key]) {
+      validated = false;
+      requiredFields.push(columns[col].key);
+    }
+  }
+  if (!validated) {
+    alert('Please fill in the required fields: ' + requiredFields.join(', '));
+    return false;
+  }
+  return true;
+}
+
 function createRow() {
-  rows.value.push(deepClone(newItem));
-  upsert('http://localhost:3141/' + itemName + '/upsert', newItem);
+  if (!validateColumns(newItem)) return;
+  const item = deepClone(newItem);
+  item.state = new State();
+  rows.value.push(item);
+  upsert('http://localhost:3141/db/upsert/management_' + itemName, newItem);
+  id.value = newId();
 }
 
 function upsertRow(index) {
   const rowToUpsert = rows._rawValue[index];
-  upsert('http://localhost:3141/' + itemName + '/upsert', rowToUpsert);
+  if (!validateColumns(rowToUpsert)) return;
+  upsert('http://localhost:3141/upsert/management_' + itemName, rowToUpsert);
   rows.value[index].state.isBeingEdited = false;
   document.activeElement.blur();
 }
 const selectedRows = computed(() => {
   let selectedRows = [];
-  console.log(rows);
   rows._rawValue.forEach((row) => {
     if (row.state.isSelected) {
       selectedRows.push(row.id);
@@ -282,9 +356,11 @@ const selectedRows = computed(() => {
   });
   return selectedRows;
 });
-async function deleteRows(index) {
+async function deleteRows(id) {
   let deleteRowList = [];
-  if (index) {
+  if (id) {
+    deleteRowList.push(id);
+    const index = rows.value.findIndex((row) => row.id === id);
     rows.value.splice(index, 1);
   } else {
     for (let i = 0; i < rows.value.length; i++) {
@@ -296,9 +372,9 @@ async function deleteRows(index) {
     }
   }
   request(
-    'http://localhost:3141/' + itemName + '/delete',
+    'http://localhost:3141/db/delete/management_' + itemName,
     'post',
-    index ? [rows.value[index].id] : deleteRowList
+    deleteRowList
   );
 }
 </script>

@@ -29,6 +29,28 @@ import { useMoveStore } from '~/stores/move.js';
 import { useProjectStore } from '~/stores/project.js';
 import { fetchWrapper } from '~/static/request';
 import moment from 'moment';
+const today = moment(new Date()).format('YYYY-MM-DD');
+// const moves = (
+//   await useFetch('http://localhost:3141/db/all', {
+//     headers: { table: 'management_move' },
+//   })
+// ).data;
+// provide('moves', moves);
+
+const movesToday = (
+  await useFetch('http://localhost:3141/db/query?key=date&value=' + today, {
+    headers: { table: 'management_move' },
+  })
+).data;
+console.log('vl', movesToday);
+provide('movesToday', movesToday);
+
+const projects = (
+  await useFetch('http://localhost:3141/db/all', {
+    headers: { table: 'management_project' },
+  })
+).data;
+provide('projects', projects);
 
 //  #MOVES
 let moveColumns = [
@@ -37,27 +59,34 @@ let moveColumns = [
     key: 'is-selected',
     type: 'is-selected',
     disabled: true,
+    noSave: true,
     attrs: { type: 'text' },
   },
   {
     name: 'Action',
     key: 'action',
     type: 'button',
+    noSave: true,
     disabled: false,
   },
+  // {
+  //   name: 'ID',
+  //   key: 'id',
+  //   type: 'p',
+  // },
   {
     name: 'Move',
     key: 'name',
     type: 'input',
     disabled: false,
-    attrs: { type: 'text' },
+    attrs: { type: 'text', required: true },
   },
   {
     name: 'Done',
     key: 'done',
     type: 'checkbox',
     disabled: false,
-    default: false,
+    default: true,
     attrs: { type: 'checkbox' },
   },
   {
@@ -73,35 +102,44 @@ let moveColumns = [
     type: 'input',
     disabled: false,
     default: moment().format('YYYY-MM-DD'),
-    attrs: { type: 'text' },
+    attrs: { type: 'text', required: true },
   },
   {
     name: 'Duration',
     key: 'duration',
     type: 'input',
     disabled: false,
-    attrs: { type: 'text' },
+    attrs: { type: 'text', required: true },
   },
   {
     name: 'Category',
     key: 'cat',
-    type: 'input',
+    type: 'select',
     disabled: false,
-    attrs: { type: 'text' },
+    options: [
+      'Navigation',
+      'Engineering',
+      'Aesthetics',
+      'Business',
+      'Operation',
+    ],
+    attrs: { type: 'text', required: true },
   },
   {
     name: 'Project',
     key: 'prj',
-    type: 'input',
+    type: 'select',
     disabled: false,
-    attrs: { type: 'text' },
+    options: projects.value.map((p) => p.name),
+    attrs: { type: 'text', required: true },
   },
   {
     name: 'Group',
     key: 'grp',
-    type: 'input',
+    type: 'select',
     disabled: false,
-    attrs: { type: 'text' },
+    options: ['Personal', 'MFVN', 'TCGS', 'TrinityLTD'],
+    attrs: { type: 'text', required: true },
   },
   {
     name: 'Tags',
@@ -113,10 +151,6 @@ let moveColumns = [
 ];
 provide('moveColumns', moveColumns);
 
-const moveStore = useMoveStore();
-const moves = await moveStore.fetchMoves();
-provide('moves', moves);
-
 const wasteChoreColumns = [
   {
     name: '',
@@ -126,11 +160,18 @@ const wasteChoreColumns = [
     attrs: { type: 'text' },
   },
   {
+    name: 'Action',
+    key: 'action',
+    type: 'button',
+    noSave: true,
+    disabled: false,
+  },
+  {
     name: 'Duration',
     key: 'duration',
     type: 'input',
     disabled: false,
-    attrs: { type: 'text' },
+    attrs: { type: 'text', required: true },
   },
   {
     name: 'Move',
@@ -155,6 +196,13 @@ const wasteMoves = (
   })
 ).data;
 provide('waste', wasteMoves);
+const choreMoves = (
+  await useFetch('http://localhost:3141/db/all', {
+    headers: { table: 'management_chore' },
+  })
+).data;
+provide('chore', choreMoves);
+
 // const choreMoves = (
 //   await useFetch('http://localhost:3141/db/management_chore/all')
 // ).data;
@@ -172,9 +220,31 @@ provide('waste', wasteMoves);
 //
 
 // #PROJECTS
-const projectStore = useProjectStore();
-const projects = reactive(fetchWrapper(await projectStore.fetchProjects()));
-provide('projects', projects);
+const projectColumns = [
+  {
+    name: '',
+    key: 'is-selected',
+    type: 'is-selected',
+    disabled: true,
+    attrs: { type: 'text' },
+  },
+  {
+    name: 'Project',
+    key: 'name',
+    type: 'input',
+    disabled: false,
+    attrs: { type: 'text' },
+  },
+  {
+    name: 'Hour',
+    key: 'hour',
+    type: 'input',
+    disabled: false,
+    attrs: { type: 'text' },
+  },
+];
+
+provide('projectColumns', projectColumns);
 
 // Ultilities
 Array.prototype.random = function () {

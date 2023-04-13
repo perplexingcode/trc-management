@@ -1,4 +1,5 @@
 - Gauge for todayWaste & todayChore (red & orange)
+- mf-learning, mf-showname
 - render select
 - Implement caching
 - Hide ID
