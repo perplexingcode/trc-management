@@ -1,63 +1,62 @@
-.card {
-  border-radius: 5px;
-  padding: 2rem;
-  margin: 1rem;
+.table-wrapper {
+  position: relative;
 }
 
-.card *:is(p, h1, h2, h3, h4, h5, h6) {
-  color: #fff;
+.table-row.is-being-edited {
+  height: 3rem;
 }
 
-/* Buttons */
-button {
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  padding: 0.3rem 0.6rem;
-  margin: 0.5rem;
-  height: 2rem;
-  background: #ffdb00;
-}
-
-/* Input */
-input:not([type='checkbox']):not([type='radio']) {
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 0.95rem;
-  line-height: 2.25;
-  padding: 0.3rem 0.6rem 0rem 0.6rem;
-  margin: 0 0.25rem;
-  height: 2rem;
-}
-
-textarea {
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  padding: 0.3rem;
-  margin: 0.25rem;
-  height: 1rem;
-  overflow-y: hidden;
-}
-
-.input-duration {
-  width: 4rem;
-  text-align: center;
-}
-.input-date {
-  width: 6.5rem;
-}
-
-/* Select */
-
-select {
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 0.95rem;
-  padding: 0.3rem 0.6rem;
-  margin: 0 0.25rem;
-  height: 2rem;
+.modal.suggestions {
+  position: absolute;
+  bottom: calc(100% - 10px);
+  border: solid 2px #333;
+  padding: 0.25rem;
   background: #fff;
+  border-radius: 6px;
 }
 
-option[disabled] {
-  display: none;
+.modal .suggestion.row:not(:last-child):not(.selected):not(:hover) {
+  border-bottom: solid 1px #333;
+}
+
+.modal .suggestion.row:hover,
+.suggestion.row.selected {
+  outline: solid 2px #ffdb00 !important;
+  border-color: #0000;
+}
+
+.modal .suggestion-col .value {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.modal .suggestion-col .value:hover {
+  white-space: normal !important;
+}
+.modal .suggestion-col .name {
+  background: #3333;
+  margin-left: 0.2rem;
+  margin-right: 0.2rem;
+}
+
+.suggestion em {
+  color: #0000;
+}
+
+table button {
+  font-size: 0.65rem;
+  height: 1rem;
+  line-height: 1;
+}
+
+#dev-panel {
+  padding-bottom: 15rem;
+}
+
+.new-row .suggestion {
+  text-align: left;
+  max-width: 15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

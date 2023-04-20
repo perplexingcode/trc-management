@@ -8,15 +8,22 @@
         <li><NuxtLink to="/today">Today</NuxtLink></li>
         <li><NuxtLink to="/category">Categories</NuxtLink></li>
         <li><NuxtLink to="/project">Projects</NuxtLink></li>
+        <li><NuxtLink to="/data">Data</NuxtLink></li>
         <li class="menu-parent-item">
           <NuxtLink to="/navigation">Navigation</NuxtLink>
           <ul class="menu-drop-down">
-            <li><NuxtLink to="nav/week">Week</NuxtLink></li>
-            <li><NuxtLink to="nav/month">Month</NuxtLink></li>
-            <li><NuxtLink to="nav/quarter">Quarter</NuxtLink></li>
-            <li><NuxtLink to="nav/year">Year</NuxtLink></li>
-            <li><NuxtLink to="nav/phase">Phase</NuxtLink></li>
-            <li><NuxtLink to="nav/decade">Decade</NuxtLink></li>
+            <li><NuxtLink to="/nav/week">Week</NuxtLink></li>
+            <li><NuxtLink to="/nav/month">Month</NuxtLink></li>
+            <li><NuxtLink to="/nav/quarter">Quarter</NuxtLink></li>
+            <li><NuxtLink to="/nav/year">Year</NuxtLink></li>
+            <li><NuxtLink to="/nav/phase">Phase</NuxtLink></li>
+            <li><NuxtLink to="/nav/decade">Decade</NuxtLink></li>
+          </ul>
+        </li>
+        <li class="menu-parent-item">
+          <NuxtLink to="/report">Report</NuxtLink>
+          <ul class="menu-drop-down">
+            <li><NuxtLink to="/report/waste-chore">Waste-Chore</NuxtLink></li>
           </ul>
         </li>
       </ul>
@@ -25,25 +32,34 @@
   </div>
 </template>
 <script setup>
-import { useMoveStore } from '~/stores/move.js';
-import { useProjectStore } from '~/stores/project.js';
-import { fetchWrapper } from '~/static/request';
 import moment from 'moment';
 const today = moment(new Date()).format('YYYY-MM-DD');
-// const moves = (
-//   await useFetch('http://localhost:3141/db/all', {
-//     headers: { table: 'management_move' },
-//   })
-// ).data;
-// provide('moves', moves);
+const moves = (
+  await useFetch('http://localhost:3141/db/all', {
+    headers: { table: 'management_move' },
+  })
+).data;
+provide('moves', moves);
 
 const movesToday = (
   await useFetch('http://localhost:3141/db/query?key=date&value=' + today, {
     headers: { table: 'management_move' },
   })
 ).data;
-console.log('vl', movesToday);
 provide('movesToday', movesToday);
+
+const wasteMoves = (
+  await useFetch('http://localhost:3141/db/all', {
+    headers: { table: 'management_waste' },
+  })
+).data;
+provide('waste', wasteMoves);
+const choreMoves = (
+  await useFetch('http://localhost:3141/db/all', {
+    headers: { table: 'management_chore' },
+  })
+).data;
+provide('chore', choreMoves);
 
 const projects = (
   await useFetch('http://localhost:3141/db/all', {
@@ -62,13 +78,6 @@ let moveColumns = [
     noSave: true,
     attrs: { type: 'text' },
   },
-  {
-    name: 'Action',
-    key: 'action',
-    type: 'button',
-    noSave: true,
-    disabled: false,
-  },
   // {
   //   name: 'ID',
   //   key: 'id',
@@ -77,7 +86,7 @@ let moveColumns = [
   {
     name: 'Move',
     key: 'name',
-    type: 'input',
+    type: 'input-name',
     disabled: false,
     attrs: { type: 'text', required: true },
   },
@@ -102,14 +111,14 @@ let moveColumns = [
     type: 'input',
     disabled: false,
     default: moment().format('YYYY-MM-DD'),
-    attrs: { type: 'text', required: true },
+    attrs: { type: 'text', required: true, suggestion: false },
   },
   {
     name: 'Duration',
     key: 'duration',
     type: 'input',
     disabled: false,
-    attrs: { type: 'text', required: true },
+    attrs: { type: 'text', required: true, suggestion: false },
   },
   {
     name: 'Category',
@@ -160,13 +169,6 @@ const wasteChoreColumns = [
     attrs: { type: 'text' },
   },
   {
-    name: 'Action',
-    key: 'action',
-    type: 'button',
-    noSave: true,
-    disabled: false,
-  },
-  {
     name: 'Duration',
     key: 'duration',
     type: 'input',
@@ -176,7 +178,8 @@ const wasteChoreColumns = [
   {
     name: 'Move',
     key: 'name',
-    type: 'input',
+    type: 'input-name',
+    data: choreMoves.value.map((m) => m.name),
     disabled: false,
     attrs: { type: 'text' },
   },
@@ -190,18 +193,6 @@ const wasteChoreColumns = [
   },
 ];
 provide('wasteChoreColumns', wasteChoreColumns);
-const wasteMoves = (
-  await useFetch('http://localhost:3141/db/all', {
-    headers: { table: 'management_waste' },
-  })
-).data;
-provide('waste', wasteMoves);
-const choreMoves = (
-  await useFetch('http://localhost:3141/db/all', {
-    headers: { table: 'management_chore' },
-  })
-).data;
-provide('chore', choreMoves);
 
 // const choreMoves = (
 //   await useFetch('http://localhost:3141/db/management_chore/all')
@@ -211,7 +202,6 @@ provide('chore', choreMoves);
 // const wasteMovesToday = wasteMoves.value.filter((move) => {
 //   return move.date === moment().format('YYYY-MM-DD');
 // });
-// console.log('cac', wasteMovesToday);
 // provide('wasteToday', wasteMovesToday);
 // const choreMovesToday = choreMoves.filter((move) => {
 //   return move.date === moment().format('YYYY-MM-DD');

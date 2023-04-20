@@ -1,0 +1,83 @@
+.card {
+  border-radius: 5px;
+  padding: 2rem;
+  margin: 1rem;
+}
+
+.card *:is(p, h1, h2, h3, h4, h5, h6) {
+  color: #fff;
+}
+
+/* Buttons */
+button {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 0.3rem 0.6rem;
+  margin: 0.5rem;
+  height: 2rem;
+  background: #ffdb00;
+}
+
+/* Input */
+input:not([type='checkbox']):not([type='radio']) {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 0.95rem;
+  line-height: 2.25;
+  padding: 0.3rem 0.6rem 0rem 0.6rem;
+  margin: 0 0.25rem;
+  height: 2rem;
+}
+
+textarea {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 0.3rem;
+  margin: 0.25rem;
+  height: 1rem;
+  overflow-y: hidden;
+}
+
+.input-name {
+  position: relative;
+}
+
+.input-name div {
+  font-size: 0.95rem;
+  position: absolute;
+  top: 0.5375rem;
+  left: 0.975rem;
+  pointer-events: none;
+  filter: opacity(0.5);
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  user-select: none;
+}
+.input-duration {
+  width: 4rem;
+  text-align: center;
+}
+.input-date {
+  width: 6.5rem;
+}
+
+/* Select */
+
+select {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 0.95rem;
+  padding: 0.3rem 0.6rem;
+  margin: 0 0.25rem;
+  height: 2rem;
+  background: #fff;
+}
+
+option[disabled] {
+  display: none;
+}
+
+/* Menu */
+li {
+  white-space: nowrap;
+}

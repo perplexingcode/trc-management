@@ -1,39 +1,80 @@
 <template>
-  <div v-if="props.dev === 'true'" id="dev-panel" class="card bg-secondary">
-    <h2>Dev zone</h2>
-    <p>Log: {{ log }}</p>
-    <p>isEditing: {{ isEditing }}</p>
-    <p>Selected rows: {{ selectedRows }}</p>
-    <!-- <p>{{ rows }}</p> -->
-    <p>{{ newItem }}</p>
-    <img src="~/assets/img/icon/add.png" />
-  </div>
-  <Suspense>
-    <template #default>
-      <div class="p-3">
-        <table :class="'table-' + itemName">
-          <thead v-if="columns.length">
-            <new-row v-if="props.addRow === 'true'" />
-            <tr class="cols-name">
-              <th v-for="col in columns" :key="col">
-                {{ col.name }}
-              </th>
-            </tr>
-          </thead>
-          <table-body v-if="rows.length" />
-        </table>
-      </div>
-    </template>
-    <template #fallback>
-      <div>Loading...</div>
-    </template>
-  </Suspense>
+  <ClientOnly>
+    <div v-if="props.dev === 'true'" id="dev-panel" class="card bg-secondary">
+      <h2>Dev zone</h2>
+      <p>Log: {{ log }}</p>
+      <p>isEditing: {{ isEditing }}</p>
+      <p>Selected rows: {{ selectedRows }}</p>
+      <p>Selected suggestion: {{ selectedSuggestion }}</p>
+      <p>{{ newItem }}</p>
+      <img src="~/assets/img/icon/add.png" />
+    </div>
+    <Suspense>
+      <template #default>
+        <div class="p-3 table-wrapper" :class="itemName">
+          <div
+            v-if="newItem.name && suggestionItems !== null"
+            class="modal suggestions"
+          >
+            <div
+              v-for="(item, index) in suggestionItems"
+              :key="item[0]"
+              class="suggestion flex row"
+              @click="importSuggestion(index)"
+              :class="{ selected: index === selectedSuggestion }"
+            >
+              <div
+                v-for="col in item"
+                :key="col[0]"
+                class="suggestion-col flex"
+                :class="col[0]"
+              >
+                <div class="name">{{ col[1] }}</div>
+                <div
+                  class="value"
+                  :style="{
+                    width: `${(col[3] < 20 ? col[3] : 20) * 11}` + 'px',
+                  }"
+                >
+                  {{ col[2] }}
+                </div>
+              </div>
+            </div>
+          </div>
+          <table :class="'table-' + itemName">
+            <thead>
+              <div>Search</div>
+              <div>Sort</div>
+            </thead>
+            <thead v-if="columns.length">
+              <new-row
+                v-if="props.addRow === 'true'"
+                @keydown="newRowKeydown($event)"
+              />
+              <tr class="cols-name">
+                <th v-for="col in columns" :key="col">
+                  {{ col.name }}
+                </th>
+              </tr>
+            </thead>
+            <table-body v-if="rows.length" />
+          </table>
+        </div>
+      </template>
+      <template #fallback>
+        <div>Loading...</div>
+      </template>
+    </Suspense>
+  </ClientOnly>
 </template>
 
 <script setup>
 import { request } from '~/static/request';
-import { deepClone, dir, newId } from '~/static/utils';
+import { deepClone, dir } from '~/static/utils';
+import { v4 } from 'uuid';
 import { upsert } from '~/static/db';
+
+const MAX_SUGGESTION_ROW = 5;
 
 let log = ref('');
 
@@ -47,6 +88,7 @@ const props = defineProps([
   'addRow',
   'newItem',
   'events',
+  'allRows',
 ]);
 
 const rows = inject(props.rows, []);
@@ -97,7 +139,7 @@ const hTd = function (hClass, ...args) {
   return h('td', { class: ['cell', hClass] }, h(...args));
 };
 
-let id = ref(newId());
+let id = ref(v4());
 // Add new row
 //If new item is passed as prop, use it
 let newItem = props.newItem;
@@ -115,13 +157,115 @@ newItem ||= reactive(
       else item[col.key] = '';
     });
     item.state = new State();
-    // item.id = v4().replaceAll('-', '').slice(0, 12);
     item.id = id;
     item.state.isBeingEdited = null;
     item.state.isSelected = null;
     return item;
   })()
 );
+const allRows = inject(props.allRows || props.rows);
+const suggestionItems = computed(() => {
+  if (!newItem.name) return null;
+  //Filter all rows that resemble new item input
+  const allSuggestions = allRows.value.filter((row) => {
+    let match = false;
+    for (let key in row) {
+      if (row.name.toLowerCase().startsWith(newItem.name.toLowerCase())) {
+        match = true;
+        break;
+      }
+    }
+    return match;
+  });
+
+  if (allSuggestions.length === 0) return null;
+  //Remove duplicates
+  const uniqueSuggestions = allSuggestions.filter(
+    (item, index, self) => index === self.findIndex((t) => t.name === item.name)
+  );
+  //Return only the first several items
+  let suggestions = uniqueSuggestions.slice(0, MAX_SUGGESTION_ROW);
+
+  const columnKeys = columns.map((col) => col.key);
+  suggestions = suggestions.map((suggestion) => {
+    return (
+      Object.entries(suggestion)
+        .sort((a, b) => {
+          return columnKeys.indexOf(a[0]) - columnKeys.indexOf(b[0]);
+        })
+        // Create item containing key for classes, name and value for display
+        .map(([key, value]) => {
+          //Ignore columns that don't have a name
+          const name = columns.find((col) => col.key === key)?.name;
+          if (!name) return null;
+
+          //   columns.find((col) => col.key === key)?.attrs?.suggestion
+          // );
+          //Ignore columns that don't need suggestions
+          const isSuggestion = columns.find((col) => col.key === key)?.attrs
+            ?.suggestion;
+          if (isSuggestion === false) return null;
+          return [key, name, value];
+        })
+        .filter((value) => {
+          return value !== null;
+        })
+    );
+  });
+  const maxLengths = [];
+  for (let i = 0; i < suggestions[0].length; i++) {
+    maxLengths[i] = 0;
+    for (let n = 0; n < suggestions.length; n++) {
+      try {
+        suggestions[n][i][2].length > maxLengths[i]
+          ? (maxLengths[i] = suggestions[n][i][2].length)
+          : null;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }
+  suggestions.forEach((suggestion) => {
+    for (let i = 0; i < suggestions[0].length; i++) {
+      suggestion[i] ? (suggestion[i][3] = maxLengths[i]) : null;
+    }
+  });
+
+  return suggestions;
+});
+
+const selectedSuggestion = ref(null);
+watch(suggestionItems, () => {
+  selectedSuggestion.value = null;
+});
+function newRowKeydown(e) {
+  if (suggestionItems.value === null) return;
+  let selected = selectedSuggestion.value;
+  const max = suggestionItems.value.length - 1;
+  //up
+  if (e.keyCode === 38) {
+    if (selected === null || selected === 0) selectedSuggestion.value = max;
+    if (selected > 0) selectedSuggestion.value--;
+    e.preventDefault();
+  }
+  //down
+  if (e.keyCode === 40) {
+    if (selected === null || selected === max) selectedSuggestion.value = 0;
+    if (selected < max) selectedSuggestion.value++;
+    e.preventDefault();
+  }
+}
+
+function importSuggestion(index) {
+  const suggestion = suggestionItems.value[index];
+  for (let i = 0; i < suggestion.length; i++) {
+    const key = suggestion[i][0];
+    const value = suggestion[i][2];
+    newItem[key] = value;
+  }
+  selectedSuggestion.value = null;
+}
+
 if (props.events) {
   watch(props.events.addRow, () => {
     createRow();
@@ -135,32 +279,87 @@ let newRow = computed(() =>
       id: 'row-' + newItem.id,
       onKeyup: (e) => {
         if (e.key === 'Enter') {
+          if (selectedSuggestion.value) {
+            console.log('???');
+            importSuggestion(selectedSuggestion.value);
+          }
           createRow();
         }
       },
     },
     columns.map((col) => {
-      if (col.type === 'is-selected') {
-        return hTd('cell-select', 'img', {
-          src: dir('assets/img/icon/add.png'),
-          class: 'add-row',
-          onClick: (e) => {
-            createRow();
-          },
-        });
-      }
-      if (col.key === 'action') {
-        return hTd(
-          'cell-action',
-          'button',
-          {
+      switch (col.type) {
+        case 'is-selected':
+          return hTd('cell-select', 'img', {
+            src: dir('assets/img/icon/add.png'),
             class: 'add-row',
             onClick: (e) => {
-              createRow();
+              importSuggestion(selectedSuggestion.value);
             },
-          },
-          'Create row'
-        );
+          });
+        case 'action':
+          return hTd(
+            'cell-action',
+            'button',
+            {
+              class: 'add-row',
+              onClick: (e) => {
+                createRow();
+              },
+            },
+            'Create row'
+          );
+        case 'input-name':
+          let autofill = '';
+          const suggestions = allRows.value.map((m) => m.name);
+          watch(
+            () => newItem[col.key],
+            (input) => {
+              if (!input) {
+                autofill = '';
+                return;
+              }
+              const match = suggestions.find((suggestion) =>
+                suggestion.toLowerCase().startsWith(input.toLowerCase())
+              );
+              match ? (autofill = match.slice(input.length)) : (autofill = '');
+            },
+            { immediate: true }
+          );
+          return h('td', { class: ['cell' + col.key, 'input-name'] }, [
+            h('input', {
+              type: 'text',
+              class: col.key,
+              value: newItem[col.key],
+              required: col.attrs.required,
+              disabled: col.disabled,
+              onKeydown: (e) => {
+                if (e.keyCode === 39) {
+                  newItem[col.key] = newItem[col.key] + autofill;
+                }
+                if (
+                  e.keyCode === 9 &&
+                  autofill &&
+                  newItem[col.key] !== autofill
+                ) {
+                  newItem[col.key] = newItem[col.key] + autofill;
+                }
+              },
+              onInput: (e) => {
+                newItem[col.key] = e.target.value;
+              },
+              onFocus: (e) => {
+                e.target.setSelectionRange(
+                  e.target.value.length,
+                  e.target.value.length
+                );
+              },
+            }),
+            h('div', { class: 'suggestion' }, [
+              h('em', newItem[col.key]),
+              autofill,
+            ]),
+          ]);
       }
       return renderElement(col, newItem, true);
     })
@@ -186,19 +385,24 @@ let tableBody = computed(() =>
             editRow(index, rows, e);
           },
         },
-        columns.map((col) => {
-          if (col.key === 'action') {
-            return hTd('cell-action flex justify-center', 'img', {
-              src: dir('assets/img/icon/minus.png'),
-              title: 'Delete row',
-              class: 'action-delete py-1',
-              onClick: (e) => {
-                deleteRows(item.id);
-              },
-            });
-          }
-          return renderElement(col, item, false);
-        })
+        columns
+          .map((col) => {
+            // Insert exception render here
+            return renderElement(col, item, false);
+          })
+          // Insert at the end of the row
+          .concat(
+            h('td', { class: 'cell-action' }, [
+              h('img', {
+                src: dir('assets/img/icon/minus.png'),
+                title: 'Delete row',
+                class: 'action-delete',
+                onClick: (e) => {
+                  deleteRows(item.id);
+                },
+              }),
+            ])
+          )
       );
     })
   )
@@ -224,7 +428,26 @@ function renderElement(element, item, isNewRow) {
       return hTd('cell-' + element.key, 'input', {
         type: 'text',
         class: element.key,
-        value: isNewRow ? element.default : item[element.key],
+        value: item[element.key] ? item[element.key] : element.default,
+        required: element.attrs.required,
+        disabled:
+          element.disabled ||
+          (!(item.state.isBeingEdited && isEditing.value) && !isNewRow),
+        onInput: (e) => {
+          item[element.key] = e.target.value;
+        },
+        onFocus: (e) => {
+          e.target.setSelectionRange(
+            e.target.value.length,
+            e.target.value.length
+          );
+        },
+      });
+    case 'input-name':
+      return hTd('cell-' + element.key, 'input', {
+        type: 'text',
+        class: element.key,
+        value: item[element.key] ? item[element.key] : element.default,
         required: element.attrs.required,
         disabled:
           element.disabled ||
@@ -241,7 +464,7 @@ function renderElement(element, item, isNewRow) {
       });
     case 'text-area':
       return hTd('cell-' + element.key, 'textarea', {
-        value: isNewRow ? element.default : item[element.key],
+        value: item[element.key] ? item[element.key] : element.default,
         class: element.key,
         disabled:
           element.disabled ||
@@ -285,7 +508,7 @@ function renderElement(element, item, isNewRow) {
       return hTd('cell-' + element.key, 'input', {
         type: 'checkbox',
         class: element.key,
-        checked: isNewRow ? element.default : item[element.key],
+        checked: item[element.key] ? item[element.key] : element.default,
         readonly:
           element.disabled ||
           (!(item.state.isBeingEdited && isEditing.value) && !isNewRow),
@@ -337,7 +560,7 @@ function createRow() {
   item.state = new State();
   rows.value.push(item);
   upsert('http://localhost:3141/db/upsert/management_' + itemName, newItem);
-  id.value = newId();
+  id.value = v4();
 }
 
 function upsertRow(index) {

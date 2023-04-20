@@ -1,3 +1,7 @@
+- Status cell stored in JSON string (tootip,link, action name)
+- Dropdown row (type: row-parent)
+- Update items across x tables (itemName, itemName)?, or only update 1 table at a time? (tableBeingEdited in app.vue)
+- Validation for duration
 - Gauge for todayWaste & todayChore (red & orange)
 - mf-learning, mf-showname
 - render select

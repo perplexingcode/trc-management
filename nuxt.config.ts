@@ -13,6 +13,7 @@ export default defineNuxtConfig({
   css: [
     '~/assets/css/main.css',
     '~/assets/css/app.css',
+    '~/assets/css/elements.css',
     '~/assets/css/components.css',
     '~/assets/css/text.css',
   ],

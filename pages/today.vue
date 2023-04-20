@@ -2,7 +2,7 @@
   <div @keyup.enter="confirmChanges">
     <h1>Today</h1>
     <p>Today's date is {{ today }}</p>
-    <div id="dev-panel" class="card bg-secondary">
+    <div id="dev-panel" class="card bg-secondary hidden">
       <h2>Dev zone</h2>
       <!-- <p>{{ doneTodayMoves }}</p> -->
       <p>{{ newWasteMove }}</p>
@@ -103,6 +103,7 @@
             item-name="move"
             dev="true"
             addRow="true"
+            allRows="moves"
           />
         </div>
       </template>
@@ -115,8 +116,8 @@
 <script setup>
 import moment from 'moment';
 import { sumTime } from '~/static/time';
-import { upsert } from '~~/static/db';
-import { deepClone, newId } from '~~/static/utils';
+import { v4 } from 'uuid';
+
 const today = moment(new Date()).format('YYYY-MM-DD');
 const movesToday = inject('movesToday', []);
 // const groups = inject('groups', []);
@@ -124,7 +125,7 @@ const movesToday = inject('movesToday', []);
 
 const showWasteMoves = ref(false);
 class WasteMove {
-  id = ref(newId());
+  id = ref(v4());
   name = ref('');
   duration = ref('');
   date = ref(today);
@@ -138,7 +139,7 @@ function addWasteMove() {
 
 const showChoreMoves = ref(false);
 class ChoreMove {
-  id = ref(newId());
+  id = ref(v4());
   name = ref('');
   duration = ref('');
   date = ref(today);

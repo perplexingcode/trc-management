@@ -24,7 +24,7 @@ export const cvTime = function (time) {
     }
     return duration;
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return 0;
   }
 };
@@ -49,6 +49,6 @@ export const sumTime = function (...times) {
     }
     return `${hours}:${minutes}`;
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
