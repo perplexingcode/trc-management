@@ -1,4 +1,6 @@
+- Change disable to overlay
 - Status cell stored in JSON string (tootip,link, action name)
+- Consider content editable div - create super input element
 - Dropdown row (type: row-parent)
 - Update items across x tables (itemName, itemName)?, or only update 1 table at a time? (tableBeingEdited in app.vue)
 - Validation for duration

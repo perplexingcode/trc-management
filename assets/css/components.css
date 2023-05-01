@@ -5,6 +5,16 @@
 .table-row.is-being-edited {
   height: 3rem;
 }
+.table-row.is-focused {
+  outline: solid 2px #ffdb00 !important;
+}
+.table-row.is-focused .cell-is-selected {
+  background-color: #ffdb00;
+}
+
+.cell-is-selected {
+  min-width: 5px;
+}
 
 .modal.suggestions {
   position: absolute;

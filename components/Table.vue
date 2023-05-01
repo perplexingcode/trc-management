@@ -6,6 +6,7 @@
       <p>isEditing: {{ isEditing }}</p>
       <p>Selected rows: {{ selectedRows }}</p>
       <p>Selected suggestion: {{ selectedSuggestion }}</p>
+      <p>Rows: {{ rows }}</p>
       <p>{{ newItem }}</p>
       <img src="~/assets/img/icon/add.png" />
     </div>
@@ -42,10 +43,10 @@
             </div>
           </div>
           <table :class="'table-' + itemName">
-            <thead>
+            <!-- <thead>
               <div>Search</div>
               <div>Sort</div>
-            </thead>
+            </thead> -->
             <thead v-if="columns.length">
               <new-row
                 v-if="props.addRow === 'true'"
@@ -123,6 +124,7 @@ onMounted(() => {
 // #DATA
 const isEditing = ref(false);
 let rowBeingEdited = ref(null);
+let rowBeingFocused = ref(null);
 class State {
   isBeingEdited = false;
   isSelected = false;
@@ -160,6 +162,7 @@ newItem ||= reactive(
     item.id = id;
     item.state.isBeingEdited = null;
     item.state.isSelected = null;
+    item.state.isFocused = null;
     return item;
   })()
 );
@@ -271,6 +274,49 @@ if (props.events) {
     createRow();
   });
 }
+
+const nonTextKeys = [
+  8, // backspace
+  9, // tab
+  13, // enter
+  16, // shift
+  17, // ctrl
+  18, // alt
+  19, // pause/break
+  20, // caps lock
+  27, // escape
+  32, // space
+  33, // page up
+  34, // page down
+  35, // end
+  36, // home
+  37, // left arrow
+  38, // up arrow
+  39, // right arrow
+  40, // down arrow
+  45, // insert
+  46, // delete
+  91, // left window key
+  92, // right window key
+  93, // select key
+  112, // f1
+  113, // f2
+  114, // f3
+  115, // f4
+  116, // f5
+  117, // f6
+  118, // f7
+  119, // f8
+  120, // f9
+  121, // f10
+  122, // f11
+  123, // f12
+  144, // num lock
+  145, // scroll lock
+  224, // meta key
+];
+
+const showIsSelected = ref(false);
 let newRow = computed(() =>
   h(
     'tr',
@@ -290,13 +336,28 @@ let newRow = computed(() =>
     columns.map((col) => {
       switch (col.type) {
         case 'is-selected':
-          return hTd('cell-select', 'img', {
-            src: dir('assets/img/icon/add.png'),
-            class: 'add-row',
-            onClick: (e) => {
-              importSuggestion(selectedSuggestion.value);
-            },
-          });
+          return h(
+            'td',
+            { class: 'cell-select' },
+            h('img', {
+              src: dir('assets/img/icon/add.png'),
+              class: [
+                'add-row',
+                {
+                  hidden: !(selectedRows.value[0] || showIsSelected.value),
+                },
+              ],
+              onClick: (e) => {
+                importSuggestion(selectedSuggestion.value);
+              },
+              onHover: (e) => {
+                showIsSelected.value = true;
+              },
+              onBlur: (e) => {
+                showIsSelected.value = false;
+              },
+            })
+          );
         case 'action':
           return hTd(
             'cell-action',
@@ -379,10 +440,14 @@ let tableBody = computed(() =>
             {
               'is-selected': item.state.isSelected,
               'is-being-edited': item.state.isBeingEdited,
+              'is-focused': item.state.isFocused,
             },
           ],
           onDblclick: (e) => {
             editRow(index, rows, e);
+          },
+          onClick: (e) => {
+            focusRow(index, rows, e);
           },
         },
         columns
@@ -411,19 +476,33 @@ let tableBody = computed(() =>
 function renderElement(element, item, isNewRow) {
   switch (element.type) {
     case 'is-selected':
-      return hTd('cell-' + element.key, 'input', {
-        type: 'checkbox',
-        class: [
-          element.key,
-          {
-            'd-none': item.state.isSelected === null,
+      return h(
+        'td',
+        {
+          class: 'cell-' + element.key,
+          onMouseover: (e) => {
+            showIsSelected.value = true;
           },
-        ],
-        checked: item.state.isSelected,
-        onClick: (e) => {
-          item.state.isSelected = e.target.checked;
+          onMouseout: (e) => {
+            showIsSelected.value = false;
+          },
         },
-      });
+        h('input', {
+          type: 'checkbox',
+          class: [
+            element.key,
+            {
+              hidden:
+                item.state.isSelected === null ||
+                !(selectedRows.value[0] || showIsSelected.value),
+            },
+          ],
+          checked: item.state.isSelected,
+          onClick: (e) => {
+            item.state.isSelected = e.target.checked;
+          },
+        })
+      );
     case 'input':
       return hTd('cell-' + element.key, 'input', {
         type: 'text',
@@ -454,6 +533,26 @@ function renderElement(element, item, isNewRow) {
           (!(item.state.isBeingEdited && isEditing.value) && !isNewRow),
         onInput: (e) => {
           item[element.key] = e.target.value;
+        },
+        // onKeydown(e) {
+        //   console.log(e.keyCode);
+        //   if (nonTextKeys.includes(e.keyCode)) {
+        //     editRow(
+        //       rows.value.findIndex((i) => (i.id = item.id)),
+        //       rows,
+        //       e
+        //     );
+        //     e.target.focus();
+        //   }
+        // },
+        onClick: (e) => {
+          console.log(e.target);
+          e.target.removeAttribute('disabled');
+          e.target.focus();
+          e.target.setSelectionRange(
+            e.target.value.length,
+            e.target.value.length
+          );
         },
         onFocus: (e) => {
           e.target.setSelectionRange(
@@ -537,6 +636,11 @@ function editRow(index, itemsArray, element) {
     element.target.focus();
   });
 }
+function focusRow(index, itemsArray, element) {
+  rowBeingFocused.value = index;
+  itemsArray.value.forEach((item) => (item.state.isFocused = false));
+  itemsArray.value[index].state.isFocused = true;
+}
 
 function validateColumns(items) {
   let validated = true;
@@ -570,15 +674,32 @@ function upsertRow(index) {
   rows.value[index].state.isBeingEdited = false;
   document.activeElement.blur();
 }
-const selectedRows = computed(() => {
-  let selectedRows = [];
-  rows._rawValue.forEach((row) => {
-    if (row.state.isSelected) {
-      selectedRows.push(row.id);
-    }
-  });
-  return selectedRows;
-});
+
+const selectedRows = ref([]);
+watch(
+  rows,
+  () => {
+    let _selectedRows = [];
+    rows.value.forEach((row) => {
+      if (row.state.isSelected) {
+        _selectedRows.push(row.id);
+      }
+    });
+    selectedRows.value = _selectedRows;
+  },
+  { deep: true }
+);
+// const selectedRows = computed(() => {
+//   let selectedRows = ref([]);
+//   console.log(rows._rawValue);
+//   rows._rawValue.forEach((row) => {
+//     if (row.state.isSelected) {
+//       selectedRows.value.push(row.id);
+//     }
+//   });
+//   return selectedRows;
+// });
+
 async function deleteRows(id) {
   let deleteRowList = [];
   if (id) {
