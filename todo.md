@@ -1,3 +1,5 @@
+- Implement undo redo
+- Implement current table
 - Change disable to overlay
 - Status cell stored in JSON string (tootip,link, action name)
 - Consider content editable div - create super input element

@@ -71,9 +71,11 @@
 
 <script setup>
 import { request } from '~/static/request';
-import { deepClone, dir } from '~/static/utils';
+import { deepClone, dir, deepCompare } from '~/static/utils';
 import { v4 } from 'uuid';
 import { upsert } from '~/static/db';
+
+const backendUrl = useRuntimeConfig().backendUrl;
 
 const MAX_SUGGESTION_ROW = 5;
 
@@ -135,6 +137,45 @@ watch(isEditing, (newValue, oldValue) => {
     upsertRow(rowBeingEdited.value);
   }
 });
+let previous = null;
+let current = null;
+
+//Use computed rows to watch for changes
+//TODO: Implement a undo redo array (first in last out size 10)
+const computedRows = computed(() => {
+  return deepClone(rows);
+});
+watch(
+  computedRows,
+  (newValue, oldValue) => {
+    let _previous = deepClone(oldValue._rawValue);
+    let _current = deepClone(newValue._rawValue);
+    //Delete state
+    for (let i = 0; i < _previous.length; i++) {
+      delete _previous[i].state;
+    }
+    for (let i = 0; i < _current.length; i++) {
+      delete _current[i].state;
+    }
+    if (deepCompare(_previous, _current)) return;
+    console.log(deepCompare(_previous, _current));
+    console.log('pre', _previous);
+    console.log('cur', _current);
+    previous = oldValue._rawValue;
+    current = newValue._rawValue;
+  },
+  {
+    deep: true,
+  }
+);
+if (process.client) {
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'F2') {
+      console.log('previous', previous);
+      rows.value = previous;
+    }
+  });
+}
 
 // #LOGIC
 const hTd = function (hClass, ...args) {
@@ -326,7 +367,6 @@ let newRow = computed(() =>
       onKeyup: (e) => {
         if (e.key === 'Enter') {
           if (selectedSuggestion.value) {
-            console.log('???');
             importSuggestion(selectedSuggestion.value);
           }
           createRow();
@@ -535,7 +575,7 @@ function renderElement(element, item, isNewRow) {
           item[element.key] = e.target.value;
         },
         // onKeydown(e) {
-        //   console.log(e.keyCode);
+
         //   if (nonTextKeys.includes(e.keyCode)) {
         //     editRow(
         //       rows.value.findIndex((i) => (i.id = item.id)),
@@ -546,7 +586,6 @@ function renderElement(element, item, isNewRow) {
         //   }
         // },
         onClick: (e) => {
-          console.log(e.target);
           e.target.removeAttribute('disabled');
           e.target.focus();
           e.target.setSelectionRange(
@@ -663,14 +702,14 @@ function createRow() {
   const item = deepClone(newItem);
   item.state = new State();
   rows.value.push(item);
-  upsert('http://localhost:3141/db/upsert/management_' + itemName, newItem);
+  upsert(backendUrl + '/db/upsert/management_' + itemName, newItem);
   id.value = v4();
 }
 
 function upsertRow(index) {
   const rowToUpsert = rows._rawValue[index];
   if (!validateColumns(rowToUpsert)) return;
-  upsert('http://localhost:3141/upsert/management_' + itemName, rowToUpsert);
+  upsert(backendUrl + '/upsert/management_' + itemName, rowToUpsert);
   rows.value[index].state.isBeingEdited = false;
   document.activeElement.blur();
 }
@@ -691,7 +730,7 @@ watch(
 );
 // const selectedRows = computed(() => {
 //   let selectedRows = ref([]);
-//   console.log(rows._rawValue);
+
 //   rows._rawValue.forEach((row) => {
 //     if (row.state.isSelected) {
 //       selectedRows.value.push(row.id);
@@ -716,7 +755,7 @@ async function deleteRows(id) {
     }
   }
   request(
-    'http://localhost:3141/db/delete/management_' + itemName,
+    backendUrl + '/db/delete/management_' + itemName,
     'post',
     deleteRowList
   );

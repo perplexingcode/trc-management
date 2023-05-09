@@ -22,7 +22,7 @@ export const cvTime = function (time) {
         duration = moment.duration(time, 'd').asMinutes();
         break;
     }
-    return duration;
+    return duration / 1440;
   } catch (error) {
     console.error(error);
     return 0;
@@ -42,8 +42,8 @@ export const sumTime = function (...times) {
       });
     }
     // Convert minutes to hours and minutes in hh:mm format
-    const hours = Math.floor(sum / 60);
-    const minutes = Math.round(sum % 60);
+    const hours = Math.floor(sum * 24);
+    const minutes = Math.round(((sum * 24) % 1) * 60);
     if (minutes < 10) {
       return `${hours}:0${minutes}`;
     }

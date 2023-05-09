@@ -34,35 +34,43 @@
 <script setup>
 import moment from 'moment';
 const today = moment(new Date()).format('YYYY-MM-DD');
+
+const backendUrl = useRuntimeConfig().backendUrl;
+console.log('wut', backendUrl);
 const moves = (
-  await useFetch('http://localhost:3141/db/all', {
+  await useFetch(backendUrl + '/db/all', {
     headers: { table: 'management_move' },
   })
 ).data;
 provide('moves', moves);
 
 const movesToday = (
-  await useFetch('http://localhost:3141/db/query?key=date&value=' + today, {
+  await useFetch(backendUrl + '/db/query?key=date&value=' + today, {
     headers: { table: 'management_move' },
   })
 ).data;
+// (
+//   await useFetch(backendUrl + '/db/query?key=date&value=' + '2023-05-09', {
+//     headers: { table: 'management_move' },
+//   })
+// ).data;
 provide('movesToday', movesToday);
 
 const wasteMoves = (
-  await useFetch('http://localhost:3141/db/all', {
+  await useFetch(backendUrl + '/db/query?key=date&value=' + today, {
     headers: { table: 'management_waste' },
   })
 ).data;
 provide('waste', wasteMoves);
 const choreMoves = (
-  await useFetch('http://localhost:3141/db/all', {
+  await useFetch(backendUrl + '/db/query?key=date&value=' + today, {
     headers: { table: 'management_chore' },
   })
 ).data;
 provide('chore', choreMoves);
 
 const projects = (
-  await useFetch('http://localhost:3141/db/all', {
+  await useFetch(backendUrl + '/db/all', {
     headers: { table: 'management_project' },
   })
 ).data;
@@ -127,10 +135,11 @@ let moveColumns = [
     disabled: false,
     options: [
       'Navigation',
+      'Cosmic Engine',
       'Engineering',
       'Aesthetics',
-      'Business',
       'Operation',
+      'Business',
     ],
     attrs: { type: 'text', required: true },
   },
@@ -195,7 +204,7 @@ const wasteChoreColumns = [
 provide('wasteChoreColumns', wasteChoreColumns);
 
 // const choreMoves = (
-//   await useFetch('http://localhost:3141/db/management_chore/all')
+//   await useFetch(backendUrl + '/db/management_chore/all')
 // ).data;
 // provide('chore', choreMoves);
 

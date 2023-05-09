@@ -24,7 +24,7 @@ export const upsert = async function (url, data) {
 //     }
 //   }
 //   request(
-//     'http://localhost:3141/' + itemName + '/delete',
+//     backendUrl + '/' + itemName + '/delete',
 //     'post',
 //     deleteRowList
 //   );

@@ -12,6 +12,8 @@
         <p>Total waste: {{ todayWaste }}</p>
         <p>Total chore: {{ todayChore }}</p>
         <p>Today done: {{ todayDone }}</p>
+        <p>Today left: {{ todayLeft }}</p>
+        <p>Current move: {{ currentMoveTime }}</p>
       </div>
       <div class="waste-chore w-1/2">
         <div class="waste">
@@ -101,7 +103,7 @@
             rows="movesToday"
             columns="moveColumns"
             item-name="move"
-            dev="true"
+            dev="false"
             addRow="true"
             allRows="moves"
           />
@@ -115,7 +117,7 @@
 </template>
 <script setup>
 import moment from 'moment';
-import { sumTime } from '~/static/time';
+import { cvTime, sumTime } from '~/static/time';
 import { v4 } from 'uuid';
 
 const today = moment(new Date()).format('YYYY-MM-DD');
@@ -165,5 +167,26 @@ const todayDoneMoves = computed(() => {
 
 const todayDone = computed(() => {
   return sumTime(todayDoneMoves.value.map((move) => move.duration));
+});
+
+const todayLeft = computed(() => {
+  return sumTime(
+    cvTime('24h') -
+      cvTime(todayDone.value) -
+      cvTime(todayWaste.value) -
+      cvTime(todayChore.value)
+  );
+});
+
+const currentMoveTime = computed(() => {
+  return sumTime(
+    Math.floor(
+      moment.duration(moment().diff(moment().startOf('day'))).asMinutes()
+    ) /
+      1440 -
+      cvTime(todayDone.value) -
+      cvTime(todayWaste.value) -
+      cvTime(todayChore.value)
+  );
 });
 </script>
