@@ -519,7 +519,7 @@ let tableBody = computed(() =>
           .concat(
             h('td', { class: 'cell-action' }, [
               h('img', {
-                src: dir('assets/img/icon/minus.png'),
+                src: require('@/assets/img/icon/minus.png'),
                 title: 'Delete row',
                 class: 'action-delete',
                 onClick: (e) => {
