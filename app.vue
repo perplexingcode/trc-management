@@ -36,7 +36,7 @@ import moment from 'moment';
 const today = moment(new Date()).format('YYYY-MM-DD');
 
 const backendUrl = useRuntimeConfig().backendUrl;
-console.log('wut', backendUrl);
+
 const moves = (
   await useFetch(backendUrl + '/db/all', {
     headers: { table: 'management_move' },
@@ -54,7 +54,9 @@ const movesToday = (
 //     headers: { table: 'management_move' },
 //   })
 // ).data;
+
 provide('movesToday', movesToday);
+console.log(movesToday);
 
 const wasteMoves = (
   await useFetch(backendUrl + '/db/query?key=date&value=' + today, {

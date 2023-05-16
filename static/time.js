@@ -34,21 +34,44 @@ export const sumTime = function (...times) {
     //Convert arguments to array
     times = Array.from(times).flat();
     let sum = 0;
+    let negative = false;
     if (times.length === 1) {
+      if (times < 0) {
+        negative = true;
+        times = -times;
+      }
+      if (times < 0.001) {
+        times = 0;
+        negative = false;
+      }
       sum = cvTime(times);
     } else {
       times.forEach((time) => {
         sum += cvTime(time);
       });
     }
+
     // Convert minutes to hours and minutes in hh:mm format
-    const hours = Math.floor(sum * 24);
-    const minutes = Math.round(((sum * 24) % 1) * 60);
-    if (minutes < 10) {
-      return `${hours}:0${minutes}`;
+    let hours = Math.floor(sum * 24);
+    let minutes = Math.floor(((sum * 24) % 1) * 60);
+    if (minutes === 60) {
+      minutes = 0;
+      hours += 1;
     }
-    return `${hours}:${minutes}`;
+    const prefix = negative ? '-' : '';
+    if (minutes < 10) {
+      return prefix + `${hours}:0${minutes}`;
+    }
+    return prefix + `${hours}:${minutes}`;
   } catch (error) {
     console.error(error);
   }
+};
+
+export const durationValidate = function (duration) {
+  //Remove all characters except numbers, m, h, and :
+  duration = duration.replace(/[^hm:\d]/g, '');
+  //Remove additional characters
+  duration = duration.replace(/(m|h|:)(?=\1)/g, '');
+  return duration;
 };

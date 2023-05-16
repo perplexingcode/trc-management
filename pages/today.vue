@@ -14,6 +14,7 @@
         <p>Today done: {{ todayDone }}</p>
         <p>Today left: {{ todayLeft }}</p>
         <p>Current move: {{ currentMoveTime }}</p>
+        <p>Max time: {{ maxTime }}</p>
       </div>
       <div class="waste-chore w-1/2">
         <div class="waste">
@@ -99,6 +100,11 @@
     <Suspense>
       <template #default>
         <div>
+          <div class="flex">
+            <button @click="decreaseDate">←</button>
+            <input v-model="date" />
+            <button @click="increaseDate">→</button>
+          </div>
           <Table
             rows="movesToday"
             columns="moveColumns"
@@ -120,10 +126,31 @@ import moment from 'moment';
 import { cvTime, sumTime } from '~/static/time';
 import { v4 } from 'uuid';
 
+const backendUrl = useRuntimeConfig().backendUrl;
 const today = moment(new Date()).format('YYYY-MM-DD');
-const movesToday = inject('movesToday', []);
+const date = ref(today);
+function increaseDate() {
+  date.value = moment(date.value).add(1, 'days').format('YYYY-MM-DD');
+}
+function decreaseDate() {
+  date.value = moment(date.value).subtract(1, 'days').format('YYYY-MM-DD');
+}
+
+let movesToday = inject('movesToday', []);
 // const groups = inject('groups', []);
 // const projects = inject('projects', []);
+
+const dateMoves = (
+  await useFetch(backendUrl + '/db/query?key=date&value=' + date.value, {
+    headers: { table: 'management_move' },
+  })
+).data;
+console.log(dateMoves);
+// if (moment(new Date()).format('YYYY-MM-DD') !== today) {
+//   movesToday = dateMoves;
+// }
+
+// provide('dateMoves', dateMoves);
 
 const showWasteMoves = ref(false);
 class WasteMove {
@@ -178,15 +205,26 @@ const todayLeft = computed(() => {
   );
 });
 
+const a = ref(0); // create & read a dummy reactive variable to trigger computed updates
 const currentMoveTime = computed(() => {
+  a.value;
   return sumTime(
     Math.floor(
       moment.duration(moment().diff(moment().startOf('day'))).asMinutes()
     ) /
       1440 -
-      cvTime(todayDone.value) -
-      cvTime(todayWaste.value) -
-      cvTime(todayChore.value)
+      [todayDone, todayWaste, todayChore].reduce(
+        (acc, curr) => acc + cvTime(curr.value),
+        0
+      )
   );
+});
+
+setInterval(() => {
+  a.value = a.value + 0.0001;
+}, 1000);
+
+const maxTime = computed(() => {
+  return sumTime(cvTime(todayDone.value) + cvTime(todayLeft.value));
 });
 </script>

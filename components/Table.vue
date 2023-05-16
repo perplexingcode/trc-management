@@ -74,6 +74,7 @@ import { request } from '~/static/request';
 import { deepClone, dir, deepCompare } from '~/static/utils';
 import { v4 } from 'uuid';
 import { upsert } from '~/static/db';
+import { durationValidate } from '~~/static/time';
 
 const backendUrl = useRuntimeConfig().backendUrl;
 
@@ -410,6 +411,25 @@ let newRow = computed(() =>
             },
             'Create row'
           );
+
+        case 'input':
+          return hTd(
+            'cell' + col.key,
+            'input',
+            {
+              type: 'text',
+              class: col.key,
+              value: newItem[col.key],
+              required: col.attrs.required,
+              disabled: col.disabled,
+              onInput: (e) => {
+                if (col.key === 'duration')
+                  e.target.value = durationValidate(e.target.value);
+                newItem[col.key] = e.target.value;
+              },
+            },
+            col.attrs.placeholder
+          );
         case 'input-name':
           let autofill = '';
           const suggestions = allRows.value.map((m) => m.name);
@@ -553,6 +573,9 @@ function renderElement(element, item, isNewRow) {
           element.disabled ||
           (!(item.state.isBeingEdited && isEditing.value) && !isNewRow),
         onInput: (e) => {
+          if (element.key == 'duration') {
+            e.target.value = durationValidate(e.target.value);
+          }
           item[element.key] = e.target.value;
         },
         onFocus: (e) => {
@@ -709,7 +732,8 @@ function createRow() {
 function upsertRow(index) {
   const rowToUpsert = rows._rawValue[index];
   if (!validateColumns(rowToUpsert)) return;
-  upsert(backendUrl + '/upsert/management_' + itemName, rowToUpsert);
+  console.log(rowToUpsert);
+  upsert(backendUrl + '/db/upsert/management_' + itemName, rowToUpsert);
   rows.value[index].state.isBeingEdited = false;
   document.activeElement.blur();
 }

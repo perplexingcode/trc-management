@@ -1,3 +1,5 @@
+- Input component
+- Implement partial match suggestion
 - Implement undo redo
 - Implement current table
 - Change disable to overlay
