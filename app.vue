@@ -38,51 +38,27 @@ const today = moment(new Date()).format('YYYY-MM-DD');
 
 const backendUrl = useRuntimeConfig().backendUrl;
 
-const moves = (
-  await useFetch(backendUrl + '/all/' + 'management_move', {
-    headers: { table: 'management_move' },
-  })
-).data;
+const moves = (await useFetch(backendUrl + '/all/' + 'management_move')).data;
 provide('moves', moves);
 
 const movesToday = (
-  await useFetch(backendUrl + '/db/query?key=date&value=' + today, {
-    headers: { table: 'management_move' },
-  })
+  await useFetch(backendUrl + '/query' + '/management_move' + '/date/' + today)
 ).data;
-// (
-//   await useFetch(backendUrl + '/db/query?key=date&value=' + '2023-05-09', {
-//     headers: { table: 'management_move' },
-//   })
-// ).data;
-
 provide('movesToday', movesToday);
 
 const wasteMoves = (
-  await useFetch(backendUrl + '/db/query?key=date&value=' + today, {
-    headers: { table: 'management_waste' },
-  })
+  await useFetch(backendUrl + '/query' + '/management_waste' + '/date/' + today)
 ).data;
 provide('waste', wasteMoves);
 const choreMoves = (
-  await useFetch(backendUrl + '/db/query?key=date&value=' + today, {
-    headers: { table: 'management_chore' },
-  })
+  await useFetch(backendUrl + '/query' + '/management_chore' + '/date/' + today)
 ).data;
 provide('chore', choreMoves);
 
-const projects = (
-  await useFetch(backendUrl + '/db/all', {
-    headers: { table: 'management_project' },
-  })
-).data;
+const projects = (await useFetch(backendUrl + '/all/' + 'management_project')).data;
 provide('projects', projects);
 
-const queuedMove = (
-  await useFetch(backendUrl + '/db/all', {
-    headers: { table: 'management_queued-move' },
-  })
-).data;
+const queuedMove = (await useFetch(backendUrl + '/all/' + 'management_queued-move')).data;
 provide('queuedMove', queuedMove);
 
 const queuedMoveColumns = [
