@@ -765,7 +765,7 @@ function createRow() {
   const item = deepClone(newItem);
   item.state = new State();
   rows.value.push(item);
-  upsert(backendUrl + '/db/upsert/management_' + itemName, newItem);
+  upsert(backendUrl + '/upsert/management_' + itemName, newItem);
   emits('rowUpsert', props.itemName);
   id.value = v4();
 }
@@ -774,7 +774,7 @@ function upsertRow(index) {
   const rowToUpsert = rows._rawValue[index];
   if (!validateColumns(rowToUpsert)) return;
   console.log(rowToUpsert);
-  upsert(backendUrl + '/db/upsert/management_' + itemName, rowToUpsert);
+  upsert(backendUrl + '/upsert/management_' + itemName, rowToUpsert);
   rows.value[index].state.isBeingEdited = false;
   document.activeElement.blur();
   emits('rowUpsert', props.itemName);
@@ -820,11 +820,7 @@ async function deleteRows(id) {
       }
     }
   }
-  request(
-    backendUrl + '/db/delete/management_' + itemName,
-    'post',
-    deleteRowList
-  );
+  request(backendUrl + '/delete/management_' + itemName, 'post', deleteRowList);
 }
 </script>
 
