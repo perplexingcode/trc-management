@@ -33,12 +33,13 @@
 </template>
 <script setup>
 import moment from 'moment';
+
 const today = moment(new Date()).format('YYYY-MM-DD');
 
 const backendUrl = useRuntimeConfig().backendUrl;
 
 const moves = (
-  await useFetch(backendUrl + '/db/all', {
+  await useFetch(backendUrl + '/all/' + 'management_move', {
     headers: { table: 'management_move' },
   })
 ).data;
@@ -56,7 +57,6 @@ const movesToday = (
 // ).data;
 
 provide('movesToday', movesToday);
-console.log(movesToday);
 
 const wasteMoves = (
   await useFetch(backendUrl + '/db/query?key=date&value=' + today, {
@@ -77,6 +77,62 @@ const projects = (
   })
 ).data;
 provide('projects', projects);
+
+const queuedMove = (
+  await useFetch(backendUrl + '/db/all', {
+    headers: { table: 'management_queued-move' },
+  })
+).data;
+provide('queuedMove', queuedMove);
+
+const queuedMoveColumns = [
+  {
+    name: '',
+    key: 'is-selected',
+    type: 'is-selected',
+    disabled: true,
+    noSave: true,
+    attrs: { type: 'text' },
+  },
+  {
+    name: 'Move',
+    key: 'name',
+    type: 'input-name',
+    disabled: false,
+    attrs: { type: 'text', required: true },
+  },
+  {
+    name: '⟁',
+    key: 'weight',
+    type: 'input',
+    disabled: false,
+    attrs: { type: 'number' },
+  },
+  {
+    name: 'Done',
+    key: 'done',
+    type: 'checkbox',
+    disabled: false,
+    default: true,
+    attrs: { type: 'checkbox' },
+  },
+  {
+    name: 'Priority',
+    key: 'priority',
+    type: 'select',
+    disabled: false,
+    options: [
+      '1-Urgent',
+      '2-Necessary',
+      '3-Important',
+      '4-Recommended',
+      '5-Optional',
+    ],
+    attrs: { type: 'text' },
+  },
+];
+
+provide('queuedMoveColumns', queuedMoveColumns);
 
 //  #MOVES
 let moveColumns = [

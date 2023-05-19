@@ -1,3 +1,5 @@
+- Use vue event bus in nuxt
+- Minified col (expand on hover)
 - Input component
 - Implement partial match suggestion
 - Implement undo redo

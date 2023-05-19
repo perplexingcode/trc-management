@@ -42,11 +42,14 @@
               </div>
             </div>
           </div>
+          <div class="table--action-panel">
+            <!-- <div>Search</div>
+              <div>Sort</div> -->
+            <button @click="showRows = !showRows">
+              {{ showRows ? '-' : '+' }}
+            </button>
+          </div>
           <table :class="'table-' + itemName">
-            <!-- <thead>
-              <div>Search</div>
-              <div>Sort</div>
-            </thead> -->
             <thead v-if="columns.length">
               <new-row
                 v-if="props.addRow === 'true'"
@@ -58,7 +61,7 @@
                 </th>
               </tr>
             </thead>
-            <table-body v-if="rows.length" />
+            <table-body v-if="rows.length" v-show="showRows" />
           </table>
         </div>
       </template>
@@ -93,7 +96,10 @@ const props = defineProps([
   'newItem',
   'events',
   'allRows',
+  'showRowsDefault',
 ]);
+
+const emits = defineEmits(['upsert']);
 
 const rows = inject(props.rows, []);
 for (let i = 0; i < rows.value.length; i++) {
@@ -103,8 +109,42 @@ for (let i = 0; i < rows.value.length; i++) {
   });
 }
 
+const showRows = ref(props.showRowsDefault === 'false' ? false : true);
+
 const columns = inject(props.columns, []);
 const itemName = props.itemName;
+
+// << DEVELOPMENT
+
+if (itemName == 'queued-move') {
+  for (let i = 0; i < rows.value.length; i++) {
+    rows.value[i].weight = +rows.value[i].weight;
+    switch (rows.value[i].priority) {
+      case '1-Urgent':
+        rows.value[i].relativeWeight = rows.value[i].weight + 999;
+        break;
+      case '2-Necessary':
+        rows.value[i].relativeWeight = rows.value[i].weight + 500;
+        break;
+      case '3-Important':
+        rows.value[i].relativeWeight = rows.value[i].weight + 250;
+        break;
+      case '4-Recommended':
+        rows.value[i].relativeWeight = rows.value[i].weight + 100;
+        break;
+      case '5-Optional':
+        rows.value[i].relativeWeight = rows.value[i].weight;
+        break;
+      default:
+        rows.value[i].relativeWeight = rows.value[i].weight;
+        break;
+    }
+    console.log(rows.value[i].name, rows.value[i].relativeWeight);
+  }
+  rows.value.sort((a, b) => b.relativeWeight - a.relativeWeight);
+}
+
+// DEV >>
 
 onMounted(() => {
   // Save changes
@@ -417,7 +457,7 @@ let newRow = computed(() =>
             'cell' + col.key,
             'input',
             {
-              type: 'text',
+              type: col.attrs.type,
               class: col.key,
               value: newItem[col.key],
               required: col.attrs.required,
@@ -565,7 +605,7 @@ function renderElement(element, item, isNewRow) {
       );
     case 'input':
       return hTd('cell-' + element.key, 'input', {
-        type: 'text',
+        type: element.attrs.type,
         class: element.key,
         value: item[element.key] ? item[element.key] : element.default,
         required: element.attrs.required,
@@ -726,6 +766,7 @@ function createRow() {
   item.state = new State();
   rows.value.push(item);
   upsert(backendUrl + '/db/upsert/management_' + itemName, newItem);
+  emits('rowUpsert', props.itemName);
   id.value = v4();
 }
 
@@ -736,6 +777,7 @@ function upsertRow(index) {
   upsert(backendUrl + '/db/upsert/management_' + itemName, rowToUpsert);
   rows.value[index].state.isBeingEdited = false;
   document.activeElement.blur();
+  emits('rowUpsert', props.itemName);
 }
 
 const selectedRows = ref([]);
@@ -826,6 +868,9 @@ input.cat,
 input.prj,
 input.grp {
   width: 8rem;
+}
+input.weight {
+  width: 4rem;
 }
 
 table {
