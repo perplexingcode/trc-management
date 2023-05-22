@@ -37,6 +37,7 @@ import moment from 'moment';
 const today = moment(new Date()).format('YYYY-MM-DD');
 
 const backendUrl = useRuntimeConfig().backendUrl;
+console.log(backendUrl);
 
 const moves = (await useFetch(backendUrl + '/all/' + 'management_move')).data;
 provide('moves', moves);
@@ -55,10 +56,13 @@ const choreMoves = (
 ).data;
 provide('chore', choreMoves);
 
-const projects = (await useFetch(backendUrl + '/all/' + 'management_project')).data;
+const projects = (await useFetch(backendUrl + '/all/' + 'management_project'))
+  .data;
 provide('projects', projects);
 
-const queuedMove = (await useFetch(backendUrl + '/all/' + 'management_queued-move')).data;
+const queuedMove = (
+  await useFetch(backendUrl + '/all/' + 'management_queued-move')
+).data;
 provide('queuedMove', queuedMove);
 
 const queuedMoveColumns = [
