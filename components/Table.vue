@@ -559,7 +559,8 @@ let tableBody = computed(() =>
           .concat(
             h('td', { class: 'cell-action' }, [
               h('img', {
-                src: dir('assets/img/icon/minus.png'),
+                // TODO: Update src logic
+                src: 'https://management-img.s3.ap-southeast-1.amazonaws.com/minus.png',
                 title: 'Delete row',
                 class: 'action-delete',
                 onClick: (e) => {
