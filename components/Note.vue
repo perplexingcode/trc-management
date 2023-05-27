@@ -129,7 +129,7 @@ onMounted(async () => {
 const isEditing = ref(false);
 
 const handleKeydown = (event) => {
-  if (event.key === 'Enter' && event.keyCode === 13) {
+  if (event.shiftKey && event.keyCode === 13) {
     event.preventDefault();
     applyChange();
   }
