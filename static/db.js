@@ -1,10 +1,15 @@
 import { request } from './request.js';
 import { deepClone } from './utils.js';
 
-export const upsert = async function (url, data) {
+export const upsert = async function (table, data) {
+  const { backendUrl } = useRuntimeConfig();
   data = deepClone(data);
   delete data.state;
-  let response = await request(url, 'POST', JSON.stringify(data));
+  let response = await request(
+    backendUrl + '/upsert/' + table,
+    'POST',
+    JSON.stringify(data)
+  );
   return response;
 };
 

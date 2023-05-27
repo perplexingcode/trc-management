@@ -17,7 +17,7 @@
         />
       </div>
       <div class="adjustment-panel card bg-secondary flex">
-        <div class="report w-1/2">
+        <div class="report w-fit p-2 mr-2 rounded border-2 border-white-200">
           <p>Total waste: {{ todayWaste }}</p>
           <p>Total chore: {{ todayChore }}</p>
           <p>Today done: {{ todayDone }}</p>
@@ -25,9 +25,9 @@
           <p>Current move: {{ currentMoveTime }}</p>
           <p>Max time: {{ maxTime }}</p>
         </div>
-        <div class="waste-chore w-1/2">
+        <div class="waste-chore">
           <div class="waste">
-            <h3 class="pr-1">Waste</h3>
+            <h3 class="pr-1 text-center">Waste</h3>
             <div class="waste_moves pl-7">
               <Table
                 rows="waste"
@@ -39,7 +39,7 @@
             </div>
           </div>
           <div class="chore">
-            <h3 class="pr-1">Chore</h3>
+            <h3 class="pr-1 text-center">Chore</h3>
             <div class="chore_moves pl-7">
               <Table
                 rows="chore"
@@ -50,7 +50,32 @@
               />
             </div>
           </div>
+          <div class="sleep text-center">
+            <h3 class="pr-1 text-center-center">Sleep</h3>
+            <div class="sleep_moves pl-7 flex">
+              <div class="input-group">
+                <label>Max</label>
+                <input v-model="sleepTimeMax" class="w-16" />
+              </div>
+              <div class="input-group">
+                <label>Current</label>
+                <input
+                  :value="sumTime(sleepTimeCurrent)"
+                  class="w-16"
+                  disabled
+                />
+              </div>
+              <div class="input-group">
+                <label>Left</label>
+                <input :value="sleepTimeLeft" disabled class="w-16" />
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
+      <div class="notes-box card bg-secondary flex flex-col">
+        <h3 class="text-center">Notes</h3>
+        <Note box="general" />
       </div>
     </div>
 
@@ -85,7 +110,6 @@
 import moment from 'moment';
 import { cvTime, sumTime } from '~/static/time';
 
-const backendUrl = useRuntimeConfig().backendUrl;
 const today = moment(new Date()).format('YYYY-MM-DD');
 const date = ref(today);
 function increaseDate() {
@@ -120,6 +144,16 @@ const todayWaste = computed(() => {
 const todayChore = computed(() => {
   return sumTime(choreMoves.value.map((move) => move.duration));
 });
+
+const vars = inject('vars', {});
+const sleepTimeMax = ref(vars.sleepTime);
+let sleepTimeCurrent = ref(0);
+for (const move of choreMoves.value) {
+  console.log(move);
+  if (/sleep|nap/i.test(move.name)) {
+    sleepTimeCurrent.value += cvTime(move.duration);
+  }
+}
 
 const todayDoneMoves = computed(() => {
   return movesToday.value.filter((move) => move.done && move.date === today);
@@ -157,7 +191,15 @@ setInterval(() => {
   a.value = a.value + 0.0001;
 }, 1000);
 
+const sleepTimeLeft = computed(() => {
+  return sumTime(cvTime(sleepTimeMax.value) - cvTime(sleepTimeCurrent.value));
+});
+
 const maxTime = computed(() => {
-  return sumTime(cvTime(todayDone.value) + cvTime(todayLeft.value));
+  return sumTime(
+    cvTime(todayDone.value) +
+      cvTime(todayLeft.value) -
+      cvTime(sleepTimeLeft.value)
+  );
 });
 </script>

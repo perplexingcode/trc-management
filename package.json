@@ -23,7 +23,8 @@
     "mitt": "^3.0.0",
     "moment": "^2.29.4",
     "pinia": "^2.0.33",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "vue3-json-viewer": "^2.2.2"
   },
   "overrides": {
     "vue": "^3.2.47"

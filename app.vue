@@ -36,7 +36,7 @@ import moment from 'moment';
 
 const today = moment(new Date()).format('YYYY-MM-DD');
 
-const backendUrl = useRuntimeConfig().backendUrl;
+const { backendUrl } = useRuntimeConfig();
 console.log(backendUrl);
 
 const moves = (await useFetch(backendUrl + '/all/' + 'management_move')).data;
@@ -56,15 +56,24 @@ const choreMoves = (
 ).data;
 provide('chore', choreMoves);
 
-const projects = (await useFetch(backendUrl + '/all/' + 'management_project'))
+let projects = (await useFetch(backendUrl + '/all/' + 'management_project'))
   .data;
+// Sort alphabetically
+projects.value = projects.value.sort((a, b) => (a.name > b.name ? 1 : -1));
 provide('projects', projects);
 
-const queuedMove = (
+const queuedMoves = (
   await useFetch(backendUrl + '/all/' + 'management_queued-move')
 ).data;
-provide('queuedMove', queuedMove);
+provide('queuedMove', queuedMoves);
 
+let vars;
+const _vars = (await useFetch(backendUrl + '/all/' + 'management_var')).data
+  ._rawValue;
+for (const v of _vars) {
+  vars = { ...vars, [v.id]: v.value };
+}
+provide('vars', reactive(vars));
 const queuedMoveColumns = [
   {
     name: '',
