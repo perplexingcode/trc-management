@@ -28,13 +28,34 @@
         <div class="waste-chore">
           <div class="waste">
             <h3 class="pr-1 text-center">Waste</h3>
+            <div class="pl-10 flex">
+              <div class="flex px-2">
+                <img
+                  width="22"
+                  height="22"
+                  src="https://img.icons8.com/color/48/facebook-new.png"
+                  alt="facebook-new"
+                />
+                <p>{{ facebookTime }}</p>
+              </div>
+              <div class="flex px-2">
+                <img
+                  width="22"
+                  height="22"
+                  src="https://img.icons8.com/fluency/48/youtube-play.png"
+                  alt="youtube-play"
+                />
+                <p>{{ youtubeTime }}</p>
+              </div>
+            </div>
             <div class="waste_moves pl-7">
               <Table
                 rows="waste"
                 columns="wasteChoreColumns"
                 item-name="waste"
                 addRow="true"
-                show-rows-default="false"
+                :show-rows-default="false"
+                :show-suggestions="false"
               />
             </div>
           </div>
@@ -46,7 +67,7 @@
                 columns="wasteChoreColumns"
                 item-name="chore"
                 addRow="true"
-                show-rows-default="false"
+                :show-rows-default="false"
               />
             </div>
           </div>
@@ -94,7 +115,6 @@
             rows="movesToday"
             columns="moveColumns"
             item-name="move"
-            dev="false"
             addRow="true"
             allRows="moves"
           />
@@ -142,18 +162,36 @@ const todayWaste = computed(() => {
   return sumTime(wasteMoves.value.map((move) => move.duration));
 });
 const todayChore = computed(() => {
-  return sumTime(choreMoves.value.map((move) => move.duration));
+  return sumTime(
+    cvTime(sumTime(choreMoves.value.map((move) => move.duration))) -
+      cvTime(sleepTimeCurrent.value)
+  );
+});
+
+const youtubeTime = computed(() => {
+  return sumTime(
+    wasteMoves.value
+      .filter((move) => /youtube|yt/i.test(move.name))
+      .map((move) => move.duration)
+  );
+});
+const facebookTime = computed(() => {
+  return sumTime(
+    wasteMoves.value
+      .filter((move) => /facebook|fb/i.test(move.name))
+      .map((move) => move.duration)
+  );
 });
 
 const vars = inject('vars', {});
 const sleepTimeMax = ref(vars.sleepTime);
-let sleepTimeCurrent = ref(0);
-for (const move of choreMoves.value) {
-  console.log(move);
-  if (/sleep|nap/i.test(move.name)) {
-    sleepTimeCurrent.value += cvTime(move.duration);
-  }
-}
+let sleepTimeCurrent = computed(() => {
+  return sumTime(
+    choreMoves.value
+      .filter((move) => /sleep|nap/i.test(move.name))
+      .map((move) => move.duration)
+  );
+});
 
 const todayDoneMoves = computed(() => {
   return movesToday.value.filter((move) => move.done && move.date === today);
@@ -168,7 +206,8 @@ const todayLeft = computed(() => {
     cvTime('24h') -
       cvTime(todayDone.value) -
       cvTime(todayWaste.value) -
-      cvTime(todayChore.value)
+      cvTime(todayChore.value) -
+      cvTime(sleepTimeCurrent.value)
   );
 });
 
@@ -183,7 +222,8 @@ const currentMoveTime = computed(() => {
       [todayDone, todayWaste, todayChore].reduce(
         (acc, curr) => acc + cvTime(curr.value),
         0
-      )
+      ) -
+      cvTime(sleepTimeCurrent.value)
   );
 });
 
