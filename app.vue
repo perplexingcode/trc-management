@@ -37,7 +37,6 @@ import moment from 'moment';
 const today = moment(new Date()).format('YYYY-MM-DD');
 
 const { backendUrl } = useRuntimeConfig();
-console.log(backendUrl);
 
 const moves = (await useFetch(backendUrl + '/all/' + 'management_move')).data;
 provide('moves', moves);
@@ -118,6 +117,25 @@ const queuedMoveColumns = [
       '5-Optional',
     ],
     attrs: { type: 'text' },
+  },
+  {
+    name: 'Personnel',
+    key: 'personnel',
+    type: 'select',
+    disabled: false,
+    options: [
+      'CEO',
+      'CFO',
+      'CMO',
+      'CTO',
+      'Developer',
+      'HR',
+      'Secretary',
+      'Sales Expert',
+      'Stylist',
+      'Artist',
+      'Philosopher',
+    ],
   },
 ];
 
