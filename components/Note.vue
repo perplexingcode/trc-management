@@ -1,6 +1,7 @@
 <template>
   <div class="notes flex flex-col">
     <textarea
+      onfocus='this.style.height = "";this.style.height = this.scrollHeight + "px"'
       v-model="note.text"
       :class="{ isEditing }"
       @input="isEditing = true"
@@ -107,10 +108,7 @@ onMounted(async () => {
     let cloudNote = await useFetch(
       backendUrl + '/query' + '/management_note' + '/box/' + props.box
     );
-    console.log(cloudNote);
-
     cloudNote = cloudNote.data._rawValue?.[0];
-    console.log(cloudNote);
     if (!cloudNote) {
       note.id = v4();
       note.text = '';
@@ -136,7 +134,6 @@ const handleKeydown = (event) => {
 };
 
 const applyChange = () => {
-  console.log(viewVersion.value);
   if (note.text == note.versionHistory[viewVersion]) {
     return;
   }
