@@ -24,15 +24,17 @@
           <p>Today left: {{ todayLeft }}</p>
           <p>Current move: {{ currentMoveTime }}</p>
           <p>Max time: {{ maxTime }}</p>
+          <p>Max time no sleep: {{ maxTimeNoSleep }}</p>
         </div>
         <div class="waste-chore">
           <div class="waste">
             <h3 class="pr-1 text-center">Waste</h3>
-            <div class="pl-10 flex">
+            <div class="pl-10 flex items-center">
               <div class="flex px-2">
                 <img
                   width="22"
                   height="22"
+                  class="mr-1"
                   src="https://img.icons8.com/color/48/facebook-new.png"
                   alt="facebook-new"
                 />
@@ -42,6 +44,7 @@
                 <img
                   width="22"
                   height="22"
+                  class="mr-1"
                   src="https://img.icons8.com/fluency/48/youtube-play.png"
                   alt="youtube-play"
                 />
@@ -241,5 +244,8 @@ const maxTime = computed(() => {
       cvTime(todayLeft.value) -
       cvTime(sleepTimeLeft.value)
   );
+});
+const maxTimeNoSleep = computed(() => {
+  return sumTime(cvTime(maxTime.value) + cvTime(sleepTimeLeft.value));
 });
 </script>
