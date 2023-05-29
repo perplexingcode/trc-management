@@ -1,6 +1,6 @@
 <template>
   <ClientOnly>
-    <div v-if="props.dev === 'true'" id="dev-panel" class="card bg-secondary">
+    <div v-if="props.dev" id="dev-panel" class="card bg-secondary">
       <h2>Dev zone</h2>
       <p>Log: {{ log }}</p>
       <p>isEditing: {{ isEditing }}</p>
@@ -14,7 +14,9 @@
       <template #default>
         <div class="p-3 table-wrapper" :class="itemName">
           <div
-            v-if="newItem.name && suggestionItems !== null"
+            v-if="
+              newItem.name && suggestionItems !== null && props.showSuggestions
+            "
             class="modal suggestions"
           >
             <div
@@ -42,12 +44,21 @@
               </div>
             </div>
           </div>
-          <div class="table--action-panel">
+          <div class="table--action-panel flex items-center">
             <!-- <div>Search</div>
               <div>Sort</div> -->
-            <button @click="showRows = !showRows">
+            <button @click="showRows = !showRows" class="btn-1char">
               {{ showRows ? '-' : '+' }}
             </button>
+            <img
+              @click="downloadCsv"
+              class="cursor-pointer"
+              width="22"
+              height="22"
+              src="https://img.icons8.com/flat-round/64/downloading-updates--v1.png"
+              alt="download button"
+              title="Download CSV"
+            />
           </div>
           <table :class="'table-' + itemName">
             <thead v-if="columns.length">
@@ -74,7 +85,7 @@
 
 <script setup>
 import { request } from '~/static/request';
-import { deepClone, dir, deepCompare } from '~/static/utils';
+import { deepClone, removeState, dir, deepCompare } from '~/static/utils';
 import { v4 } from 'uuid';
 import { upsert } from '~/static/db';
 import { durationValidate } from '~~/static/time';
@@ -87,18 +98,22 @@ let log = ref('');
 
 // #SETUP
 //Table data
-const props = defineProps([
-  'rows',
-  'itemName',
-  'columns',
-  'dev',
-  'addRow',
-  'newItem',
-  'events',
-  'allRows',
-  'showRowsDefault',
-]);
+const props = defineProps({
+  rows: {},
+  itemName: {},
+  columns: {},
+  dev: { default: false },
+  addRow: {},
+  newItem: {},
+  events: {},
+  allRows: {},
+  showRowsDefault: { default: true },
+  showSuggestions: {
+    default: true,
+  },
+});
 
+// DEV
 const emits = defineEmits(['upsert']);
 
 const rows = inject(props.rows, []);
@@ -109,7 +124,41 @@ for (let i = 0; i < rows.value.length; i++) {
   });
 }
 
-const showRows = ref(props.showRowsDefault === 'false' ? false : true);
+const downloadCsv = () => {
+  const data = removeState(deepClone(rows.value));
+  console.log(data);
+  // Extract all unique keys from the objects
+  const allKeys = Array.from(new Set(data.flatMap((obj) => Object.keys(obj))));
+
+  // Sort the keys alphabetically
+  const sortedKeys = allKeys.sort();
+
+  // Creating the CSV content
+  const csvContent = [
+    sortedKeys.join(','), // Header row
+    ...data.map((obj) =>
+      sortedKeys
+        .map((key) => {
+          console.log(obj[key]);
+          if (typeof obj[key] === 'string') {
+            return obj[key].replaceAll(',', ';');
+          }
+          return obj[key];
+        })
+        .join(',')
+    ), // Data rows
+  ].join('\n');
+  const encodedUri =
+    'data:text/csv;charset=utf-8,' + encodeURI(csvContent.replaceAll(`"`, ''));
+  const link = document.createElement('a');
+  link.setAttribute('href', encodedUri);
+  link.setAttribute('download', `${itemName}.csv`);
+  console.log(csvContent);
+  document.body.appendChild(link); // Required for FF
+  link.click();
+};
+
+const showRows = ref(props.showRowsDefault);
 
 const columns = inject(props.columns, []);
 const itemName = props.itemName;
@@ -139,7 +188,7 @@ if (itemName == 'queued-move') {
         rows.value[i].relativeWeight = rows.value[i].weight;
         break;
     }
-    console.log(rows.value[i].name, rows.value[i].relativeWeight);
+    // console.log(rows.value[i].name, rows.value[i].relativeWeight);
   }
   rows.value.sort((a, b) => b.relativeWeight - a.relativeWeight);
 }
@@ -699,7 +748,8 @@ function renderElement(element, item, isNewRow) {
             'option',
             {
               value: option?.value || option,
-              selected: option?.value || option === item[element.key],
+              selected:
+                option === item[element.key] || option === element.default,
               disabled: option === '',
             },
             option?.name || option
@@ -825,7 +875,7 @@ async function deleteRows(id) {
 }
 </script>
 
-<style>
+<style scoped>
 .table-row.is-being-edited {
   background-color: #f5f5f5;
 }
@@ -883,5 +933,12 @@ tr {
 td {
   border: solid 1px #ccc2;
   text-align: center;
+}
+
+ul#menu-desktop-guest {
+  position: fixed;
+  top: 5rem;
+  left: 0rem;
+  background: #eef2ff10;
 }
 </style>

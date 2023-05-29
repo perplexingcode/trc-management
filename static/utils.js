@@ -6,6 +6,15 @@ export const unwrap = function (obj) {
 export const deepClone = function (obj) {
   return JSON.parse(JSON.stringify(obj));
 };
+
+export const removeState = function (obj) {
+  if (Array.isArray(obj)) {
+    for (const item of obj) {
+      delete item.state;
+    }
+  }
+  return obj;
+};
 export const dir = function (path) {
   const config = useRuntimeConfig();
   const rootDir = config.rootDir;

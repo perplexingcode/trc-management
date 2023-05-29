@@ -18,6 +18,10 @@ button {
   background: #ffdb00;
 }
 
+.btn-1char {
+  @apply rounded-full font-bold h-6 w-6 flex items-center justify-center;
+}
+
 /* Input */
 input:not([type='checkbox']):not([type='radio']) {
   border: 1px solid #ccc;

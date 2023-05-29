@@ -1,3 +1,8 @@
+- Weight system/mechanism for table
+- Sort table
+  - Pass in sort function
+  - Sort on change = true
+- default value in select
 - Use vue event bus in nuxt
 - Minified col (expand on hover)
 - Input component

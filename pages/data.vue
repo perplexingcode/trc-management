@@ -3,7 +3,7 @@
     rows="moves"
     columns="moveColumns"
     item-name="move"
-    dev="true"
+    :dev="false"
     addRow="true"
   />
 </template>

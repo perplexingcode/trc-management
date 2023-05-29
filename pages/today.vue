@@ -6,7 +6,7 @@
       <h2>Dev zone</h2>
       <!-- <p>{{ doneTodayMoves }}</p> -->
     </div>
-    <div class="flex">
+    <div class="section planning flex">
       <div class="action-queue">
         <h3>Action queue</h3>
         <Table
@@ -16,6 +16,9 @@
           addRow="true"
         />
       </div>
+      <div class=""></div>
+    </div>
+    <div class="flex section tracking">
       <div class="adjustment-panel card bg-secondary flex">
         <div class="report w-fit p-2 mr-2 rounded border-2 border-white-200">
           <p>Total waste: {{ todayWaste }}</p>
@@ -102,31 +105,29 @@
         <Note box="general" />
       </div>
     </div>
-
-    <div id="action-form" class="bg-secondary card">
-      <h2>Actions</h2>
-    </div>
-    <Suspense>
-      <template #default>
-        <div>
-          <div class="flex">
-            <button @click="decreaseDate">←</button>
-            <input v-model="date" />
-            <button @click="increaseDate">→</button>
+    <div class="section data">
+      <Suspense>
+        <template #default>
+          <div>
+            <div class="flex">
+              <button @click="decreaseDate">←</button>
+              <input v-model="date" />
+              <button @click="increaseDate">→</button>
+            </div>
+            <Table
+              rows="movesToday"
+              columns="moveColumns"
+              item-name="move"
+              addRow="true"
+              allRows="moves"
+            />
           </div>
-          <Table
-            rows="movesToday"
-            columns="moveColumns"
-            item-name="move"
-            addRow="true"
-            allRows="moves"
-          />
-        </div>
-      </template>
-      <template #fallback>
-        <p>Loading...</p>
-      </template>
-    </Suspense>
+        </template>
+        <template #fallback>
+          <p>Loading...</p>
+        </template>
+      </Suspense>
+    </div>
   </div>
 </template>
 <script setup>

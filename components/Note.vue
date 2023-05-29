@@ -14,7 +14,7 @@
         <button v-show="showVersion" @click="viewVersion == 0 || viewVersion--">
           &lt;
         </button>
-        <button class="m-auto" @click="showVersion = !showVersion">
+        <button class="m-auto btn-1char" @click="showVersion = !showVersion">
           {{ showVersion ? '-' : '+' }}
         </button>
         <button

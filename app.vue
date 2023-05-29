@@ -1,5 +1,5 @@
 <template>
-  <div class="main_wrap">
+  <main class="main_wrap">
     <h1>This is Management</h1>
     <nav>
       <ul>
@@ -29,7 +29,7 @@
       </ul>
     </nav>
     <NuxtPage />
-  </div>
+  </main>
 </template>
 <script setup>
 import moment from 'moment';
@@ -65,6 +65,11 @@ const queuedMoves = (
   await useFetch(backendUrl + '/all/' + 'management_queued-move')
 ).data;
 provide('queuedMove', queuedMoves);
+
+const dailyMoves = (
+  await useFetch(backendUrl + '/all/' + 'management_daily-move')
+).data;
+provide('dailyMove', dailyMoves);
 
 let vars;
 const _vars = (await useFetch(backendUrl + '/all/' + 'management_var')).data
@@ -122,6 +127,7 @@ const queuedMoveColumns = [
     name: 'Personnel',
     key: 'personnel',
     type: 'select',
+    default: 'CEO',
     disabled: false,
     options: [
       'CEO',
