@@ -274,7 +274,7 @@ const maxTimeNoSleep = computed(() => {
 });
 </script>
 
-<style scoped>
+<style>
 .section .planning {
   width: 45%;
 }

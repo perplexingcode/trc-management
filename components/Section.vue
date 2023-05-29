@@ -9,7 +9,6 @@
         />
       </div>
       <div class="action-panel">
-        <p>{{ maxStep }}</p>
         <slot name="action-panel"></slot>
       </div>
       <div v-if="maxStep > 1" class="steps flex items-center">
