@@ -1,133 +1,156 @@
 <template>
-  <div @keyup.enter="confirmChanges">
-    <h1>Today</h1>
-    <p>Today's date is {{ today }}</p>
+  <div>
+    <header class="text-center">
+      <h1 class="text-xl">Today</h1>
+      <p class="text-center">Today's date is {{ today }}</p>
+    </header>
+
     <div id="dev-panel" class="card bg-secondary hidden">
       <h2>Dev zone</h2>
       <!-- <p>{{ doneTodayMoves }}</p> -->
     </div>
-    <div class="section planning flex">
-      <div class="action-queue">
-        <h3>Action queue</h3>
-        <Table
-          rows="queuedMove"
-          columns="queuedMoveColumns"
-          item-name="queued-move"
-          addRow="true"
-        />
-      </div>
-      <div class=""></div>
-    </div>
-    <div class="flex section tracking">
-      <div class="adjustment-panel card bg-secondary flex">
-        <div class="report w-fit p-2 mr-2 rounded border-2 border-white-200">
-          <p>Total waste: {{ todayWaste }}</p>
-          <p>Total chore: {{ todayChore }}</p>
-          <p>Today done: {{ todayDone }}</p>
-          <p>Today left: {{ todayLeft }}</p>
-          <p>Current move: {{ currentMoveTime }}</p>
-          <p>Max time: {{ maxTime }}</p>
-          <p>Max time no sleep: {{ maxTimeNoSleep }}</p>
-        </div>
-        <div class="waste-chore">
-          <div class="waste">
-            <h3 class="pr-1 text-center">Waste</h3>
-            <div class="pl-10 flex items-center">
-              <div class="flex px-2">
-                <img
-                  width="22"
-                  height="22"
-                  class="mr-1"
-                  src="https://img.icons8.com/color/48/facebook-new.png"
-                  alt="facebook-new"
-                />
-                <p>{{ facebookTime }}</p>
-              </div>
-              <div class="flex px-2">
-                <img
-                  width="22"
-                  height="22"
-                  class="mr-1"
-                  src="https://img.icons8.com/fluency/48/youtube-play.png"
-                  alt="youtube-play"
-                />
-                <p>{{ youtubeTime }}</p>
-              </div>
-            </div>
-            <div class="waste_moves pl-7">
-              <Table
-                rows="waste"
-                columns="wasteChoreColumns"
-                item-name="waste"
-                addRow="true"
-                :show-rows-default="false"
-                :show-suggestions="false"
-              />
-            </div>
-          </div>
-          <div class="chore">
-            <h3 class="pr-1 text-center">Chore</h3>
-            <div class="chore_moves pl-7">
-              <Table
-                rows="chore"
-                columns="wasteChoreColumns"
-                item-name="chore"
-                addRow="true"
-                :show-rows-default="false"
-              />
-            </div>
-          </div>
-          <div class="sleep text-center">
-            <h3 class="pr-1 text-center-center">Sleep</h3>
-            <div class="sleep_moves pl-7 flex">
-              <div class="input-group">
-                <label>Max</label>
-                <input v-model="sleepTimeMax" class="w-16" />
-              </div>
-              <div class="input-group">
-                <label>Current</label>
-                <input
-                  :value="sumTime(sleepTimeCurrent)"
-                  class="w-16"
-                  disabled
-                />
-              </div>
-              <div class="input-group">
-                <label>Left</label>
-                <input :value="sleepTimeLeft" disabled class="w-16" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="notes-box card bg-secondary flex flex-col">
-        <h3 class="text-center">Notes</h3>
-        <Note box="general" />
-      </div>
-    </div>
-    <div class="section data">
-      <Suspense>
-        <template #default>
-          <div>
-            <div class="flex">
-              <button @click="decreaseDate">←</button>
-              <input v-model="date" />
-              <button @click="increaseDate">→</button>
-            </div>
+    <div class="intellisense-tracking flex">
+      <Section title="IntelliSense" class="section planning">
+        <template #step-0>
+          <div class="action-queue">
+            <h3>Action queue</h3>
             <Table
-              rows="movesToday"
-              columns="moveColumns"
-              item-name="move"
+              rows="queuedMove"
+              columns="queuedMoveColumns"
+              item-name="queued-move"
               addRow="true"
-              allRows="moves"
             />
           </div>
         </template>
-        <template #fallback>
-          <p>Loading...</p>
+        <template #step-1><p>danchoi</p></template>
+        <template #step-2><p>danchoi</p></template>
+      </Section>
+      <Section title="Tracking" class="section tracking">
+        <template #step-0>
+          <div class="flex">
+            <div class="adjustment-panel card bg-secondary flex">
+              <div
+                class="report w-fit p-2 mr-2 rounded border-2 border-white-200"
+              >
+                <p>Total waste: {{ todayWaste }}</p>
+                <p>Total chore: {{ todayChore }}</p>
+                <p>Today done: {{ todayDone }}</p>
+                <p>Today left: {{ todayLeft }}</p>
+                <p>Current move: {{ currentMoveTime }}</p>
+                <p>Max time: {{ maxTime }}</p>
+                <p>Max time no sleep: {{ maxTimeNoSleep }}</p>
+              </div>
+              <div class="waste-chore">
+                <div class="waste">
+                  <h3 class="pr-1 text-center">Waste</h3>
+                  <div class="pl-10 flex items-center">
+                    <div class="flex px-2">
+                      <img
+                        width="22"
+                        height="22"
+                        class="mr-1"
+                        src="https://img.icons8.com/color/48/facebook-new.png"
+                        alt="facebook-new"
+                      />
+                      <p>{{ facebookTime }}</p>
+                    </div>
+                    <div class="flex px-2">
+                      <img
+                        width="22"
+                        height="22"
+                        class="mr-1"
+                        src="https://img.icons8.com/fluency/48/youtube-play.png"
+                        alt="youtube-play"
+                      />
+                      <p>{{ youtubeTime }}</p>
+                    </div>
+                  </div>
+                  <div class="waste_moves pl-7">
+                    <Table
+                      rows="waste"
+                      columns="wasteChoreColumns"
+                      item-name="waste"
+                      addRow="true"
+                      :is-default-show-rows="false"
+                      :show-suggestions="false"
+                    />
+                  </div>
+                </div>
+                <div class="chore">
+                  <h3 class="pr-1 text-center">Chore</h3>
+                  <div class="chore_moves pl-7">
+                    <Table
+                      rows="chore"
+                      columns="wasteChoreColumns"
+                      item-name="chore"
+                      addRow="true"
+                      :is-default-show-rows="false"
+                    />
+                  </div>
+                </div>
+                <div class="sleep text-center">
+                  <h3 class="pr-1 text-center-center">Sleep</h3>
+                  <div class="sleep_moves pl-7 flex">
+                    <div class="input-group">
+                      <label>Max</label>
+                      <input v-model="sleepTimeMax" class="w-16" />
+                    </div>
+                    <div class="input-group">
+                      <label>Current</label>
+                      <input
+                        :value="sumTime(sleepTimeCurrent)"
+                        class="w-16"
+                        disabled
+                      />
+                    </div>
+                    <div class="input-group">
+                      <label>Left</label>
+                      <input :value="sleepTimeLeft" disabled class="w-16" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="notes-box card bg-secondary flex flex-col">
+              <h3 class="text-center">Notes</h3>
+              <Note box="general" />
+            </div>
+          </div>
         </template>
-      </Suspense>
+        <template #step-1><p>danchoi</p></template>
+        <template #step-2><p>danchoi</p></template>
+      </Section>
     </div>
+
+    <Section title="Data" class="section data">
+      <template #action-panel>
+        <div class="flex">
+          <button @click="decreaseDate">←</button>
+          <input v-model="date" />
+          <button @click="increaseDate">→</button>
+        </div>
+      </template>
+      <template #step-0>
+        <Suspense>
+          <template #default>
+            <div>
+              <Table
+                rows="movesToday"
+                columns="moveColumns"
+                item-name="move"
+                addRow="true"
+                allRows="moves"
+              />
+            </div>
+          </template>
+          <template #fallback>
+            <p>Loading...</p>
+          </template>
+        </Suspense>
+      </template>
+      <template #step-1><p>danchoi</p></template>
+      <template #step-2><p>danchoi</p></template>
+    </Section>
   </div>
 </template>
 <script setup>
@@ -250,3 +273,12 @@ const maxTimeNoSleep = computed(() => {
   return sumTime(cvTime(maxTime.value) + cvTime(sleepTimeLeft.value));
 });
 </script>
+
+<style scoped>
+.section .planning {
+  width: 45%;
+}
+.section .tracking {
+  width: 55%;
+}
+</style>

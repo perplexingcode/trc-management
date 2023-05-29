@@ -2,7 +2,7 @@
 - Sort table
   - Pass in sort function
   - Sort on change = true
-- default value in select
+- semantic html structure
 - Use vue event bus in nuxt
 - Minified col (expand on hover)
 - Input component

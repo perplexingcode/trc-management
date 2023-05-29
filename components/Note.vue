@@ -14,9 +14,11 @@
         <button v-show="showVersion" @click="viewVersion == 0 || viewVersion--">
           &lt;
         </button>
-        <button class="m-auto btn-1char" @click="showVersion = !showVersion">
-          {{ showVersion ? '-' : '+' }}
-        </button>
+        <btn-show-hide
+          class="m-auto"
+          @click="showVersion = !showVersion"
+          :is-default-show="false"
+        />
         <button
           v-show="showVersion"
           @click="
@@ -30,8 +32,11 @@
         <div
           v-for="(item, index) in note.versionHistory.stack"
           :key="item.id"
-          class="w-4 h-4 bg-gray-500 mr-2"
-          :class="{ 'bg-yellow-500': index == viewVersion }"
+          class="w-4 h-4 bg-gray-500"
+          :class="{
+            'bg-yellow-500': index == viewVersion,
+            'mr-2': index != note.versionHistory.stack.length - 1,
+          }"
         ></div>
       </div>
       <textarea

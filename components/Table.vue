@@ -47,14 +47,13 @@
           <div class="table--action-panel flex items-center">
             <!-- <div>Search</div>
               <div>Sort</div> -->
-            <button @click="showRows = !showRows" class="btn-1char">
-              {{ showRows ? '-' : '+' }}
-            </button>
+            <btn-show-hide
+              @click="showRows = !showRows"
+              :is-default-show="showRows"
+            />
             <img
               @click="downloadCsv"
-              class="cursor-pointer"
-              width="22"
-              height="22"
+              class="cursor-pointer btn-circle"
               src="https://img.icons8.com/flat-round/64/downloading-updates--v1.png"
               alt="download button"
               title="Download CSV"
@@ -107,7 +106,7 @@ const props = defineProps({
   newItem: {},
   events: {},
   allRows: {},
-  showRowsDefault: { default: true },
+  isDefaultShowRows: { default: true },
   showSuggestions: {
     default: true,
   },
@@ -158,7 +157,7 @@ const downloadCsv = () => {
   link.click();
 };
 
-const showRows = ref(props.showRowsDefault);
+const showRows = ref(props.isDefaultShowRows);
 
 const columns = inject(props.columns, []);
 const itemName = props.itemName;
@@ -455,6 +454,7 @@ let newRow = computed(() =>
       class: 'new-row',
       id: 'row-' + newItem.id,
       onKeyup: (e) => {
+        // BUG: This is not working
         if (e.key === 'Enter') {
           if (selectedSuggestion.value) {
             importSuggestion(selectedSuggestion.value);

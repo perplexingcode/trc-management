@@ -1,13 +1,6 @@
 .card {
-  border-radius: 5px;
-  padding: 2rem;
-  margin: 1rem;
+  @apply rounded p-2 m-3 h-fit;
 }
-
-.card *:is(p, h1, h2, h3, h4, h5, h6) {
-  color: #fff;
-}
-
 /* Buttons */
 button {
   border: 1px solid #ccc;
@@ -18,8 +11,8 @@ button {
   background: #ffdb00;
 }
 
-.btn-1char {
-  @apply rounded-full font-bold h-6 w-6 flex items-center justify-center;
+.btn-circle {
+  @apply rounded-full font-bold h-6 w-6 flex items-center justify-center border border-gray-300;
 }
 
 /* Input */
