@@ -279,23 +279,22 @@ props.newItem
   ? (props.newItem.state = reactive({ isBeingEdited: null, isSelected: null }))
   : null;
 //If not, create a new one
-newItem ||= reactive(
-  (() => {
-    let item = {};
-    columns.forEach((col) => {
-      if (!col.name || col.noSave) return;
-      if (col.default !== null && col.default !== undefined)
-        item[col.key] = col.default;
-      else item[col.key] = '';
-    });
-    item.state = new State();
-    item.id = id;
-    item.state.isBeingEdited = null;
-    item.state.isSelected = null;
-    item.state.isFocused = null;
-    return item;
-  })()
-);
+const createNewItemObj = function () {
+  let item = {};
+  columns.forEach((col) => {
+    if (!col.name || col.noSave) return;
+    if (col.default !== null && col.default !== undefined)
+      item[col.key] = col.default;
+    else item[col.key] = '';
+  });
+  item.state = new State();
+  item.id = id;
+  item.state.isBeingEdited = null;
+  item.state.isSelected = null;
+  item.state.isFocused = null;
+  return item;
+};
+newItem ||= reactive(createNewItemObj());
 const allRows = inject(props.allRows || props.rows);
 const suggestionItems = computed(() => {
   if (!newItem.name) return null;
@@ -454,10 +453,10 @@ let newRow = computed(() =>
       class: 'new-row',
       id: 'row-' + newItem.id,
       onKeyup: (e) => {
-        // BUG: This is not working
         if (e.key === 'Enter') {
           if (selectedSuggestion.value) {
             importSuggestion(selectedSuggestion.value);
+            return;
           }
           createRow();
         }
@@ -790,6 +789,7 @@ function editRow(index, itemsArray, element) {
   });
 }
 function focusRow(index, itemsArray, element) {
+  // TODO : Error detected ưhen delete a row
   rowBeingFocused.value = index;
   itemsArray.value.forEach((item) => (item.state.isFocused = false));
   itemsArray.value[index].state.isFocused = true;
@@ -819,6 +819,7 @@ function createRow() {
   upsert('management_' + itemName, newItem);
   emits('rowUpsert', props.itemName);
   id.value = v4();
+  newItem = reactive(createNewItemObj());
 }
 
 function upsertRow(index) {

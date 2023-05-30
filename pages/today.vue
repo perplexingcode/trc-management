@@ -44,25 +44,17 @@
                 <div class="waste">
                   <h3 class="pr-1 text-center">Waste</h3>
                   <div class="pl-10 flex items-center">
-                    <div class="flex px-2">
-                      <img
-                        width="22"
-                        height="22"
-                        class="mr-1"
-                        src="https://img.icons8.com/color/48/facebook-new.png"
-                        alt="facebook-new"
-                      />
-                      <p>{{ facebookTime }}</p>
-                    </div>
-                    <div class="flex px-2">
-                      <img
-                        width="22"
-                        height="22"
-                        class="mr-1"
-                        src="https://img.icons8.com/fluency/48/youtube-play.png"
-                        alt="youtube-play"
-                      />
-                      <p>{{ youtubeTime }}</p>
+                    <div v-for="group in wasteGroups" :key="group.name">
+                      <div class="flex px-2">
+                        <img
+                          width="22"
+                          height="22"
+                          class="mr-1"
+                          :src="group.img"
+                          :alt="group.name"
+                        />
+                        <p>{{ group.duration }}</p>
+                      </div>
                     </div>
                   </div>
                   <div class="waste_moves pl-7">
@@ -78,6 +70,20 @@
                 </div>
                 <div class="chore">
                   <h3 class="pr-1 text-center">Chore</h3>
+                  <div class="pl-10 flex items-center">
+                    <div v-for="group in choreGroups" :key="group.name">
+                      <div class="flex px-2">
+                        <img
+                          width="22"
+                          height="22"
+                          class="mr-1"
+                          :src="group.img"
+                          :alt="group.name"
+                        />
+                        <p>{{ group.duration }}</p>
+                      </div>
+                    </div>
+                  </div>
                   <div class="chore_moves pl-7">
                     <Table
                       rows="chore"
@@ -195,20 +201,77 @@ const todayChore = computed(() => {
   );
 });
 
-const youtubeTime = computed(() => {
-  return sumTime(
-    wasteMoves.value
-      .filter((move) => /youtube|yt/i.test(move.name))
-      .map((move) => move.duration)
-  );
-});
-const facebookTime = computed(() => {
-  return sumTime(
-    wasteMoves.value
-      .filter((move) => /facebook|fb/i.test(move.name))
-      .map((move) => move.duration)
-  );
-});
+const wasteMoveGroups = [
+  {
+    regExp: /youtube|yt/i,
+    img: 'https://img.icons8.com/fluency/48/youtube-play.png',
+    name: 'youtube',
+  },
+  {
+    regExp: /facebook|fb/i,
+    img: 'https://img.icons8.com/color/48/000000/facebook-new.png',
+    name: 'facebook',
+  },
+];
+
+const wasteGroups = ref([]);
+
+for (const group of wasteMoveGroups) {
+  const duration = computed(() => {
+    return sumTime(
+      wasteMoves.value
+        .filter((move) => group.regExp.test(move.name))
+        .map((move) => move.duration)
+    );
+  });
+  wasteGroups.value.push({
+    name: group.name,
+    img: group.img,
+    // moves,
+    duration,
+  });
+}
+
+const choreMoveGroups = [
+  {
+    regExp: /shower|bath|hygience|brushing teeth/i,
+    img: 'https://img.icons8.com/color/48/water.png',
+    name: 'hygience',
+  },
+  {
+    regExp: /eat|breakfast|lunch|dinner/i,
+    img: 'https://img.icons8.com/color/48/meal--v1.png',
+    name: 'meal',
+  },
+  {
+    regExp: /cleaning|tidy/i,
+    img: 'https://img.icons8.com/color/48/cleaning-a-surface.png',
+    name: 'tidy',
+  },
+  {
+    regExp: /sleep|nap/i,
+    img: 'https://img.icons8.com/color/48/sleep.png',
+    name: 'sleep',
+  },
+];
+
+const choreGroups = ref([]);
+
+for (const group of choreMoveGroups) {
+  const duration = computed(() => {
+    return sumTime(
+      choreMoves.value
+        .filter((move) => group.regExp.test(move.name))
+        .map((move) => move.duration)
+    );
+  });
+  choreGroups.value.push({
+    name: group.name,
+    img: group.img,
+    // moves,
+    duration,
+  });
+}
 
 const vars = inject('vars', {});
 const sleepTimeMax = ref(vars.sleepTime);
