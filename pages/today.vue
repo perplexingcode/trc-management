@@ -274,11 +274,15 @@ const maxTimeNoSleep = computed(() => {
 });
 </script>
 
-<style scoped>
+<style>
 .section.planning {
   width: 45%;
 }
 .section.tracking {
   width: 55%;
+}
+
+.waste-chore input.name {
+  width: 12rem;
 }
 </style>
