@@ -227,7 +227,7 @@ let moveColumns = [
     key: 'grp',
     type: 'select',
     disabled: false,
-    options: ['Personal', 'MFVN', 'TCGS', 'TrinityLTD'],
+    options: ['Personal', 'MFVN', 'Freelace', 'TCGS', 'TrinityLTD'],
     attrs: { type: 'text', required: true },
   },
   {
