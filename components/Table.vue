@@ -285,13 +285,13 @@ props.newItem
   ? (props.newItem.state = reactive({ isBeingEdited: null, isSelected: null }))
   : null;
 //If not, create a new one
-const createNewItemObj = function () {
-  let item = {};
+const createNewItemObj = () => {
+  const item = {};
   columns.forEach((col) => {
     if (!col.name || col.noSave) return;
-    if (col.default !== null && col.default !== undefined)
-      item[col.key] = col.default;
-    else item[col.key] = '';
+    col.default !== null && col.default !== undefined
+      ? (item[col.key] = col.default)
+      : (item[col.key] = '');
   });
   item.state = new State();
   item.id = id;
@@ -300,6 +300,16 @@ const createNewItemObj = function () {
   item.state.isFocused = null;
   return item;
 };
+
+const resetNewItem = () => {
+  columns.forEach((col) => {
+    if (!col.name || col.noSave) return;
+    col.default !== null && col.default !== undefined
+      ? (newItem[col.key] = col.default)
+      : (newItem[col.key] = '');
+  });
+};
+
 newItem ||= reactive(createNewItemObj());
 const allRows = inject(props.allRows || props.rows);
 const suggestionItems = computed(() => {
@@ -468,122 +478,138 @@ let newRow = computed(() =>
         }
       },
     },
-    columns.map((col) => {
-      switch (col.type) {
-        case 'is-selected':
-          return h(
-            'td',
-            { class: 'cell-select' },
-            h('img', {
-              src: dir('assets/img/icon/add.png'),
-              class: [
-                'add-row',
-                {
-                  hidden: !(selectedRows.value[0] || showIsSelected.value),
+    columns
+      .map((col) => {
+        switch (col.type) {
+          case 'is-selected':
+            return h(
+              'td',
+              { class: 'cell-select' },
+              h('img', {
+                src: dir('assets/img/icon/add.png'),
+                class: [
+                  'add-row',
+                  {
+                    hidden: !(selectedRows.value[0] || showIsSelected.value),
+                  },
+                ],
+                onClick: (e) => {
+                  importSuggestion(selectedSuggestion.value);
                 },
-              ],
-              onClick: (e) => {
-                importSuggestion(selectedSuggestion.value);
+                onHover: (e) => {
+                  showIsSelected.value = true;
+                },
+                onBlur: (e) => {
+                  showIsSelected.value = false;
+                },
+              })
+            );
+          case 'action':
+            return hTd(
+              'cell-action',
+              'button',
+              {
+                class: 'add-row',
+                onClick: (e) => {
+                  createRow();
+                },
               },
-              onHover: (e) => {
-                showIsSelected.value = true;
-              },
-              onBlur: (e) => {
-                showIsSelected.value = false;
-              },
-            })
-          );
-        case 'action':
-          return hTd(
-            'cell-action',
-            'button',
-            {
-              class: 'add-row',
-              onClick: (e) => {
-                createRow();
-              },
-            },
-            'Create row'
-          );
+              'Create row'
+            );
 
-        case 'input':
-          return hTd(
-            'cell' + col.key,
-            'input',
-            {
-              type: col.attrs.type,
-              class: col.key,
-              value: newItem[col.key],
-              required: col.attrs.required,
-              disabled: col.disabled,
-              onInput: (e) => {
-                if (col.key === 'duration')
-                  e.target.value = durationValidate(e.target.value);
-                newItem[col.key] = e.target.value;
+          case 'input':
+            return hTd(
+              'cell' + col.key,
+              'input',
+              {
+                type: col.attrs.type,
+                class: col.key,
+                value: newItem[col.key],
+                required: col.attrs.required,
+                disabled: col.disabled,
+                onInput: (e) => {
+                  if (col.key === 'duration')
+                    e.target.value = durationValidate(e.target.value);
+                  newItem[col.key] = e.target.value;
+                },
               },
-            },
-            col.attrs.placeholder
-          );
-        case 'input-name':
-          let autofill = '';
-          const suggestions = allRows.value.map((m) => m.name);
-          watch(
-            () => newItem[col.key],
-            (input) => {
-              if (!input) {
-                autofill = '';
-                return;
-              }
-              const match = suggestions.find((suggestion) =>
-                suggestion.toLowerCase().startsWith(input.toLowerCase())
-              );
-              match ? (autofill = match.slice(input.length)) : (autofill = '');
-            },
-            { immediate: true }
-          );
-          return h('td', { class: ['cell' + col.key, 'input-name'] }, [
-            h('input', {
-              type: 'text',
-              class: col.key,
-              value: newItem[col.key],
-              required: col.attrs.required,
-              disabled: col.disabled,
-              onKeydown: (e) => {
-                if (e.keyCode === 39) {
-                  newItem[col.key] = newItem[col.key] + autofill;
+              col.attrs.placeholder
+            );
+          case 'input-name':
+            let autofill = '';
+            const suggestions = allRows.value.map((m) => m.name);
+            watch(
+              () => newItem[col.key],
+              (input) => {
+                if (!input) {
+                  autofill = '';
+                  return;
                 }
-                if (
-                  e.keyCode === 9 &&
-                  autofill &&
-                  newItem[col.key] !== autofill
-                ) {
-                  newItem[col.key] = newItem[col.key] + autofill;
-                }
-              },
-              onInput: (e) => {
-                newItem[col.key] = e.target.value;
-                isShownSuggestions.value = true;
-              },
-              onFocus: (e) => {
-                e.target.setSelectionRange(
-                  e.target.value.length,
-                  e.target.value.length
+                const match = suggestions.find((suggestion) =>
+                  suggestion.toLowerCase().startsWith(input.toLowerCase())
                 );
+                match
+                  ? (autofill = match.slice(input.length))
+                  : (autofill = '');
               },
-              onBlur: (e) => {
-                setTimeout(() => {
-                  isShownSuggestions.value = false;
-                }, 120);
-              },
-            }),
-            h('div', { class: 'suggestion' }, [
-              h('em', newItem[col.key]),
-              autofill,
-            ]),
-          ]);
-      }
-      return renderElement(col, newItem, true);
-    })
+              { immediate: true }
+            );
+            return h('td', { class: ['cell' + col.key, 'input-name'] }, [
+              h('input', {
+                type: 'text',
+                class: col.key,
+                value: newItem[col.key],
+                required: col.attrs.required,
+                disabled: col.disabled,
+                onKeydown: (e) => {
+                  if (e.keyCode === 39) {
+                    newItem[col.key] = newItem[col.key] + autofill;
+                  }
+                  if (
+                    e.keyCode === 9 &&
+                    autofill &&
+                    newItem[col.key] !== autofill
+                  ) {
+                    newItem[col.key] = newItem[col.key] + autofill;
+                  }
+                },
+                onInput: (e) => {
+                  newItem[col.key] = e.target.value;
+                  isShownSuggestions.value = true;
+                },
+                onFocus: (e) => {
+                  e.target.setSelectionRange(
+                    e.target.value.length,
+                    e.target.value.length
+                  );
+                },
+                onBlur: (e) => {
+                  setTimeout(() => {
+                    isShownSuggestions.value = false;
+                  }, 120);
+                },
+              }),
+              h('div', { class: 'suggestion' }, [
+                h('em', newItem[col.key]),
+                autofill,
+              ]),
+            ]);
+        }
+        return renderElement(col, newItem, true);
+      })
+      .concat(
+        h('td', { class: 'cell-action' }, [
+          h('img', {
+            // TODO: Update src logic
+            src: 'https://management-img.s3.ap-southeast-1.amazonaws.com/minus.png',
+            title: 'Reset new row',
+            class: 'action-reset-new-row cursor-pointer',
+            onClick: (e) => {
+              resetNewItem();
+            },
+          }),
+        ])
+      )
   )
 );
 
@@ -622,7 +648,7 @@ let tableBody = computed(() =>
                 // TODO: Update src logic
                 src: 'https://management-img.s3.ap-southeast-1.amazonaws.com/minus.png',
                 title: 'Delete row',
-                class: 'action-delete',
+                class: 'action-delete cursor-pointer',
                 onClick: (e) => {
                   deleteRows(item.id);
                 },
@@ -832,13 +858,7 @@ function createRow() {
   emits('rowUpsert', props.itemName);
   id.value = v4();
   isShownSuggestions.value = false;
-  // reset newItem
-  columns.forEach((col) => {
-    if (!col.name || col.noSave) return;
-    if (col.default !== null && col.default !== undefined)
-      newItem[col.key] = col.default;
-    else newItem[col.key] = '';
-  });
+  resetNewItem();
 }
 
 function upsertRow(index) {
