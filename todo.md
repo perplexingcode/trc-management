@@ -38,3 +38,9 @@ For customer
 
 - Help mode
 - Strict mode
+
+---
+
+Done
+
+- Click away: use onBlur

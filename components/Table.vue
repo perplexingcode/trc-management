@@ -15,7 +15,10 @@
         <div class="p-3 table-wrapper" :class="itemName">
           <div
             v-if="
-              newItem.name && suggestionItems !== null && props.showSuggestions
+              newItem.name &&
+              suggestionItems !== null &&
+              props.showSuggestions &&
+              isShownSuggestions
             "
             class="modal suggestions"
           >
@@ -89,9 +92,12 @@ import { v4 } from 'uuid';
 import { upsert } from '~/static/db';
 import { durationValidate } from '~~/static/time';
 
+// CONSTANTS
 const backendUrl = useRuntimeConfig().backendUrl;
-
 const MAX_SUGGESTION_ROW = 5;
+
+// STATES
+const isShownSuggestions = ref(true);
 
 let log = ref('');
 
@@ -556,12 +562,18 @@ let newRow = computed(() =>
               },
               onInput: (e) => {
                 newItem[col.key] = e.target.value;
+                isShownSuggestions.value = true;
               },
               onFocus: (e) => {
                 e.target.setSelectionRange(
                   e.target.value.length,
                   e.target.value.length
                 );
+              },
+              onBlur: (e) => {
+                setTimeout(() => {
+                  isShownSuggestions.value = false;
+                }, 120);
               },
             }),
             h('div', { class: 'suggestion' }, [
@@ -819,7 +831,14 @@ function createRow() {
   upsert('management_' + itemName, newItem);
   emits('rowUpsert', props.itemName);
   id.value = v4();
-  newItem = reactive(createNewItemObj());
+  isShownSuggestions.value = false;
+  // reset newItem
+  columns.forEach((col) => {
+    if (!col.name || col.noSave) return;
+    if (col.default !== null && col.default !== undefined)
+      newItem[col.key] = col.default;
+    else newItem[col.key] = '';
+  });
 }
 
 function upsertRow(index) {
