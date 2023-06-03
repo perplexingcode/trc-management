@@ -1,3 +1,4 @@
+- Responsivity
 - Weight system/mechanism for table
 - Sort table
   - Pass in sort function

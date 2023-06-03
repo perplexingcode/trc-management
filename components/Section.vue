@@ -8,10 +8,10 @@
           :isDefaultShow="showSection"
         />
       </div>
-      <div class="action-panel">
+      <div v-show="showSection" class="action-panel">
         <slot name="action-panel"></slot>
       </div>
-      <div v-if="maxStep > 1" class="steps flex items-center">
+      <div v-if="maxStep > 1 && showSection" class="steps flex items-center">
         <button @click="step == 0 || step--">&lt;</button>
         <div
           v-for="(_, index) in maxStep"
