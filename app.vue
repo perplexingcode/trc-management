@@ -9,6 +9,7 @@
         <li><NuxtLink to="/category">Categories</NuxtLink></li>
         <li><NuxtLink to="/project">Projects</NuxtLink></li>
         <li><NuxtLink to="/data">Data</NuxtLink></li>
+        <li><NuxtLink to="/note">Note</NuxtLink></li>
         <li class="menu-parent-item">
           <NuxtLink to="/navigation">Navigation</NuxtLink>
           <ul class="menu-drop-down">
