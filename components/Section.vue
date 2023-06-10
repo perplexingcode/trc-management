@@ -1,5 +1,8 @@
 <template>
-  <section class="card bg-gray-200 flex flex-col">
+  <section
+    class="card bg-gray-200 flex flex-col"
+    :class="[{ closed: !showSection }]"
+  >
     <div class="section header flex justify-between">
       <div class="flex items-center">
         <h2 class="text-xl font-bold text-black">{{ title }}</h2>
@@ -54,4 +57,8 @@ console.log(maxStep);
 const showSection = ref(props.isDefaultShow);
 const step = ref(0);
 </script>
-<style></style>
+<style>
+.closed {
+  width: fit-content !important;
+}
+</style>
