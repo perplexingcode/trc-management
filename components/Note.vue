@@ -1,5 +1,6 @@
 <template>
-  <div class="notes flex flex-col">
+  <div class="note flex flex-col h-fit">
+    <h3>{{ title }}</h3>
     <textarea
       onfocus='this.style.height = "";this.style.height = this.scrollHeight + "px"'
       v-model="note.text"
@@ -15,6 +16,7 @@
           &lt;
         </button>
         <btn-show-hide
+          v-if="props.showVersionHistory"
           class="m-auto"
           @click="showVersion = !showVersion"
           :is-default-show="false"
@@ -44,6 +46,14 @@
         :value="note.versionHistory.stack[viewVersion]?.text"
         disabled
       />
+      <p
+        v-show="
+          showVersion && note.versionHistory.stack[viewVersion]?.timestamp
+        "
+        class="text-xs text-center"
+      >
+        {{ note.versionHistory.stack[viewVersion]?.timestamp }}
+      </p>
     </div>
   </div>
 </template>
@@ -51,7 +61,29 @@
 <script setup>
 import { v4 } from 'uuid';
 import { upsert } from '~~/static/db';
+import { createTimestamp } from '~~/static/time';
 import { syncReactive } from '~~/static/utils';
+
+// define props
+const props = defineProps({
+  name: {
+    type: String,
+    required: true,
+  },
+  box: {
+    type: String,
+    required: false,
+  },
+  title: {
+    type: String,
+    required: false,
+  },
+  showVersionHistory: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
+});
 
 const showVersion = ref(false);
 const viewVersion = ref(0);
@@ -68,7 +100,7 @@ class FILOArray {
     if (this.stack.length >= this.maxSize) {
       this.stack.shift(); // Remove the oldest item
     }
-    this.stack.push({ id: v4(), text: item });
+    this.stack.push({ id: v4(), text: item, timestamp: createTimestamp() });
   }
 
   pop() {
@@ -91,19 +123,13 @@ class FILOArray {
     this.stack = [];
   }
 }
-// define props
-const props = defineProps({
-  box: {
-    type: String,
-    required: true,
-  },
-});
 
 const note = reactive({
   id: '',
   text: '',
   lastUpdated: '',
   box: '',
+  name: '',
   versionHistory: new FILOArray(),
 });
 
@@ -111,13 +137,14 @@ const { backendUrl } = useRuntimeConfig();
 onMounted(async () => {
   nextTick(async () => {
     let cloudNote = await useFetch(
-      backendUrl + '/query' + '/management_note' + '/box/' + props.box
+      backendUrl + '/query' + '/management_note' + '/name/' + props.name
     );
     cloudNote = cloudNote.data._rawValue?.[0];
     if (!cloudNote) {
       note.id = v4();
       note.text = '';
       note.box = props.box;
+      note.name = props.name;
       note.lastUpdated = createTimestamp();
       note.versionHistory = new FILOArray();
       upsert('management_note', note);
@@ -147,16 +174,6 @@ const applyChange = () => {
   upsert('management_note', note);
   isEditing.value = false;
   viewVersion.value = note.versionHistory.stack.length - 1;
-};
-
-const createTimestamp = () => {
-  return `\n${
-    new Date(new Date().getTime() + 7 * 60 * 60 * 1000)
-      .toISOString()
-      .replace(/[TZ]/g, ' ')
-      .trim()
-      .split('.')[0]
-  }`;
 };
 </script>
 
