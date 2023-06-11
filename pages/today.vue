@@ -17,7 +17,7 @@
 
 <style>
 .section.planning {
-  width: 45%;
+  width: 47%;
 }
 .section.tracking {
   width: 55%;
