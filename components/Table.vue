@@ -713,11 +713,13 @@ function renderElement(element, item, isNewRow) {
         },
       });
     case 'input-name':
+      const innerText = item[element.key] ? item[element.key] : element.default;
       return hTd('cell-' + element.key, 'input', {
         type: 'text',
         class: element.key,
-        value: item[element.key] ? item[element.key] : element.default,
+        value: innerText,
         required: element.attrs.required,
+        title: innerText?.length > 20 ? innerText : null,
         disabled:
           element.disabled ||
           (!(item.state.isBeingEdited && isEditing.value) && !isNewRow),
