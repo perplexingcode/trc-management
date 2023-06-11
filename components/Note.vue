@@ -157,6 +157,14 @@ onMounted(async () => {
 });
 
 const isEditing = ref(false);
+// Alert save changes
+window.addEventListener('beforeunload', function (event) {
+  if (isEditing.value) {
+    event.preventDefault();
+    event.returnValue = '';
+    return '';
+  }
+});
 
 const handleKeydown = (event) => {
   if (event.shiftKey && event.keyCode === 13) {
