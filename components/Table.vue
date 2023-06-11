@@ -647,9 +647,9 @@ let tableBody = computed(() =>
               h('img', {
                 // TODO: Update src logic
                 src: 'https://management-img.s3.ap-southeast-1.amazonaws.com/minus.png',
-                title: 'Delete row',
+                title: 'Double click to delete row',
                 class: 'action-delete cursor-pointer',
-                onClick: (e) => {
+                onDblclick: (e) => {
                   deleteRows(item.id);
                 },
               }),
