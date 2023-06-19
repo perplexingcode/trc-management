@@ -35,6 +35,10 @@ textarea {
   overflow-y: hidden;
 }
 
+input:focus-visible {
+  outline: 2px solid #ccc;
+}
+
 .input-name {
   position: relative;
 }

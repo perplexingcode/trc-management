@@ -1,7 +1,7 @@
 <template>
   <div class="sleep text-center">
     <h3 class="pr-1 text-center-center">Sleep</h3>
-    <div class="sleep_moves pl-7 flex">
+    <div class="sleep_moves pl-2 flex">
       <div class="input-group">
         <label>Max</label>
         <input v-model="sleepTimeMax" class="w-16" />
@@ -27,7 +27,7 @@ const sleepTimeMax = ref(vars.sleepTime);
 let sleepTimeCurrent = computed(() => {
   return sumTime(
     choreMoves.value
-      .filter((move) => /sleep|nap/i.test(move.name))
+      .filter((move) => /sleep|nap|rest/i.test(move.name))
       .map((move) => move.duration)
   );
 });

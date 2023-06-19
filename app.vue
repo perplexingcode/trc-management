@@ -1,6 +1,7 @@
 <template>
   <main class="main_wrap">
     <h1>This is Management</h1>
+    <p class="text-center">Last action: {{ lastActionTimestamp }}</p>
     <nav>
       <ul>
         <li><NuxtLink to="/">Home</NuxtLink></li>
@@ -35,6 +36,21 @@
 <script setup>
 import moment from 'moment';
 
+if (process.client) {
+  const lastActionTimestamp = ref(moment(new Date()).format('HH:mm:ss'));
+  var elements = document.getElementsByTagName('*');
+  for (var i = 0; i < elements.length; i++) {
+    // Attach a click event handler to each element
+    elements[i].addEventListener('click', function (event) {
+      // Prevent the default behavior of the click event
+      lastActionTimestamp.value = moment(new Date()).format('HH:mm:ss');
+    });
+    elements[i].addEventListener('change', function (event) {
+      // Prevent the default behavior of the click event
+      lastActionTimestamp.value = moment(new Date()).format('HH:mm:ss');
+    });
+  }
+}
 const today = moment(new Date()).format('YYYY-MM-DD');
 
 const { backendUrl } = useRuntimeConfig();
@@ -61,6 +77,7 @@ let projects = (await useFetch(backendUrl + '/all/' + 'management_project'))
 // Sort alphabetically
 projects.value = projects.value.sort((a, b) => (a.name > b.name ? 1 : -1));
 provide('projects', projects);
+const projectNames = projects.value.map((p) => p.name);
 
 const queuedMoves = (
   await useFetch(backendUrl + '/all/' + 'management_queued-move')
@@ -107,7 +124,7 @@ const queuedMoveColumns = [
     key: 'done',
     type: 'checkbox',
     disabled: false,
-    default: true,
+    default: false,
     attrs: { type: 'checkbox' },
   },
   {
@@ -124,25 +141,33 @@ const queuedMoveColumns = [
     ],
     attrs: { type: 'text' },
   },
+  // {
+  //   name: 'Personnel',
+  //   key: 'personnel',
+  //   type: 'select',
+  //   default: 'CEO',
+  //   disabled: false,
+  //   options: [
+  //     'CEO',
+  //     'CFO',
+  //     'CMO',
+  //     'CTO',
+  //     'Developer',
+  //     'HR',
+  //     'Secretary',
+  //     'Sales Expert',
+  //     'Stylist',
+  //     'Artist',
+  //     'Philosopher',
+  //   ],
+  // },
   {
-    name: 'Personnel',
-    key: 'personnel',
+    name: 'Project',
+    key: 'prj',
     type: 'select',
-    default: 'CEO',
     disabled: false,
-    options: [
-      'CEO',
-      'CFO',
-      'CMO',
-      'CTO',
-      'Developer',
-      'HR',
-      'Secretary',
-      'Sales Expert',
-      'Stylist',
-      'Artist',
-      'Philosopher',
-    ],
+    options: projectNames,
+    attrs: { type: 'text', required: false },
   },
 ];
 
@@ -175,7 +200,7 @@ let moveColumns = [
     key: 'done',
     type: 'checkbox',
     disabled: false,
-    default: true,
+    default: false,
     attrs: { type: 'checkbox' },
   },
   {
@@ -220,7 +245,7 @@ let moveColumns = [
     key: 'prj',
     type: 'select',
     disabled: false,
-    options: projects.value.map((p) => p.name),
+    options: projectNames,
     attrs: { type: 'text', required: true },
   },
   {

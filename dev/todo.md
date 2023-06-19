@@ -1,8 +1,11 @@
 - Responsivity
+- Make note history disabled instead of attaching to bottom (< timestamp > >>)
 - Weight system/mechanism for table
 - Sort table
   - Pass in sort function
   - Sort on change = true
+- implement dev element
+- note sync mechanism (current mechanism will break if note changed on different devices)
 - semantic html structure
 - Use vue event bus in nuxt
 - Minified col (expand on hover)
@@ -24,8 +27,6 @@
 - Copy ID
 - Icon tooltip for table row (This move is repeated daily)
 - Action dropdown for table row
-- Implement base URL
-- Implement upsert backend
 - Hover states: input,
 - Loading
 - nav : report, today, calendar (today, week, month, quarter, phase, decade), categories

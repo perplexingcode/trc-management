@@ -75,3 +75,13 @@ export const durationValidate = function (duration) {
   duration = duration.replace(/(m|h|:)(?=\1)/g, '');
   return duration;
 };
+
+export const createTimestamp = () => {
+  return `\n${
+    new Date(new Date().getTime() + 7 * 60 * 60 * 1000)
+      .toISOString()
+      .replace(/[TZ]/g, ' ')
+      .trim()
+      .split('.')[0]
+  }`;
+};

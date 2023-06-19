@@ -15,7 +15,7 @@
         </div>
       </div>
     </div>
-    <div class="waste_moves pl-7">
+    <div class="waste_moves pl-2">
       <Table
         rows="waste"
         columns="wasteChoreColumns"

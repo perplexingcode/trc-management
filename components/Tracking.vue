@@ -20,7 +20,7 @@
         </div>
         <div class="notes-box card bg-secondary flex flex-col">
           <h3 class="text-center">Notes</h3>
-          <Note box="general" />
+          <Note name="general" box="general" :show-version-history="true" />
         </div>
       </div>
     </template>

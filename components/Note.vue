@@ -63,6 +63,7 @@ import { v4 } from 'uuid';
 import { upsert } from '~~/static/db';
 import { createTimestamp } from '~~/static/time';
 import { syncReactive } from '~~/static/utils';
+import FILOArray from '~~/static/class/FILOArray';
 
 // define props
 const props = defineProps({
@@ -81,48 +82,16 @@ const props = defineProps({
   showVersionHistory: {
     type: Boolean,
     required: false,
-    default: false,
+    default: true,
+  },
+  data: {
+    type: Object,
+    required: false,
   },
 });
 
 const showVersion = ref(false);
 const viewVersion = ref(0);
-
-class FILOArray {
-  constructor() {
-    this.stack = [];
-    this.maxSize = 10;
-  }
-
-  push(item) {
-    // no duplicates
-    if (this.stack[this.stack.length - 1]?.text === item) return;
-    if (this.stack.length >= this.maxSize) {
-      this.stack.shift(); // Remove the oldest item
-    }
-    this.stack.push({ id: v4(), text: item, timestamp: createTimestamp() });
-  }
-
-  pop() {
-    return this.stack.pop();
-  }
-
-  peek() {
-    return this.stack[this.stack.length - 1];
-  }
-
-  isEmpty() {
-    return this.stack.length === 0;
-  }
-
-  size() {
-    return this.stack.length;
-  }
-
-  clear() {
-    this.stack = [];
-  }
-}
 
 const note = reactive({
   id: '',
@@ -135,25 +104,37 @@ const note = reactive({
 
 const { backendUrl } = useRuntimeConfig();
 onMounted(async () => {
-  nextTick(async () => {
-    let cloudNote = await useFetch(
-      backendUrl + '/query' + '/management_note' + '/name/' + props.name
-    );
-    cloudNote = cloudNote.data._rawValue?.[0];
-    if (!cloudNote) {
-      note.id = v4();
-      note.text = '';
-      note.box = props.box;
-      note.name = props.name;
-      note.lastUpdated = createTimestamp();
-      note.versionHistory = new FILOArray();
-      upsert('management_note', note);
-      return;
-    }
+  await nextTick();
+  Object.setPrototypeOf(note.versionHistory, FILOArray.prototype);
+  if (props.data) {
+    syncReactive(note, props.data);
+    Object.setPrototypeOf(note.versionHistory, FILOArray.prototype);
+    viewVersion.value = note.versionHistory.stack.length - 1;
+    return;
+  }
+  let cloudNote = await useFetch(
+    backendUrl + '/query' + '/management_note' + '/name/' + props.name
+  );
+  cloudNote = cloudNote.data._rawValue?.[0];
+  // if (!cloudNote) {
+  //   note.id = v4();
+  //   note.text = '';
+  //   note.box = props.box;
+  //   note.name = props.name;
+  //   note.lastUpdated = createTimestamp();
+  //   note.versionHistory = new FILOArray();
+  //   upsert('management_note', note);
+  //   return;
+  // }
+  try {
     syncReactive(note, cloudNote);
     Object.setPrototypeOf(note.versionHistory, FILOArray.prototype);
     viewVersion.value = note.versionHistory.stack.length - 1;
-  });
+    // wait 0.5s to make sure all notes are loaded
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  } catch (error) {
+    console.error(error);
+  }
 });
 
 const isEditing = ref(false);

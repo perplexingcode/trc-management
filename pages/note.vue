@@ -35,7 +35,7 @@
           >
             ({{ note.box }})
           </h5>
-          <Note :name="note.name" :box="note.box" />
+          <Note :name="note.name" :box="note.box" :data="note" />
         </div>
       </div>
     </div>
@@ -47,6 +47,7 @@ import { createTimestamp } from '~~/static/time';
 import { unwrap } from '~~/static/utils';
 import { v4 } from 'uuid';
 import { request } from '~~/static/request';
+import FILOArray from '~~/static/class/FILOArray';
 
 const vars = inject('vars');
 const backendUrl = vars.backendUrl;
@@ -67,7 +68,7 @@ const newNote = reactive({
   text: '',
   name: '',
   box: '',
-  versionHistory: {},
+  versionHistory: new FILOArray(),
 });
 onMounted(async () => {
   await nextTick();
@@ -75,15 +76,16 @@ onMounted(async () => {
     ._rawValue;
   notes.value = cloudNotes;
 });
-function addNewNote() {
+async function addNewNote() {
+  await nextTick();
   if (newNote.name) {
     newNote.createdAt = createTimestamp();
     newNote.lastUpdated = createTimestamp();
     notes.value.push(unwrap(newNote));
     newNote.id = v4();
-    newNote.name = '';
-    newNote.box = '';
     upsert('management_note', newNote);
+    newNote.box = '';
+    newNote.name = '';
   }
 }
 
