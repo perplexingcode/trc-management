@@ -51,9 +51,8 @@ const props = defineProps({
 });
 const $slots = useSlots();
 const maxStep = ref(
-  Object.keys($slots).filter((slotName) => slotName.includes('step')).length
+  Object.keys($slots).filter((slotName) => slotName.includes("step")).length,
 );
-console.log(maxStep);
 const showSection = ref(props.isDefaultShow);
 const step = ref(0);
 </script>
