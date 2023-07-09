@@ -1,5 +1,5 @@
-import { v4 } from "uuid";
-import { createTimestamp } from "../time";
+import { v4 } from 'uuid';
+import { createTimestamp } from '../time';
 
 class FILOArray {
   constructor() {
@@ -9,11 +9,11 @@ class FILOArray {
 
   push(item) {
     // no duplicates
-    if (this.stack[this.stack.length - 1] === item) return;
+    if (this.stack[this.stack.length - 1]?.text === item) return;
     if (this.stack.length >= this.maxSize) {
       this.stack.shift(); // Remove the oldest item
     }
-    this.stack.push(item);
+    this.stack.push({ id: v4(), text: item, timestamp: createTimestamp() });
   }
 
   pop() {

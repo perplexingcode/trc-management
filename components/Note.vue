@@ -63,7 +63,7 @@ import { v4 } from 'uuid';
 import { upsert } from '~~/static/db';
 import { createTimestamp } from '~~/static/time';
 import { syncReactive } from '~~/static/utils';
-import FILOArray from '~~/static/class/FILOArray';
+import FILOArray from '~~/static/class/FILOArrayNote';
 
 // define props
 const props = defineProps({
@@ -94,11 +94,11 @@ const showVersion = ref(false);
 const viewVersion = ref(0);
 
 const note = reactive({
-  id: '',
+  id: v4(),
   text: '',
   lastUpdated: '',
-  box: '',
-  name: '',
+  box: props.box,
+  name: props.name,
   versionHistory: new FILOArray(),
 });
 
@@ -139,14 +139,15 @@ onMounted(async () => {
 
 const isEditing = ref(false);
 // Alert save changes
-window.addEventListener('beforeunload', function (event) {
-  if (isEditing.value) {
-    event.preventDefault();
-    event.returnValue = '';
-    return '';
-  }
-});
-
+if (process.client) {
+  window.addEventListener('beforeunload', function (event) {
+    if (isEditing.value) {
+      event.preventDefault();
+      event.returnValue = '';
+      return '';
+    }
+  });
+}
 const handleKeydown = (event) => {
   if (event.shiftKey && event.keyCode === 13) {
     event.preventDefault();
@@ -155,9 +156,17 @@ const handleKeydown = (event) => {
 };
 
 const applyChange = () => {
+  console.log(note);
   if (note.text == note.versionHistory[viewVersion]) {
     return;
   }
+  upsert('management_note_backup', {
+    id: v4(),
+    text: note.text,
+    name: note.name || v4(),
+    box: note.box || v4(),
+    timestamp: createTimestamp(),
+  });
   note.lastUpdated = createTimestamp();
   note.versionHistory.push(note.text);
   upsert('management_note', note);

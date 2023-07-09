@@ -42,14 +42,14 @@
   </main>
 </template>
 <script setup>
-import { upsert } from '~~/static/db';
-import { createTimestamp } from '~~/static/time';
-import { unwrap } from '~~/static/utils';
-import { v4 } from 'uuid';
-import { request } from '~~/static/request';
-import FILOArray from '~~/static/class/FILOArray';
+import { upsert } from "~~/static/db";
+import { createTimestamp } from "~~/static/time";
+import { unwrap } from "~~/static/utils";
+import { v4 } from "uuid";
+import { request } from "~~/static/request";
+import FILOArray from "~~/static/class/FILOArrayNote";
 
-const vars = inject('vars');
+const vars = inject("vars");
 const backendUrl = vars.backendUrl;
 const notes = ref([]);
 // REFACTOR : use class instead of object
@@ -65,27 +65,34 @@ const notes = ref([]);
 // }
 const newNote = reactive({
   id: v4(),
-  text: '',
-  name: '',
-  box: '',
+  text: "",
+  name: "",
+  box: "",
   versionHistory: new FILOArray(),
 });
 onMounted(async () => {
   await nextTick();
-  const cloudNotes = (await useFetch(backendUrl + '/all/management_note')).data
+  const cloudNotes = (await useFetch(backendUrl + "/all/management_note")).data
     ._rawValue;
   notes.value = cloudNotes;
 });
 async function addNewNote() {
   await nextTick();
+  //if note already exists, return
+  const noteNames = notes.value.map((note) => note.name);
+  if (noteNames.includes(newNote.name)) {
+    alert("Cannot add duplicate note.");
+    return;
+  }
+
   if (newNote.name) {
     newNote.createdAt = createTimestamp();
     newNote.lastUpdated = createTimestamp();
-    notes.value.push(unwrap(newNote));
+    notes.value.unshift(unwrap(newNote));
     newNote.id = v4();
-    upsert('management_note', newNote);
-    newNote.box = '';
-    newNote.name = '';
+    upsert("management_note", newNote);
+    newNote.box = "";
+    newNote.name = "";
   }
 }
 
@@ -93,7 +100,7 @@ function deleteNote() {
   if (newNote.name) {
     // get note Id
     const noteId = notes.value.find((note) => note.name == newNote.name).id;
-    request(backendUrl + '/delete/management_note', 'post', [noteId]);
+    request(backendUrl + "/delete/management_note", "post", [noteId]);
     notes.value = notes.value.filter((note) => note.name != newNote.name);
   }
 }
