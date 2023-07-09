@@ -8,8 +8,8 @@
         :class="{
           'bg-gray-300': date > today,
           'bg-blue-500': date == today,
-          'bg-yellow-300': hour >= 11.5,
-          'bg-red-600': hour < 11.5,
+          'bg-yellow-300': hour >= minimum && date < today,
+          'bg-red-600': hour < minimum && date < today,
         }"
       ></div>
     </div>
@@ -31,6 +31,8 @@
 import { query, upsert, getById } from "~~/static/db";
 import moment from "moment";
 import { sumTime, cvTime, createTimestamp } from "~~/static/time";
+
+const minimum = 10;
 
 const today = moment().format("YYYY-MM-DD");
 const movesToday = inject("movesToday");
@@ -109,7 +111,7 @@ onMounted(async () => {
 });
 
 const winrate = computed(() => {
-  const win = Object.values(dateHours.value).filter((d) => d >= 11.5).length;
+  const win = Object.values(dateHours.value).filter((d) => d >= minimum).length;
   const today = new Date();
   const currentDate = today.toISOString().split("T")[0];
   const pastHours = Object.entries(dateHours.value).filter(
