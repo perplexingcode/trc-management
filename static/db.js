@@ -21,23 +21,22 @@ export const upsert = async function (table, data) {
 export const getAll = async function (table) {
   const { backendUrl } = useRuntimeConfig();
   table = rename(table);
-  let response = await request(backendUrl + "/all/" + table, "GET");
+  let response = await request("all" + "/" + table, "GET");
   return response;
 };
 
 export const query = async function (table, queryName, queryValue) {
-  const { backendUrl } = useRuntimeConfig();
   table = rename(table);
   if (typeof queryValue === "object") {
     let response = await request(
-      backendUrl + "/query/" + table + "/" + queryName,
+      "query" + "/" + table + "/" + queryName,
       "POST",
       JSON.stringify(queryValue),
     );
     return response;
   }
   let response = await request(
-    backendUrl + "/query/" + table + "/" + queryName + "/" + queryValue,
+    "query" + "/" + table + "/" + queryName + "/" + queryValue,
     "GET",
   );
 
@@ -46,27 +45,10 @@ export const query = async function (table, queryName, queryValue) {
 
 export const getById = async function (table, id) {
   table = rename(table);
-  return await request("/id/" + table + "/" + id, "GET");
+  return await request("id" + "/" + table + "/" + id, "GET");
 };
 
-// export const deleteItems = async function (id, itemArray, hasState) {
-//   let deleteRowList = [];
-//   if (id) {
-//     deleteRowList.push(id);
-//     const index = rows.value.findIndex((row) => row.id === id);
-//     rows.value.splice(index, 1);
-//   } else {
-//     for (let i = 0; i < rows.value.length; i++) {
-//       if (rows.value[i].state.isSelected) {
-//         deleteRowList.push(rows.value[i].id);
-//         rows.value.splice(i, 1);
-//         i--;
-//       }
-//     }
-//   }
-//   request(
-//     backendUrl + '/' + itemName + '/delete',
-//     'post',
-//     deleteRowList
-//   );
-// }
+export const dbDelete = async function (table, list) {
+  table = rename(table);
+  request("delete" + "/" + table, "post", list);
+};
