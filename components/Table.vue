@@ -86,11 +86,11 @@
 </template>
 
 <script setup>
-import { request } from '~/static/request';
-import { deepClone, removeState, dir, deepCompare } from '~/static/utils';
-import { v4 } from 'uuid';
-import { upsert } from '~/static/db';
-import { durationValidate } from '~~/static/time';
+import { request } from "~/static/request";
+import { deepClone, removeState, dir, deepCompare } from "~/static/utils";
+import { v4 } from "uuid";
+import { upsert } from "~/static/db";
+import { durationValidate } from "~~/static/time";
 
 // CONSTANTS
 const backendUrl = useRuntimeConfig().backendUrl;
@@ -99,7 +99,7 @@ const MAX_SUGGESTION_ROW = 5;
 // STATES
 const isShownSuggestions = ref(true);
 
-let log = ref('');
+let log = ref("");
 
 // #SETUP
 //Table data
@@ -119,9 +119,11 @@ const props = defineProps({
 });
 
 // DEV
-const emits = defineEmits(['upsert']);
+const emits = defineEmits(["upsert"]);
 
 const rows = inject(props.rows, []);
+
+console.log(props);
 for (let i = 0; i < rows.value.length; i++) {
   rows.value[i].state = reactive({
     isBeingEdited: false,
@@ -140,24 +142,24 @@ const downloadCsv = () => {
 
   // Creating the CSV content
   const csvContent = [
-    sortedKeys.join(','), // Header row
+    sortedKeys.join(","), // Header row
     ...data.map((obj) =>
       sortedKeys
         .map((key) => {
           console.log(obj[key]);
-          if (typeof obj[key] === 'string') {
-            return obj[key].replaceAll(',', ';');
+          if (typeof obj[key] === "string") {
+            return obj[key].replaceAll(",", ";");
           }
           return obj[key];
         })
-        .join(',')
+        .join(","),
     ), // Data rows
-  ].join('\n');
+  ].join("\n");
   const encodedUri =
-    'data:text/csv;charset=utf-8,' + encodeURI(csvContent.replaceAll(`"`, ''));
-  const link = document.createElement('a');
-  link.setAttribute('href', encodedUri);
-  link.setAttribute('download', `${itemName}.csv`);
+    "data:text/csv;charset=utf-8," + encodeURI(csvContent.replaceAll(`"`, ""));
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", `${itemName}.csv`);
   console.log(csvContent);
   document.body.appendChild(link); // Required for FF
   link.click();
@@ -170,23 +172,23 @@ const itemName = props.itemName;
 
 // << DEVELOPMENT
 
-if (itemName == 'queued-move') {
+if (itemName == "queued-move") {
   for (let i = 0; i < rows.value.length; i++) {
     rows.value[i].weight = +rows.value[i].weight;
     switch (rows.value[i].priority) {
-      case '1-Urgent':
+      case "1-Urgent":
         rows.value[i].relativeWeight = rows.value[i].weight + 999;
         break;
-      case '2-Necessary':
+      case "2-Necessary":
         rows.value[i].relativeWeight = rows.value[i].weight + 500;
         break;
-      case '3-Important':
+      case "3-Important":
         rows.value[i].relativeWeight = rows.value[i].weight + 250;
         break;
-      case '4-Recommended':
+      case "4-Recommended":
         rows.value[i].relativeWeight = rows.value[i].weight + 100;
         break;
-      case '5-Optional':
+      case "5-Optional":
         rows.value[i].relativeWeight = rows.value[i].weight;
         break;
       default:
@@ -202,18 +204,18 @@ if (itemName == 'queued-move') {
 
 onMounted(() => {
   // Save changes
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
       isEditing.value = false;
     }
   });
 
   // Alert save changes
-  window.addEventListener('beforeunload', function (event) {
+  window.addEventListener("beforeunload", function (event) {
     if (isEditing.value) {
       event.preventDefault();
-      event.returnValue = '';
-      return '';
+      event.returnValue = "";
+      return "";
     }
   });
 });
@@ -254,19 +256,19 @@ watch(
     }
     if (deepCompare(_previous, _current)) return;
     console.log(deepCompare(_previous, _current));
-    console.log('pre', _previous);
-    console.log('cur', _current);
+    console.log("pre", _previous);
+    console.log("cur", _current);
     previous = oldValue._rawValue;
     current = newValue._rawValue;
   },
   {
     deep: true,
-  }
+  },
 );
 if (process.client) {
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'F2') {
-      console.log('previous', previous);
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "F2") {
+      console.log("previous", previous);
       rows.value = previous;
     }
   });
@@ -274,7 +276,7 @@ if (process.client) {
 
 // #LOGIC
 const hTd = function (hClass, ...args) {
-  return h('td', { class: ['cell', hClass] }, h(...args));
+  return h("td", { class: ["cell", hClass] }, h(...args));
 };
 
 let id = ref(v4());
@@ -291,7 +293,7 @@ const createNewItemObj = () => {
     if (!col.name || col.noSave) return;
     col.default !== null && col.default !== undefined
       ? (item[col.key] = col.default)
-      : (item[col.key] = '');
+      : (item[col.key] = "");
   });
   item.state = new State();
   item.id = id;
@@ -306,7 +308,7 @@ const resetNewItem = () => {
     if (!col.name || col.noSave) return;
     col.default !== null && col.default !== undefined
       ? (newItem[col.key] = col.default)
-      : (newItem[col.key] = '');
+      : (newItem[col.key] = "");
   });
 };
 
@@ -329,7 +331,8 @@ const suggestionItems = computed(() => {
   if (allSuggestions.length === 0) return null;
   //Remove duplicates
   const uniqueSuggestions = allSuggestions.filter(
-    (item, index, self) => index === self.findIndex((t) => t.name === item.name)
+    (item, index, self) =>
+      index === self.findIndex((t) => t.name === item.name),
   );
   //Return only the first several items
   let suggestions = uniqueSuggestions.slice(0, MAX_SUGGESTION_ROW);
@@ -464,12 +467,12 @@ const nonTextKeys = [
 const showIsSelected = ref(false);
 let newRow = computed(() =>
   h(
-    'tr',
+    "tr",
     {
-      class: 'new-row',
-      id: 'row-' + newItem.id,
+      class: "new-row",
+      id: "row-" + newItem.id,
       onKeyup: (e) => {
-        if (e.key === 'Enter') {
+        if (e.key === "Enter") {
           if (selectedSuggestion.value) {
             importSuggestion(selectedSuggestion.value);
             return;
@@ -481,14 +484,14 @@ let newRow = computed(() =>
     columns
       .map((col) => {
         switch (col.type) {
-          case 'is-selected':
+          case "is-selected":
             return h(
-              'td',
-              { class: 'cell-select' },
-              h('img', {
-                src: dir('assets/img/icon/add.png'),
+              "td",
+              { class: "cell-select" },
+              h("img", {
+                src: dir("assets/img/icon/add.png"),
                 class: [
-                  'add-row',
+                  "add-row",
                   {
                     hidden: !(selectedRows.value[0] || showIsSelected.value),
                   },
@@ -502,25 +505,25 @@ let newRow = computed(() =>
                 onBlur: (e) => {
                   showIsSelected.value = false;
                 },
-              })
+              }),
             );
-          case 'action':
+          case "action":
             return hTd(
-              'cell-action',
-              'button',
+              "cell-action",
+              "button",
               {
-                class: 'add-row',
+                class: "add-row",
                 onClick: (e) => {
                   createRow();
                 },
               },
-              'Create row'
+              "Create row",
             );
 
-          case 'input':
+          case "input":
             return hTd(
-              'cell' + col.key,
-              'input',
+              "cell" + col.key,
+              "input",
               {
                 type: col.attrs.type,
                 class: col.key,
@@ -528,35 +531,35 @@ let newRow = computed(() =>
                 required: col.attrs.required,
                 disabled: col.disabled,
                 onInput: (e) => {
-                  if (col.key === 'duration')
+                  if (col.key === "duration")
                     e.target.value = durationValidate(e.target.value);
                   newItem[col.key] = e.target.value;
                 },
               },
-              col.attrs.placeholder
+              col.attrs.placeholder,
             );
-          case 'input-name':
-            let autofill = '';
+          case "input-name":
+            let autofill = "";
             const suggestions = allRows.value.map((m) => m.name);
             watch(
               () => newItem[col.key],
               (input) => {
                 if (!input) {
-                  autofill = '';
+                  autofill = "";
                   return;
                 }
                 const match = suggestions.find((suggestion) =>
-                  suggestion.toLowerCase().startsWith(input.toLowerCase())
+                  suggestion.toLowerCase().startsWith(input.toLowerCase()),
                 );
                 match
                   ? (autofill = match.slice(input.length))
-                  : (autofill = '');
+                  : (autofill = "");
               },
-              { immediate: true }
+              { immediate: true },
             );
-            return h('td', { class: ['cell' + col.key, 'input-name'] }, [
-              h('input', {
-                type: 'text',
+            return h("td", { class: ["cell" + col.key, "input-name"] }, [
+              h("input", {
+                type: "text",
                 class: col.key,
                 value: newItem[col.key],
                 required: col.attrs.required,
@@ -580,7 +583,7 @@ let newRow = computed(() =>
                 onFocus: (e) => {
                   e.target.setSelectionRange(
                     e.target.value.length,
-                    e.target.value.length
+                    e.target.value.length,
                   );
                 },
                 onBlur: (e) => {
@@ -589,8 +592,8 @@ let newRow = computed(() =>
                   }, 120);
                 },
               }),
-              h('div', { class: 'suggestion' }, [
-                h('em', newItem[col.key]),
+              h("div", { class: "suggestion" }, [
+                h("em", newItem[col.key]),
                 autofill,
               ]),
             ]);
@@ -598,35 +601,35 @@ let newRow = computed(() =>
         return renderElement(col, newItem, true);
       })
       .concat(
-        h('td', { class: 'cell-action' }, [
-          h('img', {
+        h("td", { class: "cell-action" }, [
+          h("img", {
             // TODO: Update src logic
-            src: 'https://management-img.s3.ap-southeast-1.amazonaws.com/minus.png',
-            title: 'Reset new row',
-            class: 'action-reset-new-row cursor-pointer',
+            src: "https://management-img.s3.ap-southeast-1.amazonaws.com/minus.png",
+            title: "Reset new row",
+            class: "action-reset-new-row cursor-pointer",
             onClick: (e) => {
               resetNewItem();
             },
           }),
-        ])
-      )
-  )
+        ]),
+      ),
+  ),
 );
 
 let tableBody = computed(() =>
   h(
-    'tbody',
+    "tbody",
     rows.value.map((item, index) => {
       return h(
-        'tr',
+        "tr",
         {
-          id: 'row-' + item.id,
+          id: "row-" + item.id,
           class: [
-            'table-row',
+            "table-row",
             {
-              'is-selected': item.state.isSelected,
-              'is-being-edited': item.state.isBeingEdited,
-              'is-focused': item.state.isFocused,
+              "is-selected": item.state.isSelected,
+              "is-being-edited": item.state.isBeingEdited,
+              "is-focused": item.state.isFocused,
             },
           ],
           onDblclick: (e) => {
@@ -643,30 +646,30 @@ let tableBody = computed(() =>
           })
           // Insert at the end of the row
           .concat(
-            h('td', { class: 'cell-action' }, [
-              h('img', {
+            h("td", { class: "cell-action" }, [
+              h("img", {
                 // TODO: Update src logic
-                src: 'https://management-img.s3.ap-southeast-1.amazonaws.com/minus.png',
-                title: 'Double click to delete row',
-                class: 'action-delete cursor-pointer',
+                src: "https://management-img.s3.ap-southeast-1.amazonaws.com/minus.png",
+                title: "Double click to delete row",
+                class: "action-delete cursor-pointer",
                 onDblclick: (e) => {
                   deleteRows(item.id);
                 },
               }),
-            ])
-          )
+            ]),
+          ),
       );
-    })
-  )
+    }),
+  ),
 );
 
 function renderElement(element, item, isNewRow) {
   switch (element.type) {
-    case 'is-selected':
+    case "is-selected":
       return h(
-        'td',
+        "td",
         {
-          class: 'cell-' + element.key,
+          class: "cell-" + element.key,
           onMouseover: (e) => {
             showIsSelected.value = true;
           },
@@ -674,8 +677,8 @@ function renderElement(element, item, isNewRow) {
             showIsSelected.value = false;
           },
         },
-        h('input', {
-          type: 'checkbox',
+        h("input", {
+          type: "checkbox",
           class: [
             element.key,
             {
@@ -688,10 +691,10 @@ function renderElement(element, item, isNewRow) {
           onClick: (e) => {
             item.state.isSelected = e.target.checked;
           },
-        })
+        }),
       );
-    case 'input':
-      return hTd('cell-' + element.key, 'input', {
+    case "input":
+      return hTd("cell-" + element.key, "input", {
         type: element.attrs.type,
         class: element.key,
         value: item[element.key] ? item[element.key] : element.default,
@@ -700,7 +703,7 @@ function renderElement(element, item, isNewRow) {
           element.disabled ||
           (!(item.state.isBeingEdited && isEditing.value) && !isNewRow),
         onInput: (e) => {
-          if (element.key == 'duration') {
+          if (element.key == "duration") {
             e.target.value = durationValidate(e.target.value);
           }
           item[element.key] = e.target.value;
@@ -708,14 +711,14 @@ function renderElement(element, item, isNewRow) {
         onFocus: (e) => {
           e.target.setSelectionRange(
             e.target.value.length,
-            e.target.value.length
+            e.target.value.length,
           );
         },
       });
-    case 'input-name':
+    case "input-name":
       const innerText = item[element.key] ? item[element.key] : element.default;
-      return hTd('cell-' + element.key, 'input', {
-        type: 'text',
+      return hTd("cell-" + element.key, "input", {
+        type: "text",
         class: element.key,
         value: innerText,
         required: element.attrs.required,
@@ -738,22 +741,22 @@ function renderElement(element, item, isNewRow) {
         //   }
         // },
         onClick: (e) => {
-          e.target.removeAttribute('disabled');
+          e.target.removeAttribute("disabled");
           e.target.focus();
           e.target.setSelectionRange(
             e.target.value.length,
-            e.target.value.length
+            e.target.value.length,
           );
         },
         onFocus: (e) => {
           e.target.setSelectionRange(
             e.target.value.length,
-            e.target.value.length
+            e.target.value.length,
           );
         },
       });
-    case 'text-area':
-      return hTd('cell-' + element.key, 'textarea', {
+    case "text-area":
+      return hTd("cell-" + element.key, "textarea", {
         value: item[element.key] ? item[element.key] : element.default,
         class: element.key,
         disabled:
@@ -765,14 +768,14 @@ function renderElement(element, item, isNewRow) {
         onFocus: (e) => {
           e.target.setSelectionRange(
             e.target.value.length,
-            e.target.value.length
+            e.target.value.length,
           );
         },
       });
-    case 'select':
+    case "select":
       return hTd(
-        'cell-' + element.key,
-        'select',
+        "cell-" + element.key,
+        "select",
         {
           class: element.key,
           disabled:
@@ -782,22 +785,22 @@ function renderElement(element, item, isNewRow) {
             item[element.key] = e.target.value;
           },
         },
-        ['', ...element.options].map((option) => {
+        ["", ...element.options].map((option) => {
           return h(
-            'option',
+            "option",
             {
               value: option?.value || option,
               selected:
                 option === item[element.key] || option === element.default,
-              disabled: option === '',
+              disabled: option === "",
             },
-            option?.name || option
+            option?.name || option,
           );
-        })
+        }),
       );
-    case 'checkbox':
-      return hTd('cell-' + element.key, 'input', {
-        type: 'checkbox',
+    case "checkbox":
+      return hTd("cell-" + element.key, "input", {
+        type: "checkbox",
         class: element.key,
         checked: item[element.key] ? item[element.key] : element.default,
         readonly:
@@ -811,10 +814,10 @@ function renderElement(element, item, isNewRow) {
           item[element.key] = e.target.checked;
         },
       });
-    case 'p':
-      return h('td', { class: element.key }, item[element.key]);
+    case "p":
+      return h("td", { class: element.key }, item[element.key]);
     default:
-      return h('td', 'Error');
+      return h("td", "Error");
   }
 }
 
@@ -845,7 +848,7 @@ function validateColumns(items) {
     }
   }
   if (!validated) {
-    alert('Please fill in the required fields: ' + requiredFields.join(', '));
+    alert("Please fill in the required fields: " + requiredFields.join(", "));
     return false;
   }
   return true;
@@ -856,8 +859,8 @@ function createRow() {
   const item = deepClone(newItem);
   item.state = new State();
   rows.value.push(item);
-  upsert('management_' + itemName, newItem);
-  emits('rowUpsert', props.itemName);
+  upsert(itemName, newItem);
+  emits("rowUpsert", props.itemName);
   id.value = v4();
   isShownSuggestions.value = false;
   resetNewItem();
@@ -867,10 +870,10 @@ function upsertRow(index) {
   const rowToUpsert = rows._rawValue[index];
   if (!validateColumns(rowToUpsert)) return;
   console.log(rowToUpsert);
-  upsert('management_' + itemName, rowToUpsert);
+  upsert(itemName, rowToUpsert);
   rows.value[index].state.isBeingEdited = false;
   document.activeElement.blur();
-  emits('rowUpsert', props.itemName);
+  emits("rowUpsert", props.itemName);
 }
 
 const selectedRows = ref([]);
@@ -885,18 +888,8 @@ watch(
     });
     selectedRows.value = _selectedRows;
   },
-  { deep: true }
+  { deep: true },
 );
-// const selectedRows = computed(() => {
-//   let selectedRows = ref([]);
-
-//   rows._rawValue.forEach((row) => {
-//     if (row.state.isSelected) {
-//       selectedRows.value.push(row.id);
-//     }
-//   });
-//   return selectedRows;
-// });
 
 async function deleteRows(id) {
   let deleteRowList = [];
@@ -913,7 +906,7 @@ async function deleteRows(id) {
       }
     }
   }
-  request(backendUrl + '/delete/management_' + itemName, 'post', deleteRowList);
+  request(backendUrl + "/delete/management_" + itemName, "post", deleteRowList);
 }
 </script>
 
