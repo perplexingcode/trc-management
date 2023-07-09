@@ -15,6 +15,14 @@ button {
   @apply rounded-full font-bold h-6 w-6 flex items-center justify-center border border-gray-300;
 }
 
+button,
+.btn {
+  -moz-user-select: none; /* Firefox */
+  -webkit-user-select: none; /* Safari and Chrome */
+  -ms-user-select: none; /* IE/Edge */
+  user-select: none;
+}
+
 /* Input */
 input:not([type='checkbox']):not([type='radio']) {
   border: 1px solid #ccc;
