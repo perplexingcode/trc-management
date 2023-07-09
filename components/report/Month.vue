@@ -1,5 +1,4 @@
 <template>
-  <Json :value="dateHours" />
   <div
     class="date-hour-chart min-h-[265px] relative flex gap-3 items-end justify-center p-3 mt-24 w-fit mx-auto"
   >
