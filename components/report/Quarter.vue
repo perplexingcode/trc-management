@@ -15,9 +15,12 @@
     </div>
     <div class="stats">
       <h3>Winrate: {{ winrate }}</h3>
-      <h3>Elo: {{ elo }}</h3>
+      <h3>Elo: {{ elo }} ({{ `${eloDiff > 0 ? "+" : "-"}${eloDiff}` }})</h3>
       <h3>
         Rank: <strong>{{ rank }}</strong>
+      </h3>
+      <h3>
+        Next rank: {{ nextRankWins }} {{ nextRankWins < 2 ? " win" : " wins" }}
       </h3>
     </div>
   </div>
@@ -32,7 +35,7 @@ import { query, upsert, getById } from "~~/static/db";
 import moment from "moment";
 import { sumTime, cvTime, createTimestamp } from "~~/static/time";
 
-const minimum = 10;
+const { minimumRankedHours: minimum } = inject("vars");
 
 const today = moment().format("YYYY-MM-DD");
 const movesToday = inject("movesToday");
@@ -63,7 +66,7 @@ async function getData() {
   const quarterEnd = moment(date.value).endOf("quarter"); // Get the end date of the quarter
 
   // Fetch data from cache
-  data = (await getById("management_cache", "dateHoursQuarter")).data._rawValue;
+  data = (await getById("cache", "dateHoursQuarter")).data._rawValue;
   try {
     dateHours.value = JSON.parse(data.value);
     // Filter days of this quarter
@@ -98,7 +101,7 @@ async function getData() {
       cvTime(sumTime(date.map((move) => move.duration))) * 24
     ).toFixed(2);
   });
-  upsert("management_cache", {
+  upsert("cache", {
     id: "dateHoursQuarter",
     value: JSON.stringify(dateHours.value),
     timestamp: createTimestamp(),
@@ -110,27 +113,41 @@ onMounted(async () => {
   await getData(today);
 });
 
-const winrate = computed(() => {
-  const win = Object.values(dateHours.value).filter((d) => d >= minimum).length;
+const winCount = computed(() => {
+  return Object.values(dateHours.value).filter((d) => d >= minimum).length;
+});
+
+const pastHours = computed(() => {
   const today = new Date();
   const currentDate = today.toISOString().split("T")[0];
-  const pastHours = Object.entries(dateHours.value).filter(
-    ([date]) => date < currentDate,
-  );
-  const total = Object.values(pastHours).length;
-  return `${((win / total) * 100).toFixed(2)}%`;
+  return Object.entries(dateHours.value).filter(([date]) => date < currentDate);
 });
+
+const totalMatch = computed(() => {
+  return Object.values(pastHours.value).length;
+});
+const winrate = computed(() => {
+  return `${((winCount.value / totalMatch.value) * 100).toFixed(2)}%`;
+});
+
+const mmrElo = computed(() => {
+  return (parseFloat(winrate.value) / 100) * 4000;
+});
+const hourElo = computed(() => {
+  return pastHours.value.reduce((total, date) => total + date[1], 0);
+});
+
+const getElo = (mmr, hour) => {
+  return Math.round((mmr + hour) / 2).toFixed(0);
+};
 
 const elo = computed(() => {
-  const mmrElo = (parseFloat(winrate.value) / 100) * 4000;
-  const hourElo = Object.values(dateHours.value).reduce((a, b) => a + b, 0);
-  return Math.round((mmrElo + hourElo) / 2).toFixed(0);
+  return getElo(mmrElo.value, hourElo.value);
 });
 
-const rank = computed(() => {
-  const _elo = elo.value;
-  const _rank = Math.floor(_elo / 500);
-  const _division = Math.floor((_elo % 500) / 100);
+const getRank = (elo) => {
+  const _rank = Math.floor(elo / 500);
+  const _division = Math.floor((elo % 500) / 100);
 
   let division;
   if (_division == 4) division = "I";
@@ -147,6 +164,56 @@ const rank = computed(() => {
   if (_rank == 2) return "Gold " + division;
   if (_rank == 1) return "Silver " + division;
   if (_rank == 0) return "Bronze " + division;
+};
+
+const rank = computed(() => {
+  return getRank(elo.value);
+});
+
+const nextRankWins = computed(() => {
+  const currentRank = getRank(elo.value);
+  let nextRank = currentRank;
+  let winCount = 0;
+  if (!currentRank) return null;
+  while (nextRank == currentRank) {
+    winCount++;
+    nextRank = getRank(elo.value + winCount * minimum);
+    if (winCount > 100) return "100+";
+  }
+  return winCount;
+});
+
+const winCountYesterday = computed(() => {
+  const dateHoursYesterday = Object.entries(dateHours.value).filter(
+    ([date]) => date < today,
+  );
+  return Object.values(dateHoursYesterday).filter((d) => d >= minimum).length;
+});
+const pastHoursYesterday = computed(() => {
+  const today = new Date();
+  const currentDate = today.toISOString().split("T")[0];
+  return Object.entries(dateHours.value).filter(
+    ([date]) => date < currentDate && date > today.setDate(today.getDate() - 1),
+  );
+});
+
+const winrateYesterday = computed(() => {
+  return `${((winCountYesterday.value / totalMatch.value - 1) * 100).toFixed(
+    2,
+  )}%`;
+});
+const mmrEloYesterday = computed(() => {
+  return (parseFloat(winrateYesterday.value) / 100) * 4000;
+});
+const hourEloYesterday = computed(() => {
+  return pastHoursYesterday.value.reduce((total, date) => total + date[1], 0);
+});
+const eloYesterday = computed(() => {
+  return getElo(mmrEloYesterday.value, hourEloYesterday.value);
+});
+
+const eloDiff = computed(() => {
+  return elo.value - eloYesterday.value;
 });
 </script>
 <style></style>

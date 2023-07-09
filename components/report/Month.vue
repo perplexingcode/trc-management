@@ -124,7 +124,7 @@ async function getData() {
       cvTime(sumTime(date.map((move) => move.duration))) * 24
     ).toFixed(2);
   });
-  upsert("management_cache", {
+  upsert("cache", {
     id: "dateHours",
     value: JSON.stringify(dateHours.value),
     timestamp: createTimestamp(),
