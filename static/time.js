@@ -1,25 +1,25 @@
-import moment from 'moment';
+import moment from "moment";
 
 export const cvTime = function (time) {
   try {
     time = time.toString();
-    const identifier = time.replace(/\d+|^\s+|\s+$/g, '');
+    const identifier = time.replace(/\d+|^\s+|\s+$/g, "");
     let duration;
     switch (identifier) {
-      case 'm':
-        duration = moment.duration(time.replaceAll('m', ''), 'm').asMinutes();
+      case "m":
+        duration = moment.duration(time.replaceAll("m", ""), "m").asMinutes();
         break;
-      case 'h':
-        duration = moment.duration(time.replaceAll('h', ''), 'h').asMinutes();
+      case "h":
+        duration = moment.duration(time.replaceAll("h", ""), "h").asMinutes();
         break;
-      case ':':
+      case ":":
         duration = moment.duration(time).asMinutes();
         break;
-      case '.':
-        duration = moment.duration(time, 'd').asMinutes();
+      case ".":
+        duration = moment.duration(time, "d").asMinutes();
         break;
-      case '':
-        duration = moment.duration(time, 'd').asMinutes();
+      case "":
+        duration = moment.duration(time, "d").asMinutes();
         break;
     }
     return duration / 1440;
@@ -53,12 +53,12 @@ export const sumTime = function (...times) {
 
     // Convert minutes to hours and minutes in hh:mm format
     let hours = Math.floor(sum * 24);
-    let minutes = Math.floor(((sum * 24) % 1) * 60);
+    let minutes = Math.round(((sum * 24) % 1) * 60);
     if (minutes === 60) {
       minutes = 0;
       hours += 1;
     }
-    const prefix = negative ? '-' : '';
+    const prefix = negative ? "-" : "";
     if (minutes < 10) {
       return prefix + `${hours}:0${minutes}`;
     }
@@ -70,18 +70,18 @@ export const sumTime = function (...times) {
 
 export const durationValidate = function (duration) {
   //Remove all characters except numbers, m, h, and :
-  duration = duration.replace(/[^hm:\d]/g, '');
+  duration = duration.replace(/[^hm:\d]/g, "");
   //Remove additional characters
-  duration = duration.replace(/(m|h|:)(?=\1)/g, '');
+  duration = duration.replace(/(m|h|:)(?=\1)/g, "");
   return duration;
 };
 
 export const createTimestamp = () => {
-  return `\n${
+  return `${
     new Date(new Date().getTime() + 7 * 60 * 60 * 1000)
       .toISOString()
-      .replace(/[TZ]/g, ' ')
+      .replace(/[TZ]/g, " ")
       .trim()
-      .split('.')[0]
+      .split(".")[0]
   }`;
 };
