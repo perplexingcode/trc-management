@@ -90,7 +90,7 @@ async function addNewNote() {
     newNote.lastUpdated = createTimestamp();
     notes.value.unshift(unwrap(newNote));
     newNote.id = v4();
-    upsert("management_note", newNote);
+    upsert("note", newNote);
     newNote.box = "";
     newNote.name = "";
   }

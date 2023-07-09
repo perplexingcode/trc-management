@@ -160,7 +160,7 @@ const applyChange = () => {
   if (note.text == note.versionHistory[viewVersion]) {
     return;
   }
-  upsert('management_note_backup', {
+  upsert('note_backup', {
     id: v4(),
     text: note.text,
     name: note.name || v4(),
@@ -169,7 +169,7 @@ const applyChange = () => {
   });
   note.lastUpdated = createTimestamp();
   note.versionHistory.push(note.text);
-  upsert('management_note', note);
+  upsert('note', note);
   isEditing.value = false;
   viewVersion.value = note.versionHistory.stack.length - 1;
 };

@@ -869,7 +869,6 @@ function createRow() {
 function upsertRow(index) {
   const rowToUpsert = rows._rawValue[index];
   if (!validateColumns(rowToUpsert)) return;
-  console.log(rowToUpsert);
   upsert(itemName, rowToUpsert);
   rows.value[index].state.isBeingEdited = false;
   document.activeElement.blur();
