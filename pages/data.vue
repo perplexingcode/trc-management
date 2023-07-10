@@ -26,7 +26,7 @@ const loadData = async () => {
     return;
   }
   await nextTick();
-  rows.value = (await query("move", "date", date)).data.value;
+  rows.value = (await query("move", "date", date.value)).data.value;
   dataTable.value.rerender();
   isLoadedData.value = true;
 };
