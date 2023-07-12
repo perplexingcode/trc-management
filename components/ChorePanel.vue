@@ -27,30 +27,30 @@
   </div>
 </template>
 <script setup>
-import { sumTime } from '~~/static/time';
+import { sumTime } from "~~/static/time";
 
-const choreMoves = inject('chore', []);
+const choreMoves = inject("chore", []);
 
 const choreMoveGroups = [
   {
-    regExp: /shower|bath|hygience|brushing teeth/i,
-    img: 'https://img.icons8.com/color/48/water.png',
-    name: 'hygience',
+    regExp: /h|shower|bath|hygience|brushing teeth/i,
+    img: "https://img.icons8.com/color/48/water.png",
+    name: "hygience",
   },
   {
-    regExp: /eat|breakfast|lunch|dinner/i,
-    img: 'https://img.icons8.com/color/48/meal--v1.png',
-    name: 'meal',
+    regExp: /e|eat|breakfast|lunch|dinner/i,
+    img: "https://img.icons8.com/color/48/meal--v1.png",
+    name: "meal",
   },
   {
-    regExp: /cleaning|tidy/i,
-    img: 'https://img.icons8.com/color/48/cleaning-a-surface.png',
-    name: 'tidy',
+    regExp: /c|cleaning|tidy/i,
+    img: "https://img.icons8.com/color/48/cleaning-a-surface.png",
+    name: "tidy",
   },
   {
-    regExp: /sleep|nap/i,
-    img: 'https://img.icons8.com/color/48/sleep.png',
-    name: 'sleep',
+    regExp: /s|sleep|nap/i,
+    img: "https://img.icons8.com/color/48/sleep.png",
+    name: "sleep",
   },
 ];
 
@@ -61,7 +61,7 @@ for (const group of choreMoveGroups) {
     return sumTime(
       choreMoves.value
         .filter((move) => group.regExp.test(move.name))
-        .map((move) => move.duration)
+        .map((move) => move.duration),
     );
   });
   choreGroups.value.push({
