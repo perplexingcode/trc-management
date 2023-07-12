@@ -35,6 +35,10 @@
       <span>11.5</span>
       <hr class="border border-1 border-blue-800" />
     </div>
+    <div class="absolute w-full p-3" :style="`bottom:${24 + 20 * _minimum}px`">
+      <span class="absolute left-[-6px] top-[2px]">{{ _minimum }}</span>
+      <hr class="border border-1 border-gray-700" />
+    </div>
     <div class="absolute w-full p-3" :style="`bottom:${24 + 20 * 8}px`">
       <span>8</span>
       <hr class="border border-1 border-blue-800" />
@@ -70,6 +74,7 @@ const hourToday = computed(() => {
 });
 
 const date = ref(today);
+const { minimumRankedHours: _minimum } = inject("vars");
 
 function addMonth() {
   date.value = moment(date.value).add(1, "month").format("YYYY-MM-DD");
