@@ -14,19 +14,24 @@
       ></div>
     </div>
     <div class="stats">
-      <h3>Winrate: {{ winrate }}</h3>
-      <h3>
-        Elo: {{ elo }}
-        {{ isPastQuarter ? "" : `(${eloDiff < 0 ? "" : "+"}${eloDiff})` }}
-      </h3>
-      <h3>
-        Rank: <strong>{{ rank }}</strong>
-      </h3>
-      <h3 v-if="!isPastQuarter">
-        Next rank: {{ nextRankWins }} {{ nextRankWins < 2 ? " win" : " wins" }}
-      </h3>
-      <h3 v-if="isPastQuarter">Total hours: {{ quarterTime }}</h3>
-      <h3 v-if="isPastQuarter">Average: {{ quarterAverage }}</h3>
+      <div class="rank">
+        <h3>Winrate: {{ displayRank?.winrate }}</h3>
+        <h3>
+          Elo: {{ displayRank?.elo }}
+          {{ isPastQuarter ? "" : `(${eloDiff < 0 ? "" : "+"}${eloDiff})` }}
+        </h3>
+        <h3>
+          Rank: <strong>{{ displayRank?.rank }}</strong>
+        </h3>
+      </div>
+      <div class="details pt-2">
+        <h3 v-if="!isPastQuarter">
+          Next rank: {{ displayRank?.nextRankStreak }}
+          {{ displayRank?.nextRankStreak < 2 ? " win" : " wins" }}
+        </h3>
+        <h3>Total hours: {{ quarterTime }}</h3>
+        <h3>Average: {{ quarterAverage }}</h3>
+      </div>
     </div>
   </div>
   <div class="text-center">
@@ -49,7 +54,8 @@ import { deepClone } from "~~/static/utils";
 const { minimumRankedHours: minimum } = inject("vars");
 
 const today = moment().format("YYYY-MM-DD");
-const todayNum = new Date().getDate();
+const todayNum = moment().diff(moment().startOf("quarter"), "days") + 1;
+
 const movesToday = inject("movesToday");
 const hourToday = computed(() => {
   return +(
@@ -131,7 +137,9 @@ const quarterTime = computed(() => {
 });
 
 const quarterAverage = computed(() => {
-  return (quarterTime.value / Object.keys(dateHours.value).length).toFixed(2);
+  if (isPastQuarter.value)
+    return (quarterTime.value / Object.keys(dateHours.value).length).toFixed(2);
+  else return (quarterTime.value / todayNum).toFixed(2);
 });
 
 onMounted(async () => {
@@ -140,7 +148,7 @@ onMounted(async () => {
 });
 
 const minus1DateHours = computed(() => {
-  if (!Object.keys(dateHours.value).length) return;
+  if (isEmptyDateHours.value) return;
   const _dateHours = deepClone(dateHours.value);
   // delete date after today
   Object.keys(_dateHours).forEach((date) => {
@@ -150,50 +158,14 @@ const minus1DateHours = computed(() => {
 });
 
 const minus2DateHours = computed(() => {
-  if (!Object.keys(dateHours.value).length) return;
+  if (isEmptyDateHours.value) return;
   const _dateHours = deepClone(minus1DateHours.value);
   delete _dateHours[yesterday];
   return _dateHours;
 });
 
-const winCount = computed(() => {
-  if (!Object.keys(dateHours.value).length) return;
-  return Object.values(minus1DateHours.value).filter((hour) => hour >= minimum)
-    .length;
-});
-
-const pastDates = computed(() => {
-  if (!Object.keys(dateHours.value).length) return;
-  return Object.entries(minus1DateHours.value).filter(([date]) => date < today);
-});
-
-const winrate = computed(() => {
-  if (!Object.keys(dateHours.value).length) return;
-  return `${((winCount.value / (todayNum - 1)) * 100).toFixed(2)}%`;
-});
-
-const mmrElo = computed(() => {
-  if (!Object.keys(dateHours.value).length) return;
-  return (parseFloat(winrate.value) / 100) * 4000;
-});
-const hourElo = computed(() => {
-  if (!Object.keys(dateHours.value).length) return;
-  // Total hours = 14.3 * 90 = 1287 => 4000 / 1287 = 3.11
-  return pastDates.value.reduce((total, date) => total + date[1], 0) * 3.11;
-});
-
-const getElo = (mmrElo, hourElo) => {
-  if (!Object.keys(dateHours.value).length) return;
-  return Math.round((mmrElo + hourElo) / 2).toFixed(0);
-};
-
-const elo = computed(() => {
-  if (!Object.keys(dateHours.value).length) return;
-  return getElo(mmrElo.value, hourElo.value);
-});
-
 const getRank = (elo) => {
-  if (!Object.keys(dateHours.value).length) return;
+  if (isEmptyDateHours.value) return;
   const _rank = Math.floor(elo / 500);
   const _division = Math.floor((elo % 500) / 100);
 
@@ -212,80 +184,9 @@ const getRank = (elo) => {
   return ranks[_rank] + " " + divions[_division];
 };
 
-const rank = computed(() => {
-  if (!Object.keys(dateHours.value).length) return;
-  return getRank(elo.value);
-});
-
-const nextRankWins = computed(() => {
-  if (!Object.keys(dateHours.value).length) return;
-  let isPromoted = false;
-  let addWinCount = 0;
-  while (!isPromoted) {
-    addWinCount++;
-    const newElo = getElo(
-      (
-        ((winCount.value + addWinCount) / (todayNum - 1 + addWinCount)) *
-        100
-      ).toFixed(2) * 40,
-      hourElo.value + addWinCount * minimum,
-    );
-    if (newElo - (newElo % 100) - (elo.value - (elo.value % 100)) >= 100)
-      isPromoted = true;
-    if (addWinCount > 10) return "10+";
-  }
-  return addWinCount;
-});
-
 const yesterday = moment().subtract(1, "days").format("YYYY-MM-DD");
 
-const winCountYesterday = computed(() => {
-  if (!Object.keys(dateHours.value).length) return;
-  const minus2DayHour =
-    dateHours.value[moment().subtract(2, "days").format("YYYY-MM-DD")];
-  console.log(
-    "wincountY",
-    minus2DayHour < minimum ? winCount.value : winCount.value - 1,
-  );
-  return minus2DayHour < minimum ? winCount.value : winCount.value - 1;
-});
-
-const winrateYesterday = computed(() => {
-  if (!Object.keys(dateHours.value).length) return;
-  console.log(
-    `winrateY:${((winCountYesterday.value / (todayNum - 2)) * 100).toFixed(
-      2,
-    )}%`,
-  );
-  return `${((winCountYesterday.value / (todayNum - 2)) * 100).toFixed(2)}%`;
-});
-const mmrEloYesterday = computed(() => {
-  if (!Object.keys(dateHours.value).length) return;
-  console.log("mmrY", (parseFloat(winrateYesterday.value) / 100) * 4000);
-  return (parseFloat(winrateYesterday.value) / 100) * 4000;
-});
-
-const pastDatesYesterday = computed(() => {
-  if (!Object.keys(dateHours.value).length) return;
-  console.log(yesterday);
-  console.log(
-    "pastdatesY",
-    Object.entries(dateHours.value).filter(([date]) => date < yesterday),
-  );
-  return Object.entries(dateHours.value).filter(([date]) => date < yesterday);
-});
-const hourEloYesterday = computed(() => {
-  if (!Object.keys(dateHours.value).length) return;
-  return (
-    pastDatesYesterday.value.reduce((total, date) => total + date[1], 0) * 3.11
-  );
-});
-const eloYesterday = computed(() => {
-  if (!Object.keys(dateHours.value).length) return;
-  return getElo(mmrEloYesterday.value, hourEloYesterday.value);
-});
-
-function calculateRank(dateHours) {
+function getRankInfo(dateHours, date) {
   const winCount = Object.values(dateHours).filter(
     (hour) => hour >= minimum,
   ).length;
@@ -296,6 +197,27 @@ function calculateRank(dateHours) {
     Object.values(dateHours).reduce((total, hour) => total + hour, 0) * 3.11;
   const elo = (mmrElo + hourElo) / 2;
   const rank = getRank(elo);
+
+  let isPromoted = false;
+  let nextRankStreak = 0;
+  while (!isPromoted) {
+    nextRankStreak++;
+    const newElo =
+      ((
+        ((winCount + nextRankStreak) / (todayNum - 1 + nextRankStreak)) *
+        100
+      ).toFixed(2) *
+        40 +
+        hourElo +
+        nextRankStreak * minimum) /
+      2;
+    if (newElo - (newElo % 100) - (elo - (elo % 100)) >= 100) isPromoted = true;
+    if (nextRankStreak > 10) {
+      nextRankStreak = "10+";
+      break;
+    }
+  }
+
   return {
     winCount,
     winrate: `${(winrate * 100).toFixed(2)}%`,
@@ -303,56 +225,37 @@ function calculateRank(dateHours) {
     hourElo: hourElo.toFixed(0),
     elo: elo.toFixed(0),
     rank,
+    nextRankStreak,
   };
-  // return {
-  //   dateHours,
-  //   winCount,
-  //   winrate,
-  //   mmrElo,
-  //   hourElo,
-  //   elo,
-  //   rank,
-  // };
 }
 
+const isEmptyDateHours = computed(() => {
+  return Object.keys(dateHours.value).length === 0;
+});
+
+const displayRank = computed(() => {
+  if (isEmptyDateHours.value) return;
+  return isPastQuarter.value ? quarterRank.value : todayRank.value;
+});
+
+const quarterRank = computed(() => {
+  if (isEmptyDateHours.value) return;
+  return getRankInfo(dateHours.value);
+});
+
 const todayRank = computed(() => {
-  if (!Object.keys(dateHours.value).length) return;
-  return calculateRank(minus1DateHours.value);
+  if (isEmptyDateHours.value) return;
+  return getRankInfo(minus1DateHours.value);
 });
 
 const yesterdayRank = computed(() => {
-  if (!Object.keys(dateHours.value).length) return;
-  return calculateRank(minus2DateHours.value);
+  if (isEmptyDateHours.value) return;
+  return getRankInfo(minus2DateHours.value);
 });
 
 const eloDiff = computed(() => {
-  if (!Object.keys(dateHours.value).length) return;
+  if (isEmptyDateHours.value) return;
   return todayRank.value.elo - yesterdayRank.value.elo;
 });
-
-// const dev = computed(() => {
-//   return {
-//     dateHours: dateHours.value,
-//     today: today,
-//     todayNum: todayNum,
-//     minus1DateHours: minus1DateHours.value,
-//     winCount: winCount.value,
-//     pastDates: pastDates.value,
-//     winrate: winrate.value,
-//     mmrElo: mmrElo.value,
-//     hourElo: hourElo.value,
-//     elo: elo.value,
-//     nextRankWins: nextRankWins.value,
-//     yesterday: yesterday,
-//     minus2DateHours: minus2DateHours.value,
-//     winCountYesterday: winCountYesterday.value,
-//     winrateYesterday: winrateYesterday.value,
-//     mmrEloYesterday: mmrEloYesterday.value,
-//     pastDatesYesterday: pastDatesYesterday.value,
-//     hourEloYesterday: hourEloYesterday.value,
-//     eloYesterday: eloYesterday.value,
-//     eloDiff: eloDiff.value,
-//   };
-// });
 </script>
 <style></style>
