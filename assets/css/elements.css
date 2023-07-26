@@ -24,7 +24,7 @@ button,
 }
 
 /* Input */
-input:not([type='checkbox']):not([type='radio']) {
+input:not([type="checkbox"]):not([type="radio"]) {
   border: 1px solid #ccc;
   border-radius: 5px;
   font-size: 0.95rem;
@@ -80,6 +80,13 @@ select {
   margin: 0 0.25rem;
   height: 2rem;
   background: #fff;
+}
+
+.atomic:has(select) {
+  background: #ffdb00;
+  padding: 0.5rem;
+  width: fit-content;
+  border-radius: 9999px;
 }
 
 option[disabled] {
