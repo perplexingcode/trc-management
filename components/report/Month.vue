@@ -11,12 +11,16 @@
       <div class="flex flex-col items-center">
         <div
           class="w-10 column"
-          :style="`height:${hour * 20}px`"
+          :style="`height:${hour * 20 * UNIT}px; ${
+            GROUP[props.group].COLOR
+              ? `background-color:${GROUP[props.group].COLOR} !important`
+              : ''
+          }`"
           :class="[
-            { 'bg-gray-300': hour < 8 },
-            { 'bg-green-500': hour >= 8 && hour < 11.5 },
-            { 'bg-blue-500': hour >= 11.5 && hour < 14.3 },
-            { 'bg-yellow-300': hour >= 14.3 },
+            { 'bg-gray-300': hour < LOW },
+            { 'bg-green-500': hour >= LOW && hour < GREAT },
+            { 'bg-blue-500': hour >= GREAT && hour < PERFECT },
+            { 'bg-yellow-300': hour >= PERFECT },
           ]"
         ></div>
         <p class="absolute z-100 mt-[-22px] duration">
@@ -27,23 +31,38 @@
         {{ date.slice(-2) }}
       </p>
     </div>
-    <div class="absolute w-full p-3" :style="`bottom:${24 + 20 * 14.3}px`">
-      <span>14.3</span>
+    <div
+      class="absolute w-full p-3"
+      :style="`bottom:${24 + 20 * PERFECT * UNIT}px`"
+    >
+      <span>{{ PERFECT }}</span>
       <hr class="border border-1 border-blue-800" />
     </div>
-    <div class="absolute w-full p-3" :style="`bottom:${24 + 20 * 11.5}px`">
-      <span>11.5</span>
+    <div
+      class="absolute w-full p-3"
+      :style="`bottom:${24 + 20 * GREAT * UNIT}px`"
+    >
+      <span>{{ GREAT }}</span>
       <hr class="border border-1 border-blue-800" />
     </div>
-    <div class="absolute w-full p-3" :style="`bottom:${24 + 20 * _minimum}px`">
-      <span class="absolute left-[-6px] top-[2px]">{{ _minimum }}</span>
+    <div
+      class="absolute w-full p-3"
+      :style="`bottom:${24 + 20 * MINIMUM * UNIT}px`"
+    >
+      <span class="absolute left-[-6px] top-[2px]">{{ MINIMUM }}</span>
       <hr class="border border-1 border-gray-700" />
     </div>
-    <div class="absolute w-full p-3" :style="`bottom:${24 + 20 * 8}px`">
-      <span>8</span>
+    <div
+      class="absolute w-full p-3"
+      :style="`bottom:${24 + 20 * LOW * UNIT}px`"
+    >
+      <span>{{ LOW }}</span>
       <hr class="border border-1 border-blue-800" />
     </div>
-    <div class="absolute w-full p-3" :style="`bottom:${24 + 20 * average}px`">
+    <div
+      class="absolute w-full p-3"
+      :style="`bottom:${24 + 20 * average * UNIT}px`"
+    >
       <span class="absolute left-[-22px] top-[2px]">{{ average }}</span>
       <hr class="border border-1 border-yellow-300" />
     </div>
@@ -65,8 +84,17 @@ import { query, upsert, getById } from "~~/static/db";
 import moment from "moment";
 import { sumTime, cvTime, createTimestamp } from "~~/static/time";
 
+const props = defineProps({
+  group: {
+    type: Boolean,
+    required: true,
+  },
+});
+
 const today = moment().format("YYYY-MM-DD");
 const movesToday = inject("movesToday");
+if (!props.group === "All")
+  movesToday.value = movesToday.value.filter((move) => move.grp == props.group);
 const hourToday = computed(() => {
   return +(
     cvTime(sumTime(movesToday.value.map((move) => move.duration))) * 24
@@ -74,7 +102,47 @@ const hourToday = computed(() => {
 });
 
 const date = ref(today);
-const { minimumRankedHours: _minimum } = inject("vars");
+// const { minimumRankedHours: MINIMUM } = inject("vars");
+
+const GROUP = {
+  Personal: {
+    UNIT: 2,
+    LOW: 2.5,
+    MINIMUM: 3.5,
+    GREAT: 5,
+    PERFECT: 6,
+  },
+  All: {
+    UNIT: 1,
+    LOW: 8,
+    MINIMUM: 9,
+    GREAT: 11.5,
+    PERFECT: 14.3,
+  },
+  MFVN: {
+    UNIT: 3,
+    LOW: 1,
+    MINIMUM: 3,
+    GREAT: 4.5,
+    PERFECT: 6,
+    COLOR: "#ea5b0c",
+  },
+  Freelance: {
+    UNIT: 3,
+    LOW: 1,
+    MINIMUM: 3,
+    GREAT: 4.5,
+    PERFECT: 6,
+    COLOR: "#0d9488",
+  },
+};
+
+const UNIT = GROUP[props.group].UNIT;
+
+const LOW = GROUP[props.group].LOW;
+const MINIMUM = GROUP[props.group].MINIMUM;
+const GREAT = GROUP[props.group].GREAT;
+const PERFECT = GROUP[props.group].PERFECT;
 
 function addMonth() {
   date.value = moment(date.value).add(1, "month").format("YYYY-MM-DD");
@@ -92,24 +160,26 @@ let data = [];
 
 async function getData() {
   // Fetch data from cache
-  data = (await getById("cache", "dateHours")).data._rawValue;
-  try {
-    dateHours.value = JSON.parse(data.value);
-    // Filter days of this month
-    dateHours.value = Object.keys(dateHours.value)
-      .filter((d) => d.startsWith(date.value.slice(0, 7)))
-      .reduce((obj, key) => {
-        obj[key] = dateHours.value[key];
-        return obj;
-      }, {});
-    if (dateHours.value?.[today] !== undefined)
-      dateHours.value[today] = hourToday.value;
-    if (
-      Object.keys(dateHours.value).length !== 0 &&
-      moment().diff(moment(data.timestamp), "hours") < 6
-    )
-      return;
-  } catch (error) {}
+  // if (!props.group === "All")
+  //   data = (await getById("cache", "dateHours" + props.group)).data._rawValue;
+  // else data = (await getById("cache", "dateHours")).data._rawValue;
+  // try {
+  //   dateHours.value = JSON.parse(data.value);
+  //   // Filter days of this month
+  //   dateHours.value = Object.keys(dateHours.value)
+  //     .filter((d) => d.startsWith(date.value.slice(0, 7)))
+  //     .reduce((obj, key) => {
+  //       obj[key] = dateHours.value[key];
+  //       return obj;
+  //     }, {});
+  //   if (dateHours.value?.[today] !== undefined)
+  //     dateHours.value[today] = hourToday.value;
+  //   if (
+  //     Object.keys(dateHours.value).length !== 0 &&
+  //     moment().diff(moment(data.timestamp), "hours") < 6
+  //   )
+  //     return;
+  // } catch (error) {}
 
   // Fetch data from database
   const monthDates = [];
@@ -126,7 +196,16 @@ async function getData() {
   data = (await query("move", "date", monthDates)).data._rawValue;
   data.map((date, index) => {
     dateHours.value[monthDates[index]] = +(
-      cvTime(sumTime(date.map((move) => move.duration))) * 24
+      cvTime(
+        sumTime(
+          date
+            .filter((move) => {
+              if (props.group === "All") return true;
+              else return move.grp == props.group;
+            })
+            .map((move) => move.duration),
+        ),
+      ) * 24
     ).toFixed(2);
   });
   upsert("cache", {
@@ -143,19 +222,19 @@ onMounted(async () => {
 
 const minimum = computed(() => {
   return Object.values(dateHours.value).reduce(
-    (acc, hour) => acc + (hour >= 8 && hour < 11.5 ? 1 : 0),
+    (acc, hour) => acc + (hour >= LOW && hour < GREAT ? 1 : 0),
     0,
   );
 });
 const required = computed(() => {
   return Object.values(dateHours.value).reduce(
-    (acc, hour) => acc + (hour >= 11.5 && hour < 14.3 ? 1 : 0),
+    (acc, hour) => acc + (hour >= GREAT && hour < PERFECT ? 1 : 0),
     0,
   );
 });
 const perfect = computed(() => {
   return Object.values(dateHours.value).reduce(
-    (acc, hour) => acc + (hour >= 14.3 ? 1 : 0),
+    (acc, hour) => acc + (hour >= PERFECT ? 1 : 0),
     0,
   );
 });

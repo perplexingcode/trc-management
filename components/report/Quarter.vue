@@ -51,12 +51,29 @@ import moment from "moment";
 import { sumTime, cvTime, createTimestamp } from "~~/static/time";
 import { deepClone } from "~~/static/utils";
 
-const { minimumRankedHours: minimum } = inject("vars");
+const props = defineProps({
+  group: {
+    type: Boolean,
+    required: true,
+  },
+});
+const GROUP = {
+  Personal: 3.5,
+  All: 9,
+  MFVN: 1,
+  Freelance: 1,
+};
+
+// const { minimumRankedHours: minimum } = inject("vars");
+
+const minimum = GROUP[props.group];
 
 const today = moment().format("YYYY-MM-DD");
 const todayNum = moment().diff(moment().startOf("quarter"), "days") + 1;
 
 const movesToday = inject("movesToday");
+if (!props.group === "All")
+  movesToday.value = movesToday.value.filter((move) => move.grp == props.group);
 const hourToday = computed(() => {
   return +(
     cvTime(sumTime(movesToday.value.map((move) => move.duration))) * 24
@@ -88,24 +105,27 @@ async function getData() {
   const quarterEnd = moment(date.value).endOf("quarter"); // Get the end date of the quarter
 
   // Fetch data from cache
-  data = (await getById("cache", "dateHoursQuarter")).data._rawValue;
-  try {
-    dateHours.value = JSON.parse(data.value);
-    // Filter days of this quarter
-    dateHours.value = Object.keys(dateHours.value)
-      .filter((d) => d >= quarterStart && d <= quarterEnd)
-      .reduce((obj, key) => {
-        obj[key] = dateHours.value[key];
-        return obj;
-      }, {});
-    if (dateHours.value?.[today] !== undefined)
-      dateHours.value[today] = hourToday.value;
-    if (
-      Object.keys(dateHours.value).length !== 0 &&
-      moment().diff(moment(data.timestamp), "hours") < 6
-    )
-      return;
-  } catch (error) {}
+  // if (!props.group === "All")
+  //   data = (await getById("cache", "dateHoursQuarter" + props.group)).data
+  //     ._rawValue;
+  // else data = (await getById("cache", "dateHoursQuarter")).data._rawValue;
+  // try {
+  //   dateHours.value = JSON.parse(data.value);
+  //   // Filter days of this quarter
+  //   dateHours.value = Object.keys(dateHours.value)
+  //     .filter((d) => d >= quarterStart && d <= quarterEnd)
+  //     .reduce((obj, key) => {
+  //       obj[key] = dateHours.value[key];
+  //       return obj;
+  //     }, {});
+  //   if (dateHours.value?.[today] !== undefined)
+  //     dateHours.value[today] = hourToday.value;
+  //   if (
+  //     Object.keys(dateHours.value).length !== 0 &&
+  //     moment().diff(moment(data.timestamp), "hours") < 6
+  //   )
+  //     return;
+  // } catch (error) {}
 
   // Fetch data from database
   const quarterDates = [];
@@ -120,7 +140,16 @@ async function getData() {
   data = (await query("move", "date", quarterDates)).data._rawValue;
   data.map((date, index) => {
     dateHours.value[quarterDates[index]] = +(
-      cvTime(sumTime(date.map((move) => move.duration))) * 24
+      cvTime(
+        sumTime(
+          date
+            .filter((move) => {
+              if (props.group === "All") return true;
+              else return move.grp == props.group;
+            })
+            .map((move) => move.duration),
+        ),
+      ) * 24
     ).toFixed(2);
   });
   upsert("cache", {
@@ -190,7 +219,6 @@ function getRankInfo(dateHours, date) {
   const winCount = Object.values(dateHours).filter(
     (hour) => hour >= minimum,
   ).length;
-  console.log("winCount", winCount);
   const winrate = winCount / Object.keys(dateHours).length;
   const mmrElo = winrate * 4000;
   const hourElo =
