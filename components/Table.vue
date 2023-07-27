@@ -1,3 +1,7 @@
+<!-- 
+  * Give rows a default value
+ -->
+
 <template>
   <ClientOnly>
     <div v-if="props.dev" id="dev-panel" class="card bg-secondary">
@@ -18,7 +22,7 @@
               newItem.name &&
               suggestionItems !== null &&
               props.showSuggestions &&
-              isShownSuggestions
+              states.isShownSuggestions
             "
             class="modal suggestions"
           >
@@ -91,13 +95,11 @@ import { deepClone, removeState, dir, deepCompare } from "~/static/utils";
 import { v4 } from "uuid";
 import { upsert } from "~/static/db";
 import { durationValidate } from "~~/static/time";
+import GetId from "~~/components/GetId.vue";
 
 // CONSTANTS
 const backendUrl = useRuntimeConfig().backendUrl;
 const MAX_SUGGESTION_ROW = 5;
-
-// STATES
-const isShownSuggestions = ref(true);
 
 let log = ref("");
 
@@ -116,14 +118,35 @@ const props = defineProps({
   showSuggestions: {
     default: true,
   },
+  tableId: { default: "" },
+  action: { default: "delete,copyId" },
+  weighted: { default: false },
 });
+
+const tableActions = props.action.replaceAll(" ", "").split(",");
+
+// STATES
+const states = reactive({
+  isEditing: false,
+  selectedRows: [],
+  activeRow: null,
+  selectedSuggestion: 0,
+  suggestionItems: null,
+  isShownSuggestions: true,
+});
+
+provide(
+  "states-" + props.itemName + (props.tableId && "-" + props.tableId),
+  states,
+);
 
 // DEV
 const emits = defineEmits(["upsert"]);
 
 const rows = inject(props.rows, []);
-
-console.log(props);
+if (!rows.value) {
+  rows.value = [];
+}
 for (let i = 0; i < rows.value.length; i++) {
   rows.value[i].state = reactive({
     isBeingEdited: false,
@@ -133,7 +156,6 @@ for (let i = 0; i < rows.value.length; i++) {
 
 const downloadCsv = () => {
   const data = removeState(deepClone(rows.value));
-  console.log(data);
   // Extract all unique keys from the objects
   const allKeys = Array.from(new Set(data.flatMap((obj) => Object.keys(obj))));
 
@@ -146,7 +168,6 @@ const downloadCsv = () => {
     ...data.map((obj) =>
       sortedKeys
         .map((key) => {
-          console.log(obj[key]);
           if (typeof obj[key] === "string") {
             return obj[key].replaceAll(",", ";");
           }
@@ -160,43 +181,19 @@ const downloadCsv = () => {
   const link = document.createElement("a");
   link.setAttribute("href", encodedUri);
   link.setAttribute("download", `${itemName}.csv`);
-  console.log(csvContent);
   document.body.appendChild(link); // Required for FF
   link.click();
 };
 
 const showRows = ref(props.isDefaultShowRows);
 
-const columns = inject(props.columns, []);
+const columns =
+  typeof props.columns == "string" ? inject(props.columns, []) : props.columns;
 const itemName = props.itemName;
 
 // << DEVELOPMENT
 
-if (itemName == "queued-move") {
-  for (let i = 0; i < rows.value.length; i++) {
-    rows.value[i].weight = +rows.value[i].weight;
-    switch (rows.value[i].priority) {
-      case "1-Urgent":
-        rows.value[i].relativeWeight = rows.value[i].weight + 999;
-        break;
-      case "2-Necessary":
-        rows.value[i].relativeWeight = rows.value[i].weight + 500;
-        break;
-      case "3-Important":
-        rows.value[i].relativeWeight = rows.value[i].weight + 250;
-        break;
-      case "4-Recommended":
-        rows.value[i].relativeWeight = rows.value[i].weight + 100;
-        break;
-      case "5-Optional":
-        rows.value[i].relativeWeight = rows.value[i].weight;
-        break;
-      default:
-        rows.value[i].relativeWeight = rows.value[i].weight;
-        break;
-    }
-    // console.log(rows.value[i].name, rows.value[i].relativeWeight);
-  }
+if (props.weighted) {
   rows.value.sort((a, b) => b.relativeWeight - a.relativeWeight);
 }
 
@@ -423,47 +420,6 @@ if (props.events) {
   });
 }
 
-const nonTextKeys = [
-  8, // backspace
-  9, // tab
-  13, // enter
-  16, // shift
-  17, // ctrl
-  18, // alt
-  19, // pause/break
-  20, // caps lock
-  27, // escape
-  32, // space
-  33, // page up
-  34, // page down
-  35, // end
-  36, // home
-  37, // left arrow
-  38, // up arrow
-  39, // right arrow
-  40, // down arrow
-  45, // insert
-  46, // delete
-  91, // left window key
-  92, // right window key
-  93, // select key
-  112, // f1
-  113, // f2
-  114, // f3
-  115, // f4
-  116, // f5
-  117, // f6
-  118, // f7
-  119, // f8
-  120, // f9
-  121, // f10
-  122, // f11
-  123, // f12
-  144, // num lock
-  145, // scroll lock
-  224, // meta key
-];
-
 const showIsSelected = ref(false);
 let newRow = computed(() =>
   h(
@@ -578,7 +534,7 @@ let newRow = computed(() =>
                 },
                 onInput: (e) => {
                   newItem[col.key] = e.target.value;
-                  isShownSuggestions.value = true;
+                  states.isShownSuggestions = true;
                 },
                 onFocus: (e) => {
                   e.target.setSelectionRange(
@@ -588,7 +544,7 @@ let newRow = computed(() =>
                 },
                 onBlur: (e) => {
                   setTimeout(() => {
-                    isShownSuggestions.value = false;
+                    states.isShownSuggestions = false;
                   }, 120);
                 },
               }),
@@ -646,17 +602,40 @@ let tableBody = computed(() =>
           })
           // Insert at the end of the row
           .concat(
-            h("td", { class: "cell-action" }, [
-              h("img", {
-                // TODO: Update src logic
-                src: "https://management-img.s3.ap-southeast-1.amazonaws.com/minus.png",
-                title: "Double click to delete row",
-                class: "action-delete cursor-pointer",
-                onDblclick: (e) => {
-                  deleteRows(item.id);
+            h(
+              "td",
+              {
+                class: "cell-action flex",
+                onClick: () => {
+                  states.activeRow = item.id;
                 },
-              }),
-            ]),
+              },
+              h(
+                "div",
+                {
+                  class: "flex",
+                },
+                [
+                  h(GetId, {
+                    isImg: true,
+                    class: { "d-none": !tableActions.includes("copyId") },
+                    value: item.id,
+                  }),
+                  h("img", {
+                    // TODO: Update src logic
+                    src: "https://management-img.s3.ap-southeast-1.amazonaws.com/minus.png",
+                    title: "Double click to delete row",
+                    class: [
+                      "btn action delete cursor-pointer",
+                      { "d-none": !tableActions.includes("delete") },
+                    ],
+                    onDblclick: (e) => {
+                      deleteRows(item.id);
+                    },
+                  }),
+                ],
+              ),
+            ),
           ),
       );
     }),
@@ -802,7 +781,10 @@ function renderElement(element, item, isNewRow) {
       return hTd("cell-" + element.key, "input", {
         type: "checkbox",
         class: element.key,
-        checked: item[element.key] ? item[element.key] : element.default,
+        checked:
+          typeof item[element.key] == "boolean"
+            ? item[element.key]
+            : element.default,
         readonly:
           element.disabled ||
           (!(item.state.isBeingEdited && isEditing.value) && !isNewRow),
@@ -862,7 +844,7 @@ function createRow() {
   upsert(itemName, newItem);
   emits("rowUpsert", props.itemName);
   id.value = v4();
-  isShownSuggestions.value = false;
+  states.isShownSuggestions = false;
   resetNewItem();
 }
 
