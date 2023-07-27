@@ -1,43 +1,50 @@
 <template>
-  <div class="rank flex text-center justify-center mt-5">
-    <div class="chart w-fit grid gap-2 grid-cols-[repeat(7,1rem)] px-6">
-      <div
-        v-for="(hour, date) in dateHours.value"
-        :key="date"
-        class="w-4 h-4"
-        :class="{
-          'bg-gray-300': date > today,
-          'bg-blue-500': date == today,
-          'bg-yellow-300': hour >= minimum && date < today,
-          'bg-red-600': hour < minimum && date < today,
-        }"
-      ></div>
+  <div>
+    <div v-if="!data.length" class="text-center p-12">
+      <p class="text-xl">Loading statistics...</p>
     </div>
-    <div class="stats">
-      <div class="rank">
-        <h3>Winrate: {{ displayRank?.winrate }}</h3>
-        <h3>
-          Elo: {{ displayRank?.elo }}
-          {{ isPastQuarter ? "" : `(${eloDiff < 0 ? "" : "+"}${eloDiff})` }}
-        </h3>
-        <h3>
-          Rank: <strong>{{ displayRank?.rank }}</strong>
-        </h3>
+    <div v-show="data.length" class="report content">
+      <div class="rank flex text-center justify-center mt-5">
+        <div class="chart w-fit grid gap-2 grid-cols-[repeat(7,1rem)] px-6">
+          <div
+            v-for="(hour, date) in dateHours.value"
+            :key="date"
+            class="w-4 h-4"
+            :class="{
+              'bg-gray-300': date > today,
+              'bg-blue-500': date == today,
+              'bg-yellow-300': hour >= minimum && date < today,
+              'bg-red-600': hour < minimum && date < today,
+            }"
+          ></div>
+        </div>
+        <div class="stats">
+          <div class="rank">
+            <h3>Winrate: {{ displayRank?.winrate }}</h3>
+            <h3>
+              Elo: {{ displayRank?.elo }}
+              {{ isPastQuarter ? "" : `(${eloDiff < 0 ? "" : "+"}${eloDiff})` }}
+            </h3>
+            <h3>
+              Rank: <strong>{{ displayRank?.rank }}</strong>
+            </h3>
+          </div>
+          <div class="details pt-2">
+            <h3 v-if="!isPastQuarter">
+              Next rank: {{ displayRank?.nextRankStreak }}
+              {{ displayRank?.nextRankStreak < 2 ? " win" : " wins" }}
+            </h3>
+            <h3>Total hours: {{ quarterTime }}</h3>
+            <h3>Average: {{ quarterAverage }}</h3>
+          </div>
+        </div>
       </div>
-      <div class="details pt-2">
-        <h3 v-if="!isPastQuarter">
-          Next rank: {{ displayRank?.nextRankStreak }}
-          {{ displayRank?.nextRankStreak < 2 ? " win" : " wins" }}
-        </h3>
-        <h3>Total hours: {{ quarterTime }}</h3>
-        <h3>Average: {{ quarterAverage }}</h3>
+      <div class="text-center">
+        <button class="rounded-full" @click="minusQuarter">&lt;</button>
+        <input v-model="date" class="text-center w-[8rem]" />
+        <button class="rounded-full" @click="addQuarter">&gt;</button>
       </div>
     </div>
-  </div>
-  <div class="text-center">
-    <button class="rounded-full" @click="minusQuarter">&lt;</button>
-    <input v-model="date" class="text-center w-[8rem]" />
-    <button class="rounded-full" @click="addQuarter">&gt;</button>
   </div>
   <div v-if="dev">
     <Json :value="todayRank" />
@@ -129,6 +136,8 @@ async function getData() {
 
   // Fetch data from database
   const quarterDates = [];
+  data = [];
+  dateHours.value = {};
 
   let currentDate = quarterStart.clone();
 

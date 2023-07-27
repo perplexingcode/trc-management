@@ -1,82 +1,87 @@
 <template>
-  <div
-    class="date-hour-chart min-h-[265px] relative flex gap-3 items-end justify-center p-3 mt-24 w-fit mx-auto"
-  >
-    <div class="w-10"></div>
+  <div v-if="!data.length" class="text-center p-12">
+    <p class="text-xl">Loading statistics...</p>
+  </div>
+  <div v-show="data.length" class="report content">
     <div
-      v-for="(hour, date) in dateHours.value"
-      :key="date"
-      :class="{ today: date == today }"
+      class="date-hour-chart min-h-[265px] relative flex gap-3 items-end justify-center p-3 mt-24 w-fit mx-auto"
     >
-      <div class="flex flex-col items-center">
-        <div
-          class="w-10 column"
-          :style="`height:${hour * 20 * UNIT}px; ${
-            GROUP[props.group].COLOR
-              ? `background-color:${GROUP[props.group].COLOR} !important`
-              : ''
-          }`"
-          :class="[
-            { 'bg-gray-300': hour < LOW },
-            { 'bg-green-500': hour >= LOW && hour < GREAT },
-            { 'bg-blue-500': hour >= GREAT && hour < PERFECT },
-            { 'bg-yellow-300': hour >= PERFECT },
-          ]"
-        ></div>
-        <p class="absolute z-100 mt-[-22px] duration">
-          {{ hour }}
+      <div class="w-10"></div>
+      <div
+        v-for="(hour, date) in dateHours.value"
+        :key="date"
+        :class="{ today: date == today }"
+      >
+        <div class="flex flex-col items-center">
+          <div
+            class="w-10 column"
+            :style="`height:${hour * 20 * UNIT}px; ${
+              GROUP[props.group].COLOR
+                ? `background-color:${GROUP[props.group].COLOR} !important`
+                : ''
+            }`"
+            :class="[
+              { 'bg-gray-300': hour < LOW },
+              { 'bg-green-500': hour >= LOW && hour < GREAT },
+              { 'bg-blue-500': hour >= GREAT && hour < PERFECT },
+              { 'bg-yellow-300': hour >= PERFECT },
+            ]"
+          ></div>
+          <p class="absolute z-100 mt-[-22px] duration">
+            {{ hour }}
+          </p>
+        </div>
+        <p class="text-center date bg-teal-600 text-gray-100">
+          {{ date.slice(-2) }}
         </p>
       </div>
-      <p class="text-center date bg-teal-600 text-gray-100">
-        {{ date.slice(-2) }}
-      </p>
+      <div
+        class="absolute w-full p-3"
+        :style="`bottom:${24 + 20 * PERFECT * UNIT}px`"
+      >
+        <span>{{ PERFECT }}</span>
+        <hr class="border border-1 border-blue-800" />
+      </div>
+      <div
+        class="absolute w-full p-3"
+        :style="`bottom:${24 + 20 * GREAT * UNIT}px`"
+      >
+        <span>{{ GREAT }}</span>
+        <hr class="border border-1 border-blue-800" />
+      </div>
+      <div
+        class="absolute w-full p-3"
+        :style="`bottom:${24 + 20 * MINIMUM * UNIT}px`"
+      >
+        <span class="absolute left-[-6px] top-[2px]">{{ MINIMUM }}</span>
+        <hr class="border border-1 border-gray-700" />
+      </div>
+      <div
+        class="absolute w-full p-3"
+        :style="`bottom:${24 + 20 * LOW * UNIT}px`"
+      >
+        <span>{{ LOW }}</span>
+        <hr class="border border-1 border-blue-800" />
+      </div>
+      <div
+        class="absolute w-full p-3"
+        :style="`bottom:${24 + 20 * average * UNIT}px`"
+      >
+        <span class="absolute left-[-22px] top-[2px]">{{ average }}</span>
+        <hr class="border border-1 border-yellow-300" />
+      </div>
     </div>
-    <div
-      class="absolute w-full p-3"
-      :style="`bottom:${24 + 20 * PERFECT * UNIT}px`"
-    >
-      <span>{{ PERFECT }}</span>
-      <hr class="border border-1 border-blue-800" />
+    <div class="text-center">
+      <button class="rounded-full" @click="minusMonth">&lt;</button>
+      <input v-model="date" class="text-center w-[8rem]" />
+      <button class="rounded-full" @click="addMonth">&gt;</button>
     </div>
-    <div
-      class="absolute w-full p-3"
-      :style="`bottom:${24 + 20 * GREAT * UNIT}px`"
-    >
-      <span>{{ GREAT }}</span>
-      <hr class="border border-1 border-blue-800" />
+    <div class="text-center mt-3">
+      <p>Minimum: {{ minimum + (minimum < 2 ? " day" : " days") }}</p>
+      <p>Required: {{ required + (required < 2 ? " day" : " days") }}</p>
+      <p>Perfect: {{ perfect + (perfect < 2 ? " day" : " days") }}</p>
+      <p>Average: {{ average }}</p>
     </div>
-    <div
-      class="absolute w-full p-3"
-      :style="`bottom:${24 + 20 * MINIMUM * UNIT}px`"
-    >
-      <span class="absolute left-[-6px] top-[2px]">{{ MINIMUM }}</span>
-      <hr class="border border-1 border-gray-700" />
-    </div>
-    <div
-      class="absolute w-full p-3"
-      :style="`bottom:${24 + 20 * LOW * UNIT}px`"
-    >
-      <span>{{ LOW }}</span>
-      <hr class="border border-1 border-blue-800" />
-    </div>
-    <div
-      class="absolute w-full p-3"
-      :style="`bottom:${24 + 20 * average * UNIT}px`"
-    >
-      <span class="absolute left-[-22px] top-[2px]">{{ average }}</span>
-      <hr class="border border-1 border-yellow-300" />
-    </div>
-  </div>
-  <div class="text-center">
-    <button class="rounded-full" @click="minusMonth">&lt;</button>
-    <input v-model="date" class="text-center w-[8rem]" />
-    <button class="rounded-full" @click="addMonth">&gt;</button>
-  </div>
-  <div class="text-center mt-3">
-    <p>Minimum: {{ minimum + (minimum < 2 ? " day" : " days") }}</p>
-    <p>Required: {{ required + (required < 2 ? " day" : " days") }}</p>
-    <p>Perfect: {{ perfect + (perfect < 2 ? " day" : " days") }}</p>
-    <p>Average: {{ average }}</p>
   </div>
 </template>
 <script setup>
@@ -183,6 +188,9 @@ async function getData() {
 
   // Fetch data from database
   const monthDates = [];
+  data = [];
+  dateHours.value = {};
+
   const startDate = moment(date.value).startOf("month"); // Get the start date of the month
   const endDate = moment(date.value).endOf("month"); // Get the end date of the month
 

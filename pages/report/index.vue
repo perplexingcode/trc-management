@@ -1,11 +1,11 @@
 <template>
   <div class="text-center atomic m-auto">
-    <select @change="changeMode">
+    <select @change="changeMode(e)">
       {{
         GROUP[index]
       }}
-      <option v-for="(item, i) in GROUP" :key="i" :value="item">
-        {{ item }}
+      <option v-for="(group, i) in GROUP" :key="group" :value="i">
+        {{ group }}
       </option>
     </select>
   </div>
@@ -18,8 +18,9 @@
 const index = ref(0);
 const GROUP = ["Personal", "All", "MFVN", "Freelance"];
 const report = ref(null);
-function changeMode() {
-  index.value = (index.value + 1) % GROUP.length;
+function changeMode(e) {
+  const selectedIndex = event.target.value;
+  index.value = selectedIndex;
   report.value.rerender();
 }
 </script>
