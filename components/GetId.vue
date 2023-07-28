@@ -39,8 +39,7 @@ const props = defineProps({
 
 function getId() {
   id.value = props.value;
-  if (props.value) return;
-  id.value = v4();
+  if (props.value == "") id.value = v4();
   copied.value = true;
   setTimeout(() => (copied.value = false), 1600);
   navigator.clipboard.writeText(id.value);
