@@ -182,7 +182,7 @@ let moveColumns = [
     key: "done",
     type: "checkbox",
     disabled: false,
-    default: false,
+    default: true,
     attrs: { type: "checkbox" },
   },
   {
