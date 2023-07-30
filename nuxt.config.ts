@@ -22,7 +22,12 @@ export default defineNuxtConfig({
   },
   components: {
     global: true,
-    dirs: ["~/components", "~/components/report", "~/components/effect"],
+    dirs: [
+      "~/components",
+      "~/components/table",
+      "~/components/report",
+      "~/components/effect",
+    ],
   },
   runtimeConfig: {
     public: {
