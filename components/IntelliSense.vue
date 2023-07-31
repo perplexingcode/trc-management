@@ -7,7 +7,7 @@
           rows="queuedMove"
           columns="queuedMoveColumns"
           item-name="queued-move"
-          addRow="true"
+          add-row
         />
       </div>
     </template>

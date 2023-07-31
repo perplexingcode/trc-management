@@ -20,7 +20,7 @@
         rows="chore"
         columns="wasteChoreColumns"
         item-name="chore"
-        addRow="true"
+        add-row
         :is-default-show-rows="false"
       />
     </div>

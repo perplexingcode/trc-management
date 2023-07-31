@@ -7,7 +7,7 @@
       rows="dataRows"
       columns="moveColumns"
       item-name="move"
-      addRow="true"
+      add-row
     />
   </EffectRerender>
 </template>

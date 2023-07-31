@@ -20,7 +20,7 @@
         rows="waste"
         columns="wasteChoreColumns"
         item-name="waste"
-        addRow="true"
+        add-row
         :is-default-show-rows="false"
         :show-suggestions="false"
       />
@@ -28,20 +28,20 @@
   </div>
 </template>
 <script setup>
-import { sumTime } from '~~/static/time';
+import { sumTime } from "~~/static/time";
 
-const wasteMoves = inject('waste', []);
+const wasteMoves = inject("waste", []);
 
 const wasteMoveGroups = [
   {
     regExp: /youtube|yt/i,
-    img: 'https://img.icons8.com/fluency/48/youtube-play.png',
-    name: 'youtube',
+    img: "https://img.icons8.com/fluency/48/youtube-play.png",
+    name: "youtube",
   },
   {
     regExp: /facebook|fb/i,
-    img: 'https://img.icons8.com/color/48/000000/facebook-new.png',
-    name: 'facebook',
+    img: "https://img.icons8.com/color/48/000000/facebook-new.png",
+    name: "facebook",
   },
 ];
 
@@ -52,7 +52,7 @@ for (const group of wasteMoveGroups) {
     return sumTime(
       wasteMoves.value
         .filter((move) => group.regExp.test(move.name))
-        .map((move) => move.duration)
+        .map((move) => move.duration),
     );
   });
   wasteGroups.value.push({

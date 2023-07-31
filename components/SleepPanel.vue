@@ -18,17 +18,17 @@
   </div>
 </template>
 <script setup>
-import { sumTime } from '~~/static/time';
+import { sumTime } from "~~/static/time";
 
-const choreMoves = inject('chore', []);
-const vars = inject('vars', {});
+const choreMoves = inject("chore", []);
+const vars = inject("vars", {});
 
 const sleepTimeMax = ref(vars.sleepTime);
 let sleepTimeCurrent = computed(() => {
   return sumTime(
     choreMoves.value
-      .filter((move) => /sleep|nap|rest/i.test(move.name))
-      .map((move) => move.duration)
+      .filter((move) => /s|sleep|nap|rest/i.test(move.name))
+      .map((move) => move.duration),
   );
 });
 </script>

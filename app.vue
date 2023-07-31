@@ -14,13 +14,10 @@
         <li><NuxtLink to="/">Home</NuxtLink></li>
         <li><NuxtLink to="/test">Test</NuxtLink></li>
         <li><NuxtLink to="/today">Today</NuxtLink></li>
-        <li><NuxtLink to="/category">Categories</NuxtLink></li>
-        <li><NuxtLink to="/project">Projects</NuxtLink></li>
-        <li><NuxtLink to="/data">Data</NuxtLink></li>
-        <li><NuxtLink to="/note">Note</NuxtLink></li>
         <li class="menu-parent-item">
           <NuxtLink to="/navigation">Navigation</NuxtLink>
           <ul class="menu-drop-down">
+            <li><NuxtLink to="/nav/day">Week</NuxtLink></li>
             <li><NuxtLink to="/nav/week">Week</NuxtLink></li>
             <li><NuxtLink to="/nav/month">Month</NuxtLink></li>
             <li><NuxtLink to="/nav/quarter">Quarter</NuxtLink></li>
@@ -29,11 +26,19 @@
             <li><NuxtLink to="/nav/decade">Decade</NuxtLink></li>
           </ul>
         </li>
+        <li><NuxtLink to="/move">Move</NuxtLink></li>
         <li class="menu-parent-item">
           <NuxtLink to="/report">Report</NuxtLink>
         </li>
+        <li><NuxtLink to="/note">Note</NuxtLink></li>
+        <li><NuxtLink to="/accounting">Accounting</NuxtLink></li>
+        <li><NuxtLink to="/data">Data</NuxtLink></li>
+        <li><NuxtLink to="/category">Categories</NuxtLink></li>
+        <li><NuxtLink to="/project">Projects</NuxtLink></li>
+        <li><NuxtLink to="/settings">Settings</NuxtLink></li>
       </ul>
     </nav>
+    <GetId />
     <NuxtPage />
   </main>
 </template>
@@ -64,11 +69,14 @@ const today = moment(new Date()).format("YYYY-MM-DD");
 
 const moves = (await getAll("move")).data;
 const movesToday = (await query("move", "date", today)).data;
+const movesTodayDone = movesToday.value.filter((m) => m.done);
+const movesTodayQueued = movesToday.value.filter((m) => !m.done);
 const wasteMoves = (await query("waste", "date", today)).data;
 const choreMoves = (await query("chore", "date", today)).data;
 const queuedMoves = (await getAll("queued-move")).data;
 const dailyMoves = (await getAll("daily-move")).data;
 
+// Modification
 let vars;
 const _vars = (await getAll("var")).data._rawValue;
 for (const v of _vars) {
@@ -80,6 +88,18 @@ let projects = (await getAll("project")).data;
 projects.value = projects.value.sort((a, b) => (a.name > b.name ? 1 : -1));
 const projectNames = projects.value.map((p) => p.name);
 
+// WATCHERS
+watch(movesTodayDone, () => {
+  movesTodayDone.value = movesToday.value.filter((m) => !m.done);
+  movesTodayQueued.value = movesToday.value.filter((m) => m.done);
+});
+
+watch(movesTodayQueued, () => {
+  movesTodayDone.value = movesToday.value.filter((m) => !m.done);
+  movesTodayQueued.value = movesToday.value.filter((m) => m.done);
+});
+
+// COLUMNS
 const queuedMoveColumns = [
   {
     name: "",
@@ -235,7 +255,7 @@ let moveColumns = [
     key: "grp",
     type: "select",
     disabled: false,
-    options: ["Personal", "MFVN", "Freelace", "TCGS", "TrinityLTD"],
+    options: ["-", "TrinityInc", "Personal", "MFVN", "Freelance", "TCGS"],
     attrs: { type: "text", required: true },
   },
   {
@@ -305,56 +325,10 @@ const projectColumns = [
   },
 ];
 
-// #TRANSACTIONS
-
-const transactions = (await getAll("transaction")).data;
-const transactionColumns = [
-  {
-    name: "",
-    key: "is-selected",
-    type: "is-selected",
-    disabled: true,
-    attrs: { type: "text" },
-  },
-  {
-    name: "Category",
-    key: "cat",
-    type: "select",
-    disabled: false,
-    options: [
-      "FoodnBeverage",
-      "Services",
-      "Consumables",
-      "Shopping",
-      "Movement",
-      "Relationship",
-      "Health",
-      "Maintainance",
-      "Education",
-      "Investment",
-      "-",
-    ],
-    attrs: { type: "text", required: true },
-  },
-  {
-    name: "Group",
-    key: "grp",
-    type: "select",
-    disabled: false,
-    options: [
-      "Navigation",
-      "Cosmic Engine",
-      "Engineering",
-      "Aesthetics",
-      "Operation",
-      "Business",
-    ],
-    attrs: { type: "text", required: true },
-  },
-];
-
 // PROVIDE
 provide("moves", moves);
+provide("movesTodayDone", movesTodayDone);
+provide("movesTodayQueued", movesTodayQueued);
 provide("movesToday", movesToday);
 provide("waste", wasteMoves);
 provide("chore", choreMoves);
@@ -366,9 +340,36 @@ provide("queuedMoveColumns", queuedMoveColumns);
 provide("moveColumns", moveColumns);
 provide("wasteChoreColumns", wasteChoreColumns);
 provide("projectColumns", projectColumns);
-provide("transactions", transactions);
 
-// Ultilities
+// FUNCTIONS
+function weight(rows) {
+  for (let i = 0; i < rows.value.length; i++) {
+    rows.value[i].weight = +rows.value[i].weight;
+    switch (rows.value[i].priority) {
+      case "1-Urgent":
+        rows.value[i].relativeWeight = rows.value[i].weight + 999;
+        break;
+      case "2-Necessary":
+        rows.value[i].relativeWeight = rows.value[i].weight + 500;
+        break;
+      case "3-Important":
+        rows.value[i].relativeWeight = rows.value[i].weight + 250;
+        break;
+      case "4-Recommended":
+        rows.value[i].relativeWeight = rows.value[i].weight + 100;
+        break;
+      case "5-Optional":
+        rows.value[i].relativeWeight = rows.value[i].weight;
+        break;
+      default:
+        rows.value[i].relativeWeight = rows.value[i].weight;
+        break;
+    }
+    // console.log(rows.value[i].name, rows.value[i].relativeWeight);
+  }
+}
+
+// ULTILITIES
 Array.prototype.random = function () {
   return this[Math.floor(Math.random() * this.length)];
 };

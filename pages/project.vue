@@ -5,7 +5,7 @@
       rows="projects"
       columns="projectColumns"
       item-name="project"
-      add-row="true"
+      add-row
     />
   </div>
 </template>

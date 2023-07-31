@@ -32,7 +32,7 @@
               rows="waste"
               columns="wasteChoreColumns"
               item-name="waste"
-              addRow="true"
+              add-row
               :events="wasteEvents"
             />
           </div>
@@ -69,7 +69,7 @@
               rows="chore"
               columns="wasteChoreColumns"
               item-name="chore"
-              addRow="true"
+              add-row
               :events="choreEvents"
             />
           </div>
