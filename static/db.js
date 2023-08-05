@@ -1,8 +1,8 @@
-import { request } from "./request.js";
-import { deepClone } from "./utils.js";
+import { request } from './request.js';
+import { deepClone } from './utils.js';
 
 function rename(name) {
-  return name.includes("*") ? name.replace("*", "") : "management_" + name;
+  return name.includes('*') ? name.replace('*', '') : 'management_' + name;
 }
 
 export const upsert = async function (table, data) {
@@ -10,8 +10,8 @@ export const upsert = async function (table, data) {
   data = deepClone(data);
   delete data.state;
   let response = await request(
-    "/upsert/" + table,
-    "POST",
+    '/upsert/' + table,
+    'POST',
     JSON.stringify(data),
   );
   return response;
@@ -20,37 +20,37 @@ export const upsert = async function (table, data) {
 export const getAll = async function (table, projection) {
   table = rename(table);
   let response = await request(
-    "all" + "/" + table + (projection ? "/" + projection : ""),
-    "GET",
+    'all' + '/' + table + (projection ? '/' + projection : ''),
+    'GET',
   );
   return response;
 };
 
 export const query = async function (table, queryName, queryValue, projection) {
   table = rename(table);
-  if (typeof queryValue === "object") {
+  if (typeof queryValue === 'object') {
     let response = await request(
-      "query" +
-        "/" +
+      'query' +
+        '/' +
         table +
-        "/" +
+        '/' +
         queryName +
-        (projection ? "/" + projection : ""),
-      "POST",
+        (projection ? '/' + projection : ''),
+      'POST',
       JSON.stringify(queryValue),
     );
     return response;
   }
   let response = await request(
-    "query" +
-      "/" +
+    'query' +
+      '/' +
       table +
-      "/" +
+      '/' +
       queryName +
-      "/" +
+      '/' +
       queryValue +
-      (projection ? "/" + projection : ""),
-    "GET",
+      (projection ? '/' + projection : ''),
+    'GET',
   );
 
   return response;
@@ -59,12 +59,16 @@ export const query = async function (table, queryName, queryValue, projection) {
 export const getById = async function (table, id, projection) {
   table = rename(table);
   return await request(
-    "id" + "/" + table + "/" + id + (projection ? "/" + projection : ""),
-    "GET",
+    'id' + '/' + table + '/' + id + (projection ? '/' + projection : ''),
+    'GET',
   );
 };
 
 export const dbDelete = async function (table, list) {
   table = rename(table);
-  request("delete" + "/" + table, "post", list);
+  // if list is not an array but a single id, convert it to an array
+  if (!Array.isArray(list)) {
+    list = [list];
+  }
+  request('delete' + '/' + table, 'post', list);
 };
