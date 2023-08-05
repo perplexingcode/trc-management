@@ -20,37 +20,37 @@
         rows="chore"
         columns="wasteChoreColumns"
         item-name="chore"
-        addRow="true"
+        add-row
         :is-default-show-rows="false"
       />
     </div>
   </div>
 </template>
 <script setup>
-import { sumTime } from "~~/static/time";
+import { sumTime } from '~~/static/time';
 
-const choreMoves = inject("chore", []);
+const choreMoves = inject('chore', []);
 
 const choreMoveGroups = [
   {
-    regExp: /h|shower|bath|hygience|brushing teeth/i,
-    img: "https://img.icons8.com/color/48/water.png",
-    name: "hygience",
+    regExp: /hhh|shower|bath|hygience|brushing teeth/i,
+    img: 'https://img.icons8.com/color/48/water.png',
+    name: 'hygience',
   },
   {
-    regExp: /e|eat|breakfast|lunch|dinner/i,
-    img: "https://img.icons8.com/color/48/meal--v1.png",
-    name: "meal",
+    regExp: /eee|eat|breakfast|lunch|dinner/i,
+    img: 'https://img.icons8.com/color/48/meal--v1.png',
+    name: 'meal',
   },
   {
-    regExp: /c|cleaning|tidy/i,
-    img: "https://img.icons8.com/color/48/cleaning-a-surface.png",
-    name: "tidy",
+    regExp: /ccc|cleaning|tidy/i,
+    img: 'https://img.icons8.com/color/48/cleaning-a-surface.png',
+    name: 'tidy',
   },
   {
-    regExp: /s|sleep|nap/i,
-    img: "https://img.icons8.com/color/48/sleep.png",
-    name: "sleep",
+    regExp: /sss|sleep|nap/i,
+    img: 'https://img.icons8.com/color/48/sleep.png',
+    name: 'sleep',
   },
 ];
 

@@ -27,8 +27,8 @@ const sleepTimeMax = ref(vars.sleepTime);
 let sleepTimeCurrent = computed(() => {
   return sumTime(
     choreMoves.value
-      .filter((move) => /sleep|nap|rest/i.test(move.name))
-      .map((move) => move.duration)
+      .filter((move) => /sss|sleep|nap|rest/i.test(move.name))
+      .map((move) => move.duration),
   );
 });
 </script>

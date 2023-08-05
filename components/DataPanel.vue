@@ -9,7 +9,7 @@
               rows="movesToday"
               columns="moveColumns"
               item-name="move"
-              addRow="true"
+              add-row
               allRows="moves"
             />
           </div>
