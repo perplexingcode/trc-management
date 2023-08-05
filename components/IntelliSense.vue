@@ -7,7 +7,7 @@
           rows="queuedMove"
           columns="queuedMoveColumns"
           item-name="queued-move"
-          addRow="true"
+          add-row
         />
       </div>
     </template>
@@ -16,12 +16,7 @@
         <template #header>
           <h3>Navigation</h3>
         </template>
-        <Note
-          name="Navigation"
-          box="navigation"
-          class="note-navigation"
-          :show-version-history="true"
-        />
+        <Note name="Navigation" box="navigation" class="note-navigation" />
       </Card>
     </template>
     <template #step-2><p>danchoi</p></template>
