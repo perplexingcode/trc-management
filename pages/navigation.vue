@@ -120,6 +120,20 @@
         </div>
         <div class="navigation frame">
           <Note
+            name="Strong Work Ethic"
+            box="Navigation"
+            :data="getNote('Navigation-Strong_Work_Ethic')"
+          />
+        </div>
+        <div class="navigation frame">
+          <Note
+            name="Neural Net API"
+            box="Navigation"
+            :data="getNote('Navigation-Neural_Net_API')"
+          />
+        </div>
+        <div class="navigation frame">
+          <Note
             name="Bao Binh solutions"
             box="Navigation"
             :data="getNote('Navigation-Bao_Binh_solutions')"
