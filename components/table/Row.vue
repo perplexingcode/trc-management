@@ -94,10 +94,22 @@ function handleKeyDown(event) {
 function editRow(id, element) {
   states.isEditing = true;
   states.rowBeingEdited = id;
+
   // Find row with item.id = id
   const index = rows.value.findIndex((row) => row.id === id);
   rows.value.forEach((item) => (item.state.isBeingEdited = false));
   rows.value[index].state.isBeingEdited = true;
+  // Initiallize default values of each column
+  config.columns.forEach((col) => {
+    if (!col.name || col.isState) return;
+    // If cell already has a value, don't overwrite it
+    if (rows.value[index][col.key]) return;
+    if (col.default !== null && col.default !== undefined) {
+      rows.value[index][col.key] = col.default;
+    } else {
+      rows.value[index][col.key] = '';
+    }
+  });
   nextTick(() => {
     element.focus();
   });
