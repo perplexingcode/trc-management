@@ -16,6 +16,7 @@
               'bg-yellow-300': hour >= minimum && date < today,
               'bg-red-600': hour < minimum && date < today,
             }"
+            :title="date + ': +' + hour"
           ></div>
         </div>
         <div class="stats">
@@ -23,7 +24,7 @@
             <h3>Winrate: {{ displayRank?.winrate }}</h3>
             <h3>
               Elo: {{ displayRank?.elo }}
-              {{ isPastQuarter ? "" : `(${eloDiff < 0 ? "" : "+"}${eloDiff})` }}
+              {{ isPastQuarter ? '' : `(${eloDiff < 0 ? '' : '+'}${eloDiff})` }}
             </h3>
             <h3>
               Rank: <strong>{{ displayRank?.rank }}</strong>
@@ -32,7 +33,7 @@
           <div class="details pt-2">
             <h3 v-if="!isPastQuarter">
               Next rank: {{ displayRank?.nextRankStreak }}
-              {{ displayRank?.nextRankStreak < 2 ? " win" : " wins" }}
+              {{ displayRank?.nextRankStreak < 2 ? ' win' : ' wins' }}
             </h3>
             <h3>Total hours: {{ quarterTime }}</h3>
             <h3>Average: {{ quarterAverage }}</h3>
@@ -46,17 +47,17 @@
       </div>
     </div>
   </div>
-  <div v-if="dev">
+  <!-- <div v-if="dev">
     <Json :value="todayRank" />
     <Json :value="yesterdayRank" />
     <Json :value="dev" />
-  </div>
+  </div> -->
 </template>
 <script setup>
-import { query, upsert, getById } from "~~/static/db";
-import moment from "moment";
-import { sumTime, cvTime, createTimestamp } from "~~/static/time";
-import { deepClone } from "~~/static/utils";
+import { query, upsert, getById } from '~~/static/db';
+import moment from 'moment';
+import { sumTime, cvTime, createTimestamp } from '~~/static/time';
+import { deepClone } from '~~/static/utils';
 
 const props = defineProps({
   group: {
@@ -75,11 +76,11 @@ const GROUP = {
 
 const minimum = GROUP[props.group];
 
-const today = moment().format("YYYY-MM-DD");
-const todayNum = moment().diff(moment().startOf("quarter"), "days") + 1;
+const today = moment().format('YYYY-MM-DD');
+const todayNum = moment().diff(moment().startOf('quarter'), 'days') + 1;
 
-const movesToday = inject("movesToday");
-if (!props.group === "All")
+const movesToday = inject('movesToday');
+if (!props.group === 'All')
   movesToday.value = movesToday.value.filter((move) => move.grp == props.group);
 const hourToday = computed(() => {
   return +(
@@ -90,14 +91,14 @@ const hourToday = computed(() => {
 const date = ref(today);
 
 const isPastQuarter = computed(() => {
-  return moment(date.value).isBefore(moment().startOf("quarter"));
+  return moment(date.value).isBefore(moment().startOf('quarter'));
 });
 
 function addQuarter() {
-  date.value = moment(date.value).add(3, "month").format("YYYY-MM-DD");
+  date.value = moment(date.value).add(3, 'month').format('YYYY-MM-DD');
 }
 function minusQuarter() {
-  date.value = moment(date.value).subtract(3, "month").format("YYYY-MM-DD");
+  date.value = moment(date.value).subtract(3, 'month').format('YYYY-MM-DD');
 }
 
 watch(date, async () => {
@@ -108,8 +109,8 @@ let dateHours = reactive({ value: {} });
 let data = [];
 
 async function getData() {
-  const quarterStart = moment(date.value).startOf("quarter"); // Get the start date of the quarter
-  const quarterEnd = moment(date.value).endOf("quarter"); // Get the end date of the quarter
+  const quarterStart = moment(date.value).startOf('quarter'); // Get the start date of the quarter
+  const quarterEnd = moment(date.value).endOf('quarter'); // Get the end date of the quarter
 
   // Fetch data from cache
   // if (!props.group === "All")
@@ -142,18 +143,18 @@ async function getData() {
   let currentDate = quarterStart.clone();
 
   while (currentDate.isSameOrBefore(quarterEnd)) {
-    quarterDates.push(currentDate.format("YYYY-MM-DD"));
-    currentDate.add(1, "day");
+    quarterDates.push(currentDate.format('YYYY-MM-DD'));
+    currentDate.add(1, 'day');
   }
 
-  data = (await query("move", "date", quarterDates)).data._rawValue;
+  data = (await query('move', 'date', quarterDates)).data._rawValue;
   data.map((date, index) => {
     dateHours.value[quarterDates[index]] = +(
       cvTime(
         sumTime(
           date
             .filter((move) => {
-              if (props.group === "All") return true;
+              if (props.group === 'All') return true;
               else return move.grp == props.group;
             })
             .map((move) => move.duration),
@@ -161,8 +162,8 @@ async function getData() {
       ) * 24
     ).toFixed(2);
   });
-  upsert("cache", {
-    id: "dateHoursQuarter",
+  upsert('cache', {
+    id: 'dateHoursQuarter',
     value: JSON.stringify(dateHours.value),
     timestamp: createTimestamp(),
   });
@@ -207,22 +208,22 @@ const getRank = (elo) => {
   const _rank = Math.floor(elo / 500);
   const _division = Math.floor((elo % 500) / 100);
 
-  const divions = ["V", "IV", "III", "II", "I"];
+  const divions = ['V', 'IV', 'III', 'II', 'I'];
   const ranks = [
-    "Bronze",
-    "Silver",
-    "Gold",
-    "Platinum",
-    "Diamond",
-    "Master",
-    "Grandmaster",
-    "Challenger",
+    'Bronze',
+    'Silver',
+    'Gold',
+    'Platinum',
+    'Diamond',
+    'Master',
+    'Grandmaster',
+    'Challenger',
   ];
 
-  return ranks[_rank] + " " + divions[_division];
+  return ranks[_rank] + ' ' + divions[_division];
 };
 
-const yesterday = moment().subtract(1, "days").format("YYYY-MM-DD");
+const yesterday = moment().subtract(1, 'days').format('YYYY-MM-DD');
 
 function getRankInfo(dateHours, date) {
   const winCount = Object.values(dateHours).filter(
@@ -250,7 +251,7 @@ function getRankInfo(dateHours, date) {
       2;
     if (newElo - (newElo % 100) - (elo - (elo % 100)) >= 100) isPromoted = true;
     if (nextRankStreak > 10) {
-      nextRankStreak = "10+";
+      nextRankStreak = '10+';
       break;
     }
   }
