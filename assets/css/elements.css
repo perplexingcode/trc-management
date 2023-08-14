@@ -75,6 +75,10 @@ input:focus-visible {
   width: 6.5rem;
 }
 
+input[type='checkbox'] {
+  cursor: pointer;
+}
+
 /* Select */
 
 select {
