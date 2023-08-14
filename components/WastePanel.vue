@@ -18,30 +18,31 @@
     <div class="waste_moves pl-2">
       <Table
         rows="waste"
-        columns="wasteChoreColumns"
+        :columns="wasteChoreColumns"
         item-name="waste"
         add-row
-        :is-default-show-rows="false"
+        :init-show-rows="false"
         :show-suggestions="false"
       />
     </div>
   </div>
 </template>
 <script setup>
-import { sumTime } from "~~/static/time";
+import { sumTime } from '~~/static/time';
 
-const wasteMoves = inject("waste", []);
+const wasteMoves = inject('waste', []);
+const wasteChoreColumns = inject('wasteChoreColumns');
 
 const wasteMoveGroups = [
   {
     regExp: /youtube|yt/i,
-    img: "https://img.icons8.com/fluency/48/youtube-play.png",
-    name: "youtube",
+    img: 'https://img.icons8.com/fluency/48/youtube-play.png',
+    name: 'youtube',
   },
   {
     regExp: /facebook|fb/i,
-    img: "https://img.icons8.com/color/48/000000/facebook-new.png",
-    name: "facebook",
+    img: 'https://img.icons8.com/color/48/000000/facebook-new.png',
+    name: 'facebook',
   },
 ];
 

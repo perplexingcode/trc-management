@@ -7,7 +7,7 @@
           <div>
             <Table
               rows="movesToday"
-              columns="moveColumns"
+              :columns="moveColumns"
               item-name="move"
               add-row
               allRows="moves"
@@ -23,5 +23,7 @@
     <template #step-2><p>danchoi</p></template>
   </Section>
 </template>
-<script setup></script>
+<script setup>
+const moveColumns = inject('moveColumns');
+</script>
 <style></style>

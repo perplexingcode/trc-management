@@ -18,16 +18,18 @@
     <div class="chore_moves pl-2">
       <Table
         rows="chore"
-        columns="wasteChoreColumns"
+        :columns="wasteChoreColumns"
         item-name="chore"
         add-row
-        :is-default-show-rows="false"
+        :init-show-rows="false"
       />
     </div>
   </div>
 </template>
 <script setup>
 import { sumTime } from '~~/static/time';
+
+const wasteChoreColumns = inject('wasteChoreColumns');
 
 const choreMoves = inject('chore', []);
 
