@@ -78,6 +78,14 @@ const props = defineProps({
   action: { default: 'delete,copyId' },
   weighted: { default: false },
   dbTable: { type: String, default: null },
+  suggestionSize: {
+    type: Number,
+    default: 3000,
+  },
+  maxSuggestionNum: {
+    type: Number,
+    default: 5,
+  },
 });
 
 const tableId = props.tableId || v4();
@@ -89,6 +97,8 @@ const config = {
   dbTable: props.dbTable || props.itemName,
   addRow: props.addRow,
   showSuggestion: props.showSuggestion,
+  suggestionSize: props.suggestionSize,
+  maxSuggestionNum: props.maxSuggestionNum,
 };
 
 provide('config-' + tableId, config);

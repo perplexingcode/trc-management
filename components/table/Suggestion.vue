@@ -41,14 +41,6 @@ const props = defineProps({
   newItem: {
     required: true,
   },
-  sampleSize: {
-    type: Number,
-    default: 10,
-  },
-  maxSuggestionNum: {
-    type: Number,
-    default: 5,
-  },
 });
 
 // #SETUP
@@ -86,7 +78,7 @@ onMounted(async () => {
   if (!data.suggestionPool.length && config.dbTable) {
     await nextTick();
     data.suggestionPool = (
-      await sample(config.dbTable, props.sampleSize)
+      await sample(config.dbTable, config.suggestionSize)
     ).data._rawValue;
     suggestions.value = data.suggestionPool;
   } else {
@@ -197,8 +189,8 @@ function sortAttr() {
 
 function truncateSuggestion(suggestions) {
   // Truncate suggestion to maxSuggestionNum
-  if (suggestions.length > props.maxSuggestionNum) {
-    suggestions.splice(props.maxSuggestionNum);
+  if (suggestions.length > config.maxSuggestionNum) {
+    suggestions.splice(config.maxSuggestionNum);
   }
   return suggestions;
 }
