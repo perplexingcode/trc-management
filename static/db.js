@@ -26,6 +26,12 @@ export const getAll = async function (table, projection) {
   return response;
 };
 
+export const sample = async function (table, limit) {
+  table = rename(table);
+  let response = await request('sample' + '/' + table + '/' + limit, 'GET');
+  return response;
+};
+
 export const query = async function (table, queryName, queryValue, projection) {
   table = rename(table);
   if (typeof queryValue === 'object') {
