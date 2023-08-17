@@ -7,10 +7,9 @@
           <div>
             <Table
               rows="movesToday"
-              :columns="moveColumns"
+              columns="moveColumns"
+              dbTable="move"
               item-name="move"
-              add-row
-              allRows="moves"
             />
           </div>
         </template>
@@ -23,7 +22,5 @@
     <template #step-2><p>danchoi</p></template>
   </Section>
 </template>
-<script setup>
-const moveColumns = inject('moveColumns');
-</script>
+<script setup></script>
 <style></style>

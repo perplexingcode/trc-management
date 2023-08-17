@@ -89,17 +89,23 @@ const props = defineProps({
 });
 
 const tableId = props.tableId || v4();
+let columns;
+if (typeof props.columns === 'string') {
+  columns = inject(props.columns);
+} else {
+  columns = props.columns;
+}
 
-const config = {
+const config = reactive({
   action: props.action.split(','),
   itemName: props.itemName,
-  columns: props.columns,
+  columns,
   dbTable: props.dbTable || props.itemName,
   addRow: props.addRow,
   showSuggestion: props.showSuggestion,
   suggestionSize: props.suggestionSize,
   maxSuggestionNum: props.maxSuggestionNum,
-};
+});
 
 provide('config-' + tableId, config);
 

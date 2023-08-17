@@ -5,7 +5,7 @@
         <h3>Action queue</h3>
         <Table
           rows="queuedMove"
-          :columns="queuedMoveColumns"
+          columns="queuedMoveColumns"
           item-name="queued-move"
           add-row
         />
@@ -22,9 +22,7 @@
     <template #step-2><p>danchoi</p></template>
   </Section>
 </template>
-<script setup>
-const queuedMoveColumns = inject('queuedMoveColumns');
-</script>
+<script setup></script>
 <style>
 .note-navigation textarea {
   min-height: 360px;

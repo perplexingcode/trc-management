@@ -28,8 +28,7 @@
 </template>
 <script setup>
 import { sumTime } from '~~/static/time';
-
-const wasteChoreColumns = inject('wasteChoreColumns');
+import { wasteChoreColumns } from '~~/static/columns';
 
 const choreMoves = inject('chore', []);
 

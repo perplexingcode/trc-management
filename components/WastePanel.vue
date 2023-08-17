@@ -29,9 +29,9 @@
 </template>
 <script setup>
 import { sumTime } from '~~/static/time';
+import { wasteChoreColumns } from '~~/static/columns';
 
 const wasteMoves = inject('waste', []);
-const wasteChoreColumns = inject('wasteChoreColumns');
 
 const wasteMoveGroups = [
   {
