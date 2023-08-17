@@ -18,7 +18,7 @@
   </div>
 </template>
 <script setup>
-import { sumTime } from '~~/static/time';
+import { sumTime, cvTime } from '~~/static/time';
 
 const choreMoves = inject('chore', []);
 const vars = inject('vars', {});
@@ -29,6 +29,13 @@ let sleepTimeCurrent = computed(() => {
     choreMoves.value
       .filter((move) => /sss|sleep|nap|rest/i.test(move.name))
       .map((move) => move.duration),
+  );
+});
+const sleepTimeLeft = computed(() => {
+  return sumTime(
+    cvTime(sleepTimeMax.value) - cvTime(sleepTimeCurrent.value) > 0
+      ? cvTime(sleepTimeMax.value) - cvTime(sleepTimeCurrent.value)
+      : 0,
   );
 });
 </script>

@@ -29,15 +29,15 @@
   </Section>
 </template>
 <script setup>
-import { cvTime, sumTime } from "~~/static/time";
-import moment from "moment";
+import { cvTime, sumTime } from '~~/static/time';
+import moment from 'moment';
 
-const today = moment(new Date()).format("YYYY-MM-DD");
+const today = moment(new Date()).format('YYYY-MM-DD');
 
-let movesToday = inject("movesToday", []);
-const wasteMoves = inject("waste", []);
-const choreMoves = inject("chore", []);
-const vars = inject("vars", {});
+let movesToday = inject('movesToday', []);
+const wasteMoves = inject('waste', []);
+const choreMoves = inject('chore', []);
+const vars = inject('vars', {});
 
 const todayWaste = computed(() => {
   return sumTime(wasteMoves.value.map((move) => move.duration));
@@ -69,7 +69,7 @@ const todayDone = computed(() => {
 
 const todayLeft = computed(() => {
   return sumTime(
-    cvTime("24h") -
+    cvTime('24h') -
       cvTime(todayDone.value) -
       cvTime(todayWaste.value) -
       cvTime(todayChore.value) -
@@ -82,7 +82,7 @@ const currentMoveTime = computed(() => {
   a.value;
   return sumTime(
     Math.floor(
-      moment.duration(moment().diff(moment().startOf("day"))).asMinutes(),
+      moment.duration(moment().diff(moment().startOf('day'))).asMinutes(),
     ) /
       1440 -
       [todayDone, todayWaste, todayChore].reduce(
@@ -98,7 +98,11 @@ setInterval(() => {
 }, 1000);
 
 const sleepTimeLeft = computed(() => {
-  return sumTime(cvTime(sleepTimeMax.value) - cvTime(sleepTimeCurrent.value));
+  return sumTime(
+    cvTime(sleepTimeMax.value) - cvTime(sleepTimeCurrent.value) > 0
+      ? cvTime(sleepTimeMax.value) - cvTime(sleepTimeCurrent.value)
+      : 0,
+  );
 });
 
 const maxTime = computed(() => {
