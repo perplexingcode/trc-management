@@ -205,7 +205,7 @@ const downloadCsv = () => {
     'data:text/csv;charset=utf-8,' + encodeURI(csvContent.replaceAll(`"`, ''));
   const link = document.createElement('a');
   link.setAttribute('href', encodedUri);
-  link.setAttribute('download', `${itemName}.csv`);
+  link.setAttribute('download', `${props.itemName}.csv`);
   document.body.appendChild(link); // Required for FF
   link.click();
 };
