@@ -4,6 +4,7 @@ export const unwrap = function (obj) {
   return JSON.parse(JSON.stringify(obj));
 };
 export const deepClone = function (obj) {
+  if (typeof obj !== 'object' || obj === null) return obj;
   return JSON.parse(JSON.stringify(obj));
 };
 
