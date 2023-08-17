@@ -14,6 +14,7 @@
         <li><NuxtLink to="/">Home</NuxtLink></li>
         <li><NuxtLink to="/test">Test</NuxtLink></li>
         <li><NuxtLink to="/today">Today</NuxtLink></li>
+        <li><NuxtLink to="/project">Projects</NuxtLink></li>
         <li class="menu-parent-item">
           <NuxtLink to="/navigation">Navigation</NuxtLink>
           <ul class="menu-drop-down">
@@ -34,7 +35,6 @@
         <li><NuxtLink to="/accounting">Accounting</NuxtLink></li>
         <li><NuxtLink to="/data">Data</NuxtLink></li>
         <li><NuxtLink to="/category">Categories</NuxtLink></li>
-        <li><NuxtLink to="/project">Projects</NuxtLink></li>
         <li><NuxtLink to="/settings">Settings</NuxtLink></li>
       </ul>
     </nav>
@@ -46,6 +46,12 @@
 import moment from 'moment';
 import { getAll, query } from './static/db';
 import FILOArray from './static/class/FILOArray';
+
+// Add favicon and title
+useHead({
+  title: 'This is Management',
+  link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.svg' }],
+});
 
 const timeArray = new FILOArray();
 timeArray.maxSize = 5;
@@ -232,7 +238,7 @@ let moveColumns = [
     type: 'select',
     disabled: false,
     options: projectNames,
-    attrs: { type: 'text', required: true },
+    attrs: { type: 'text' },
   },
   {
     name: 'Group',
@@ -277,24 +283,6 @@ const wasteChoreColumns = [
   },
 ];
 
-// #PROJECTS
-const projectColumns = [
-  {
-    name: 'Project',
-    key: 'name',
-    type: 'input',
-    disabled: false,
-    attrs: { type: 'text' },
-  },
-  {
-    name: 'Hour',
-    key: 'hour',
-    type: 'input',
-    disabled: false,
-    attrs: { type: 'text' },
-  },
-];
-
 // PROVIDE
 provide('moves', moves);
 provide('movesTodayDone', movesTodayDone);
@@ -309,7 +297,6 @@ provide('vars', reactive(vars));
 provide('queuedMoveColumns', queuedMoveColumns);
 provide('moveColumns', moveColumns);
 provide('wasteChoreColumns', wasteChoreColumns);
-provide('projectColumns', projectColumns);
 
 // FUNCTIONS
 function weight(rows) {
