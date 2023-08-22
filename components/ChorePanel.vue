@@ -22,6 +22,7 @@
         item-name="chore"
         add-row
         :init-show-rows="false"
+        :show-suggestion="false"
       />
     </div>
   </div>

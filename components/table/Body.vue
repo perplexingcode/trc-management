@@ -1,10 +1,11 @@
 <template>
   <tbody v-show="states.showRows">
     <TableRow
-      v-for="item in rows"
+      v-for="item,index in rows"
       :key="item.id"
       :item="item"
       :table-id="props.tableId"
+      :index="index + 1"
     />
   </tbody>
 </template>

@@ -1,5 +1,5 @@
 <template>
-  <cell :key="key" :class="props.element?.attrs?.class || ''" />
+  <cell v-if="props.item?.state" :key="key" :class="props.element?.attrs?.class || ''" />
 </template>
 <script setup>
 import GetId from '~~/components/GetId.vue';
@@ -36,7 +36,6 @@ const states = inject('states-' + props.tableId);
 const config = inject('config-' + props.tableId);
 
 let cell = computed(() => {
-  if (!props.item?.state) return;
   return renderElement(props.element, props.item, props.isNewCell);
 });
 
@@ -175,7 +174,7 @@ function renderElement(element, item, isNewRow) {
             item[element.key] = e.target.value;
           },
         },
-        ['', ...element.options].map((option) => {
+        ['-', ...element.options].map((option) => {
           return h(
             'option',
             {

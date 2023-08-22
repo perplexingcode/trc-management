@@ -2,6 +2,8 @@
   <tr class="new-row" @keydown.enter="handleSubmit">
     <td></td>
     <!-- Select column -->
+    <td></td>
+    <!-- Index column -->
     <TableCell
       v-for="col in config.columns"
       :element="col"

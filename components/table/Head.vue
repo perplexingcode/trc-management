@@ -4,6 +4,8 @@
     <tr class="cols-name">
       <th></th>
       <!-- Select column -->
+      <th></th>
+      <!-- Index column -->
       <th v-for="col in config.columns" :key="col">
         {{ col.name }}
       </th>

@@ -133,12 +133,17 @@ const states = reactive({
 });
 provide('states-' + tableId, states);
 
-class ItemState {
-  constructor() {
-    this.isBeingEdited = false;
-    this.isSelected = false;
-  }
-}
+// class ItemState {
+//   constructor() {
+//     this.isBeingEdited = false;
+//     this.isSelected = false;
+//   }
+// }
+
+const itemState = {
+  isBeingEdited: false,
+  isSelected: false,
+};
 let rows = ref([]);
 if (props.rows) {
   rows = inject(props.rows, []);
@@ -161,7 +166,7 @@ provide('rows-' + tableId, rows);
 
 function initItemState(rows) {
   for (let i = 0; i < rows.value.length; i++) {
-    rows.value[i].state = reactive(new ItemState());
+    rows.value[i].state = reactive(deepClone(itemState));
   }
 }
 

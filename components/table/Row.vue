@@ -10,13 +10,14 @@
       'is-being-edited':
         states.activeRow === props.item.id && states.isBeingEdited,
     }"
-  >
-    <TableCell
-      :element="selectColumn"
-      :item="props.item"
-      :table-id="props.tableId"
-      @delete-row="deleteRows"
-    />
+  > 
+  <TableCell
+  :element="selectColumn"
+  :item="props.item"
+  :table-id="props.tableId"
+  @delete-row="deleteRows"
+  />
+  <td class="index"><span>{{ props.index }}</span></td>
     <TableCell
       v-for="col in config.columns"
       :element="col"
@@ -45,6 +46,10 @@ const props = defineProps({
   },
   tableId: {
     type: String,
+    required: true,
+  },
+  index: {
+    type: Number,
     required: true,
   },
 });

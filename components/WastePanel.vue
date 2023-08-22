@@ -22,7 +22,7 @@
         item-name="waste"
         add-row
         :init-show-rows="false"
-        :show-suggestions="false"
+        :show-suggestion="false"
       />
     </div>
   </div>

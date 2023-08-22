@@ -8,6 +8,7 @@
           columns="queuedMoveColumns"
           item-name="queued-move"
           add-row
+          :suggestion-size="-1"
         />
       </div>
     </template>

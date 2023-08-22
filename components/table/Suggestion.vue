@@ -3,7 +3,7 @@
  -->
 
 <template>
-  <div v-if="showSuggestion" class="modal suggestions">
+  <div v-if="showSuggestion && isLoaded" class="modal suggestions">
     <div
       v-for="(item, index) in filteredSuggestions"
       :key="item[0]"
@@ -32,8 +32,8 @@
 </template>
 
 <script setup>
-import { sample } from '~~/static/db';
-import { deepClone } from '~~/static/utils';
+import { sample, getById, upsert } from '~~/static/db';
+import moment from 'moment';
 const props = defineProps({
   tableId: {
     type: String,
@@ -48,6 +48,7 @@ const config = inject('config-' + props.tableId);
 const data = inject('data-' + props.tableId);
 const states = inject('states-' + props.tableId);
 
+const isLoaded = ref(false);
 const suggestions = ref([]);
 const colWidths = reactive({});
 
@@ -74,22 +75,48 @@ watch(showSuggestion, async () => {
     window.removeEventListener('keydown', handleKeyDown);
   }
 });
+const rows = ref([]);
 onMounted(async () => {
-  if (!data.suggestionPool.length && config.dbTable) {
-    await nextTick();
+  await nextTick();
+  // Fetch data from cache
+  const cloudSuggestion = (
+    await getById('cache', 'suggestion-' + config.dbTable)
+  ).data._rawValue;
+  if (cloudSuggestion) {
+    const now = moment();
+    const cacheDate = moment(cloudSuggestion.timestamp);
+    const diff = now.diff(cacheDate, 'days');
+    if (diff < 3) {
+      suggestions.value = cloudSuggestion.value;
+      isLoaded.value = true;
+      return;
+    }
+  }
+
+  // Fetch data from db
+  if (
+    !data.suggestionPool.length &&
+    config.dbTable &&
+    config.suggestionSize != -1
+  ) {
     data.suggestionPool = (
       await sample(config.dbTable, config.suggestionSize)
     ).data._rawValue;
     suggestions.value = data.suggestionPool;
   } else {
-    const rows = inject('rows-' + props.tableId, []);
-    await nextTick();
-    suggestions.value = deepClone(rows);
+    rows.value = inject('rows-' + props.tableId, []).value;
+    suggestions.value = rows.value;
   }
   filterAttr();
   removeDuplicate();
   setAttrWidth();
   sortAttr();
+  isLoaded.value = true;
+  upsert('cache', {
+    id: 'suggestion-' + config.dbTable,
+    value: suggestions.value,
+    timestamp: moment().format('YYYY-MM-DD HH:mm:ss'),
+  });
 });
 
 // >>>----------------------------------------------------------------------------------<<<
@@ -126,19 +153,22 @@ function importSuggestion(index) {
   states.showSuggestion = false;
 }
 //
+const noSuggestion = ['date', 'done'];
 function filterAttr() {
   for (let i = 0; i < suggestions.value.length; i++) {
     let row = suggestions.value[i];
     // Remove unneeded attributes
 
     config.columns.forEach((col) => {
-      if (col.attrs.suggestion === false) delete row[col.key];
+      if (col.attrs.suggestion === false || noSuggestion.includes(col.key))
+        delete row[col.key];
     });
 
     // Remove state & id columns
     Object.keys(row).forEach((col) => {
       const column = config.columns.filter((c) => c.key === col);
-      if (column?.[0]?.isState) delete row[col];
+      if (column?.[0]?.isState) delete row[col.key];
+      if (noSuggestion.includes(col.key)) delete row[col.key];
       delete row['id'];
     });
   }
