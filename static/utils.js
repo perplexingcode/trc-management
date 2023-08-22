@@ -9,6 +9,7 @@ export const deepClone = function (obj) {
 };
 
 export const removeState = function (obj) {
+  delete obj.state;
   if (Array.isArray(obj)) {
     for (const item of obj) {
       delete item.state;
