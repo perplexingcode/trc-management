@@ -1,7 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   build: {
-    transpile: ["moment"],
+    transpile: ['moment'],
   },
   postcss: {
     plugins: {
@@ -9,24 +9,24 @@ export default defineNuxtConfig({
       autoprefixer: {},
     },
   },
-  modules: ["@pinia/nuxt"],
+  modules: ['@pinia/nuxt'],
   css: [
-    "~/assets/css/main.css",
-    "~/assets/css/app.css",
-    "~/assets/css/elements.css",
-    "~/assets/css/components.css",
-    "~/assets/css/text.css",
+    '~/assets/css/main.css',
+    '~/assets/css/app.css',
+    '~/assets/css/elements.css',
+    '~/assets/css/components.css',
+    '~/assets/css/text.css',
   ],
   pinia: {
-    autoImports: ["defineStore"],
+    autoImports: ['defineStore'],
   },
   components: {
     global: true,
     dirs: [
-      "~/components",
-      "~/components/table",
-      "~/components/report",
-      "~/components/effect",
+      '~/components',
+      '~/components/table',
+      '~/components/report',
+      '~/components/effect',
     ],
   },
   runtimeConfig: {
