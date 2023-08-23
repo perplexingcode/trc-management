@@ -10,7 +10,9 @@
             <p>Today left: {{ todayLeft }}</p>
             <p>Current move: {{ currentMoveTime }}</p>
             <p>Max time: {{ maxTime }}</p>
-            <p>Max time no sleep: {{ maxTimeNoSleep }}</p>
+            <p v-if="sleepTimeLeft !== '0:00'">
+              Max time no sleep: {{ maxTimeNoSleep }}
+            </p>
           </div>
           <div class="waste-chore">
             <WastePanel />
