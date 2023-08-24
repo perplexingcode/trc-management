@@ -27,6 +27,7 @@ export default defineNuxtConfig({
       '~/components/table',
       '~/components/report',
       '~/components/effect',
+      '~/components/chart',
     ],
   },
   runtimeConfig: {
