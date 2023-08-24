@@ -21,6 +21,7 @@ import { v4 } from 'uuid';
 import { deepClone } from '~/static/utils';
 import { upsert } from '~/static/db';
 import { validateItem } from '~~/static/table';
+import moment from 'moment';
 
 const props = defineProps({
   suggestions: {
@@ -86,9 +87,12 @@ function handleSubmit(event) {
   if (event.key === 'Enter' && !states.isSelectingSuggestion) createRow();
 }
 
-function createRow() {
+async function createRow() {
   if (!validateItem(states.newItem, config.columns)) return;
   const item = deepClone(states.newItem);
+  await nextTick();
+  item.createdAt = moment().format('YYYY-MM-DD HH:mm:ss');
+  item.tags = item.tags + (item.tags === '' ? '' : '; ') + states.newItemTags;
   item.state = new State();
   rows.value.push(item);
   upsert(config.dbTable, states.newItem);

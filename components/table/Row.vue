@@ -10,14 +10,16 @@
       'is-being-edited':
         states.activeRow === props.item.id && states.isBeingEdited,
     }"
-  > 
-  <TableCell
-  :element="selectColumn"
-  :item="props.item"
-  :table-id="props.tableId"
-  @delete-row="deleteRows"
-  />
-  <td class="index"><span>{{ props.index }}</span></td>
+  >
+    <TableCell
+      :element="selectColumn"
+      :item="props.item"
+      :table-id="props.tableId"
+      @delete-row="deleteRows"
+    />
+    <td class="index">
+      <span>{{ props.index }}</span>
+    </td>
     <TableCell
       v-for="col in config.columns"
       :element="col"
@@ -38,6 +40,7 @@
 // >>>----------------------------------------------------------------------------------<<<
 import { dbDelete, upsert } from '~/static/db.js';
 import { validateItem } from '~~/static/table';
+import moment from 'moment';
 
 const props = defineProps({
   item: {
@@ -146,6 +149,7 @@ function upsertRow(id) {
   const index = rows.value.findIndex((row) => row.id === id);
   const rowToUpsert = rows._rawValue[index];
   if (!validateItem(rowToUpsert, config.columns)) return;
+  rowToUpsert.updatedAt = moment().format('YYYY-MM-DD HH:mm:ss');
   upsert(config.itemName, rowToUpsert);
   rows.value[index].state.isBeingEdited = false;
   document.activeElement.blur();

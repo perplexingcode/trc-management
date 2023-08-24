@@ -68,7 +68,7 @@ const props = defineProps({
   dev: { type: Boolean, default: false },
   addRow: { type: Boolean, default: true },
   events: {},
-  allRows: {},
+  newItemTags: { type: String, default: '' },
   initShowRows: { type: Boolean, default: true },
   showSuggestion: {
     type: Boolean,
@@ -125,6 +125,7 @@ const states = reactive({
   showSuggestion: false,
   showSelection: false,
   newItem: {},
+  newItemTags: props.newItemTags,
   // <Dev>
   events: props.events,
   //
