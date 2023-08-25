@@ -7,30 +7,31 @@
       rows="dataRows"
       columns="moveColumns"
       item-name="move"
-      addRow="true"
+      add-row
+      dev
     />
   </EffectRerender>
 </template>
 <script setup>
-import { getAll, query } from "~~/static/db";
+import { getAll, query } from '~~/static/db';
 
 const isLoadedData = ref(false);
-const date = ref("");
+const date = ref('');
 const dataTable = ref(null);
 let rows = ref(null);
 const loadData = async () => {
-  if (date.value === "") {
-    rows.value = (await getAll("move")).data.value;
+  if (date.value === '') {
+    rows.value = (await getAll('move')).data.value;
     dataTable.value.rerender();
     isLoadedData.value = true;
     return;
   }
   await nextTick();
-  rows.value = (await query("move", "date", date.value)).data.value;
+  rows.value = (await query('move', 'date', date.value)).data.value;
   dataTable.value.rerender();
   isLoadedData.value = true;
 };
 
-provide("dataRows", rows);
+provide('dataRows', rows);
 </script>
 <style></style>

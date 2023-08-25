@@ -30,6 +30,18 @@
         </div>
       </div>
     </div>
+    <div class="group cosmic-engine">
+      <h2>Cosmic Engine</h2>
+      <div class="notes md">
+        <div class="navigation frame values">
+          <Note
+            name="Navigation-Reality"
+            box="Navigation"
+            :data="getNote('Navigation-Reality')"
+          />
+        </div>
+      </div>
+    </div>
     <div class="group novelty">
       <h2>Novelty</h2>
       <div class="notes md">

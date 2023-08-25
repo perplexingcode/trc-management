@@ -4,16 +4,19 @@
       <h1 class="text-xl">Today</h1>
       <p class="text-center">Today's date is {{ today }}</p>
     </header>
-    <content>
+    <section>
       <div class="intellisense-tracking | flex">
         <IntelliSense />
         <Tracking />
       </div>
       <DataPanel />
-    </content>
+    </section>
   </div>
 </template>
-<script setup></script>
+<script setup>
+import moment from 'moment';
+const today = moment(new Date()).format('YYYY-MM-DD');
+</script>
 
 <style>
 .section.planning {
