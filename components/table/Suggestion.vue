@@ -47,6 +47,7 @@ const props = defineProps({
 const config = inject('config-' + props.tableId);
 const data = inject('data-' + props.tableId);
 const states = inject('states-' + props.tableId);
+const _rows = inject('rows-' + props.tableId);
 
 const isLoaded = ref(false);
 const suggestions = ref([]);
@@ -104,7 +105,7 @@ onMounted(async () => {
     ).data._rawValue;
     suggestions.value = data.suggestionPool;
   } else {
-    rows.value = inject('rows-' + props.tableId, []).value;
+    rows.value = _rows.value;
     suggestions.value = rows.value;
   }
   filterAttr();

@@ -146,19 +146,24 @@ const itemState = {
   isSelected: false,
 };
 let rows = ref([]);
-if (props.rows) {
+if (props.rows && typeof props.rows === 'string') {
   rows = inject(props.rows, []);
   initItemState(rows);
 }
+
 onMounted(async () => {
   await nextTick();
+  if (props.rows && typeof props.rows === 'object') {
+    rows = props.rows;
+    initItemState(rows);
+  }
   if (!props.rows) {
-    const table = props.dbTable || props.itemName;
+    const table = config.dbTable || props.itemName;
     if (!table) {
       console.error('No table name provided');
       return;
     }
-    rows.value = (await getAll(props.dbTable)).data._rawValue || [];
+    rows.value = (await getAll(config.dbTable)).data._rawValue || [];
     initItemState(rows);
   }
 });
