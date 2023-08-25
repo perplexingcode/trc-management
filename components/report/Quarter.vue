@@ -64,17 +64,15 @@ const props = defineProps({
     type: Boolean,
     required: true,
   },
+  metric: {
+    type: Object,
+    required: true,
+  },
 });
-const GROUP = {
-  Personal: 3.5,
-  All: 9,
-  MFVN: 1,
-  Freelance: 1,
-};
 
 // const { minimumRankedHours: minimum } = inject("vars");
-
-const minimum = GROUP[props.group];
+const METRIC = props.metric;
+const minimum = METRIC[props.group].MINIMUM;
 
 const today = moment().format('YYYY-MM-DD');
 const todayNum = moment().diff(moment().startOf('quarter'), 'days') + 1;
@@ -88,20 +86,24 @@ const hourToday = computed(() => {
   ).toFixed(2);
 });
 
-const date = ref(today);
+const quarterDate = ref(today);
 
 const isPastQuarter = computed(() => {
-  return moment(date.value).isBefore(moment().startOf('quarter'));
+  return moment(quarterDate.value).isBefore(moment().startOf('quarter'));
 });
 
 function addQuarter() {
-  date.value = moment(date.value).add(3, 'month').format('YYYY-MM-DD');
+  quarterDate.value = moment(quarterDate.value)
+    .add(3, 'month')
+    .format('YYYY-MM-DD');
 }
 function minusQuarter() {
-  date.value = moment(date.value).subtract(3, 'month').format('YYYY-MM-DD');
+  quarterDate.value = moment(quarterDate.value)
+    .subtract(3, 'month')
+    .format('YYYY-MM-DD');
 }
 
-watch(date, async () => {
+watch(quarterDate, async () => {
   await getData();
 });
 
@@ -109,8 +111,8 @@ let dateHours = reactive({ value: {} });
 let data = [];
 
 async function getData() {
-  const quarterStart = moment(date.value).startOf('quarter'); // Get the start date of the quarter
-  const quarterEnd = moment(date.value).endOf('quarter'); // Get the end date of the quarter
+  const quarterStart = moment(quarterDate.value).startOf('quarter'); // Get the start quarterDate of the quarter
+  const quarterEnd = moment(quarterDate.value).endOf('quarter'); // Get the end quarterDate of the quarter
 
   // Fetch data from cache
   // if (!props.group === "All")
@@ -141,11 +143,13 @@ async function getData() {
   dateHours.value = {};
 
   let currentDate = quarterStart.clone();
-
   while (currentDate.isSameOrBefore(quarterEnd)) {
     quarterDates.push(currentDate.format('YYYY-MM-DD'));
     currentDate.add(1, 'day');
   }
+
+  // For some reason, quarter data is mixed with month data, waiting 0.5s seems to fix it
+  await new Promise((resolve) => setTimeout(resolve, 500));
 
   data = (await query('move', 'date', quarterDates)).data._rawValue;
   data.map((date, index) => {
@@ -154,6 +158,9 @@ async function getData() {
         sumTime(
           date
             .filter((move) => {
+              if (props.group === 'MFVN' && move.grp === 'MFVN') {
+                return !move.tags.includes('mf-com');
+              }
               if (props.group === 'All') return true;
               else return move.grp == props.group;
             })
@@ -180,10 +187,19 @@ const quarterAverage = computed(() => {
     return (quarterTime.value / Object.keys(dateHours.value).length).toFixed(2);
   else return (quarterTime.value / todayNum).toFixed(2);
 });
-
+const isMonthLoaded = inject('isMonthLoaded');
 onMounted(async () => {
   await nextTick();
-  await getData(today);
+  // Wait for isMonthLoaded to be true because Vue mistakenly use quarter data for both components
+  await new Promise((resolve) => {
+    const interval = setInterval(async () => {
+      if (isMonthLoaded.value) {
+        clearInterval(interval);
+        resolve();
+        await getData(today);
+      }
+    }, 100);
+  });
 });
 
 const minus1DateHours = computed(() => {

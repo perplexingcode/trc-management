@@ -1,104 +1,144 @@
 <template>
-  <div v-if="!data.length" class="text-center p-12">
-    <p class="text-xl">Loading statistics...</p>
-  </div>
-  <div v-show="data.length" class="report content">
-    <div
-      class="date-hour-chart min-h-[265px] relative flex gap-3 items-end justify-center p-3 mt-24 w-fit mx-auto"
-    >
-      <div class="w-10"></div>
+  <div>
+    <h2 class="text-2xl text-center my-3">Month</h2>
+    <div v-if="!monthData.length" class="text-center p-12">
+      <p class="text-xl">Loading statistics...</p>
+    </div>
+    <div v-show="monthData.length" class="report content">
       <div
-        v-for="(hour, date) in dateHours.value"
-        :key="date"
-        :class="{ today: date == today }"
+        class="date-hour-chart h-fit min-h-[22rem] relative flex gap-3 items-end justify-center p-3 mt-8 w-fit mx-auto"
       >
-        <div class="flex flex-col items-center">
+        <div class="w-10"></div>
+        <div
+          v-for="(hour, date) in monthDateHours.value"
+          :key="date"
+          :class="{ today: date == today }"
+        >
+          <div class="flex flex-col items-center">
+            <div
+              class="w-10 column"
+              :style="`height:${hour * 20 * UNIT}px; ${
+                METRIC[props.group].COLOR
+                  ? `background-color:${METRIC[props.group].COLOR} !important`
+                  : ''
+              }`"
+              :class="[
+                { 'bg-gray-300': hour < LOW },
+                { 'bg-green-500': hour >= LOW && hour < GREAT },
+                { 'bg-blue-500': hour >= GREAT && hour < PERFECT },
+                { 'bg-yellow-300': hour >= PERFECT },
+              ]"
+            ></div>
+            <p class="absolute z-100 mt-[-22px] duration">
+              {{ hour }}
+            </p>
+          </div>
           <div
-            class="w-10 column"
-            :style="`height:${hour * 20 * UNIT}px; ${
-              GROUP[props.group].COLOR
-                ? `background-color:${GROUP[props.group].COLOR} !important`
-                : ''
-            }`"
-            :class="[
-              { 'bg-gray-300': hour < LOW },
-              { 'bg-green-500': hour >= LOW && hour < GREAT },
-              { 'bg-blue-500': hour >= GREAT && hour < PERFECT },
-              { 'bg-yellow-300': hour >= PERFECT },
-            ]"
-          ></div>
-          <p class="absolute z-100 mt-[-22px] duration">
-            {{ hour }}
-          </p>
+            @mouseenter="state.showWeekDay = true"
+            @mouseleave="state.showWeekDay = false"
+            class="cursor-pointer"
+          >
+            <p class="text-center date bg-teal-600 text-gray-100">
+              {{ date.slice(-2) }}
+            </p>
+          </div>
+          <div
+            @mouseenter="state.showWeekDay = true"
+            @mouseleave="state.showWeekDay = false"
+            class="h-6 w-full cursor-pointer"
+          >
+            <p
+              class="text-center text-gray-600"
+              :class="{
+                'bg-yellow-100': ['Mon'].includes(moment(date).format('ddd')),
+                hidden: !state.showWeekDay,
+              }"
+            >
+              {{ moment(date).format('ddd') }}
+            </p>
+          </div>
         </div>
-        <p class="text-center date bg-teal-600 text-gray-100">
-          {{ date.slice(-2) }}
-        </p>
+        <div
+          class="absolute w-full p-3 cursor-pointer"
+          :style="`bottom:${24 + 20 * PERFECT * UNIT}px`"
+          :title="'Perfect: ' + PERFECT"
+        >
+          <span>{{ PERFECT }}</span>
+          <hr class="border border-1 border-blue-800" />
+        </div>
+        <div
+          class="absolute w-full p-3 cursor-pointer"
+          :style="`bottom:${24 + 20 * GREAT * UNIT}px`"
+          :title="'Great: ' + GREAT"
+        >
+          <span>{{ GREAT }}</span>
+          <hr class="border border-1 border-blue-800" />
+        </div>
+        <div
+          class="absolute w-full p-3 cursor-pointer"
+          :style="`bottom:${24 + 20 * MINIMUM * UNIT}px`"
+          :title="'Minimum: ' + MINIMUM"
+        >
+          <span class="absolute left-[-6px] top-[2px]">{{ MINIMUM }}</span>
+          <hr class="border border-1 border-gray-700" />
+        </div>
+        <div
+          class="absolute w-full p-3 cursor-pointer"
+          :style="`bottom:${24 + 20 * LOW * UNIT}px`"
+          :title="'Low: ' + LOW"
+        >
+          <span>{{ LOW }}</span>
+          <hr class="border border-1 border-blue-800" />
+        </div>
+        <div
+          class="absolute w-full p-3 cursor-pointer"
+          :style="`bottom:${24 + 20 * average * UNIT}px`"
+          :title="'Avarage: ' + average"
+        >
+          <span class="absolute left-[-22px] top-[2px]">{{ average }}</span>
+          <hr class="border border-1 border-yellow-300" />
+        </div>
       </div>
-      <div
-        class="absolute w-full p-3"
-        :style="`bottom:${24 + 20 * PERFECT * UNIT}px`"
-      >
-        <span>{{ PERFECT }}</span>
-        <hr class="border border-1 border-blue-800" />
+      <div class="text-center">
+        <button class="rounded-full" @click="minusMonth">&lt;</button>
+        <input v-model="date" class="text-center w-[8rem]" />
+        <button class="rounded-full" @click="addMonth">&gt;</button>
       </div>
-      <div
-        class="absolute w-full p-3"
-        :style="`bottom:${24 + 20 * GREAT * UNIT}px`"
-      >
-        <span>{{ GREAT }}</span>
-        <hr class="border border-1 border-blue-800" />
+      <div class="text-center mt-3">
+        <p>Minimum: {{ minimum + (minimum < 2 ? ' day' : ' days') }}</p>
+        <p>Required: {{ required + (required < 2 ? ' day' : ' days') }}</p>
+        <p>Perfect: {{ perfect + (perfect < 2 ? ' day' : ' days') }}</p>
+        <p>Average: {{ average }}</p>
+        <p>Total: {{ total }}</p>
       </div>
-      <div
-        class="absolute w-full p-3"
-        :style="`bottom:${24 + 20 * MINIMUM * UNIT}px`"
-      >
-        <span class="absolute left-[-6px] top-[2px]">{{ MINIMUM }}</span>
-        <hr class="border border-1 border-gray-700" />
-      </div>
-      <div
-        class="absolute w-full p-3"
-        :style="`bottom:${24 + 20 * LOW * UNIT}px`"
-      >
-        <span>{{ LOW }}</span>
-        <hr class="border border-1 border-blue-800" />
-      </div>
-      <div
-        class="absolute w-full p-3"
-        :style="`bottom:${24 + 20 * average * UNIT}px`"
-      >
-        <span class="absolute left-[-22px] top-[2px]">{{ average }}</span>
-        <hr class="border border-1 border-yellow-300" />
-      </div>
-    </div>
-    <div class="text-center">
-      <button class="rounded-full" @click="minusMonth">&lt;</button>
-      <input v-model="date" class="text-center w-[8rem]" />
-      <button class="rounded-full" @click="addMonth">&gt;</button>
-    </div>
-    <div class="text-center mt-3">
-      <p>Minimum: {{ minimum + (minimum < 2 ? " day" : " days") }}</p>
-      <p>Required: {{ required + (required < 2 ? " day" : " days") }}</p>
-      <p>Perfect: {{ perfect + (perfect < 2 ? " day" : " days") }}</p>
-      <p>Average: {{ average }}</p>
     </div>
   </div>
 </template>
 <script setup>
-import { query, upsert, getById } from "~~/static/db";
-import moment from "moment";
-import { sumTime, cvTime, createTimestamp } from "~~/static/time";
+import { query, upsert, getById } from '~~/static/db';
+import moment from 'moment';
+import { sumTime, cvTime, createTimestamp } from '~~/static/time';
 
 const props = defineProps({
   group: {
-    type: Boolean,
+    type: String,
+    required: true,
+  },
+  metric: {
+    type: Object,
     required: true,
   },
 });
 
-const today = moment().format("YYYY-MM-DD");
-const movesToday = inject("movesToday");
-if (!props.group === "All")
+const state = reactive({
+  showWeekDay: false,
+});
+
+const isMonthLoaded = inject('isMonthLoaded');
+
+const today = moment().format('YYYY-MM-DD');
+const movesToday = inject('movesToday');
+if (!props.group === 'All')
   movesToday.value = movesToday.value.filter((move) => move.grp == props.group);
 const hourToday = computed(() => {
   return +(
@@ -109,78 +149,47 @@ const hourToday = computed(() => {
 const date = ref(today);
 // const { minimumRankedHours: MINIMUM } = inject("vars");
 
-const GROUP = {
-  Personal: {
-    UNIT: 2,
-    LOW: 2.5,
-    MINIMUM: 3.5,
-    GREAT: 5,
-    PERFECT: 6,
-  },
-  All: {
-    UNIT: 1,
-    LOW: 8,
-    MINIMUM: 9,
-    GREAT: 11.5,
-    PERFECT: 14.3,
-  },
-  MFVN: {
-    UNIT: 3,
-    LOW: 1,
-    MINIMUM: 3,
-    GREAT: 4.5,
-    PERFECT: 6,
-    COLOR: "#ea5b0c",
-  },
-  Freelance: {
-    UNIT: 3,
-    LOW: 1,
-    MINIMUM: 3,
-    GREAT: 4.5,
-    PERFECT: 6,
-    COLOR: "#0d9488",
-  },
-};
+const METRIC = props.metric;
 
-const UNIT = GROUP[props.group].UNIT;
+const UNIT = METRIC[props.group].UNIT;
 
-const LOW = GROUP[props.group].LOW;
-const MINIMUM = GROUP[props.group].MINIMUM;
-const GREAT = GROUP[props.group].GREAT;
-const PERFECT = GROUP[props.group].PERFECT;
+const LOW = METRIC[props.group].LOW;
+const MINIMUM = METRIC[props.group].MINIMUM;
+const GREAT = METRIC[props.group].GREAT;
+const PERFECT = METRIC[props.group].PERFECT;
 
 function addMonth() {
-  date.value = moment(date.value).add(1, "month").format("YYYY-MM-DD");
+  date.value = moment(date.value).add(1, 'month').format('YYYY-MM-DD');
 }
 function minusMonth() {
-  date.value = moment(date.value).subtract(1, "month").format("YYYY-MM-DD");
+  date.value = moment(date.value).subtract(1, 'month').format('YYYY-MM-DD');
 }
 
 watch(date, async () => {
-  await getData();
+  await getMonthData();
 });
 
-let dateHours = reactive({ value: {} });
-let data = [];
+let monthDateHours = reactive({ value: {} });
+let monthData = [];
 
-async function getData() {
+async function getMonthData() {
   // Fetch data from cache
   // if (!props.group === "All")
-  //   data = (await getById("cache", "dateHours" + props.group)).data._rawValue;
-  // else data = (await getById("cache", "dateHours")).data._rawValue;
+  //   data = (await getById("cache", "monthDateHours" + props.group)).data._rawValue;
+  // else data = (await getById("cache", "monthDateHours")).data._rawValue;
   // try {
-  //   dateHours.value = JSON.parse(data.value);
+  //   monthDateHours.value = JSON.parse(data.value);
   //   // Filter days of this month
-  //   dateHours.value = Object.keys(dateHours.value)
+  //   monthDateHours.value = Object.keys(monthDateHours.value)
   //     .filter((d) => d.startsWith(date.value.slice(0, 7)))
   //     .reduce((obj, key) => {
-  //       obj[key] = dateHours.value[key];
+  //       obj[key] = monthDateHours.value[key];
   //       return obj;
   //     }, {});
-  //   if (dateHours.value?.[today] !== undefined)
-  //     dateHours.value[today] = hourToday.value;
+  //   if (monthDateHours.value?.[today] !== undefined)
+  //     monthDateHours.value[today] = hourToday.value;
   //   if (
-  //     Object.keys(dateHours.value).length !== 0 &&
+  //     Object.keys(monthDateHours.value).length !== 0 &&
   //     moment().diff(moment(data.timestamp), "hours") < 6
   //   )
   //     return;
@@ -188,27 +197,29 @@ async function getData() {
 
   // Fetch data from database
   const monthDates = [];
-  data = [];
-  dateHours.value = {};
+  monthData = [];
+  monthDateHours.value = {};
 
-  const startDate = moment(date.value).startOf("month"); // Get the start date of the month
-  const endDate = moment(date.value).endOf("month"); // Get the end date of the month
+  const startDate = moment(date.value).startOf('month'); // Get the start date of the month
+  const endDate = moment(date.value).endOf('month'); // Get the end date of the month
 
   let currentDate = startDate.clone();
 
   while (currentDate.isSameOrBefore(endDate)) {
-    monthDates.push(currentDate.format("YYYY-MM-DD"));
-    currentDate.add(1, "day");
+    monthDates.push(currentDate.format('YYYY-MM-DD'));
+    currentDate.add(1, 'day');
   }
-
-  data = (await query("move", "date", monthDates)).data._rawValue;
-  data.map((date, index) => {
-    dateHours.value[monthDates[index]] = +(
+  monthData = (await query('move', 'date', monthDates)).data._rawValue;
+  monthData.map((date, index) => {
+    monthDateHours.value[monthDates[index]] = +(
       cvTime(
         sumTime(
           date
             .filter((move) => {
-              if (props.group === "All") return true;
+              if (props.group === 'MFVN' && move.grp === 'MFVN') {
+                return !move.tags.includes('mf-com');
+              }
+              if (props.group === 'All') return true;
               else return move.grp == props.group;
             })
             .map((move) => move.duration),
@@ -216,32 +227,33 @@ async function getData() {
       ) * 24
     ).toFixed(2);
   });
-  upsert("cache", {
-    id: "dateHours",
-    value: JSON.stringify(dateHours.value),
+  isMonthLoaded.value = true;
+  upsert('cache', {
+    id: 'monthDateHours',
+    value: JSON.stringify(monthDateHours.value),
     timestamp: createTimestamp(),
   });
 }
 
 onMounted(async () => {
   await nextTick();
-  await getData(today);
+  await getMonthData(today);
 });
 
 const minimum = computed(() => {
-  return Object.values(dateHours.value).reduce(
+  return Object.values(monthDateHours.value).reduce(
     (acc, hour) => acc + (hour >= LOW && hour < GREAT ? 1 : 0),
     0,
   );
 });
 const required = computed(() => {
-  return Object.values(dateHours.value).reduce(
+  return Object.values(monthDateHours.value).reduce(
     (acc, hour) => acc + (hour >= GREAT && hour < PERFECT ? 1 : 0),
     0,
   );
 });
 const perfect = computed(() => {
-  return Object.values(dateHours.value).reduce(
+  return Object.values(monthDateHours.value).reduce(
     (acc, hour) => acc + (hour >= PERFECT ? 1 : 0),
     0,
   );
@@ -249,16 +261,21 @@ const perfect = computed(() => {
 
 const average = computed(() => {
   const today = new Date();
-  const currentDate = today.toISOString().split("T")[0];
-  const pastHours = Object.entries(dateHours.value)
+  const currentDate = today.toISOString().split('T')[0];
+  const pastHours = Object.entries(monthDateHours.value)
     .filter(([date]) => date < currentDate) // Filter out future and today's dates
     .map(([_, hour]) => hour); // Get the hour values
-
   if (pastHours.length > 0) {
     const sum = pastHours.reduce((total, hour) => total + hour, 0);
     return (sum / pastHours.length).toFixed(2);
   }
   return 0;
+});
+
+const total = computed(() => {
+  return Object.values(monthDateHours.value)
+    .reduce((acc, hour) => acc + hour, 0)
+    .toFixed(2);
 });
 </script>
 <style>
