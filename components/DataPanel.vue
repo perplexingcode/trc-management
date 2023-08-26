@@ -10,6 +10,7 @@
               columns="moveColumns"
               dbTable="move"
               item-name="move"
+              :new-item-tags="' lap' + currentLap"
             />
           </div>
         </template>
@@ -22,5 +23,8 @@
     <template #step-2><p>danchoi</p></template>
   </Section>
 </template>
-<script setup></script>
+<script setup>
+import { cvTime, sumTime } from '~~/static/time';
+const currentLap = inject('currentLap');
+</script>
 <style></style>
