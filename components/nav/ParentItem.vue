@@ -1,9 +1,14 @@
 <template>
   <EffectShowOnHover>
-    <li class="menu-parent-item cursor-pointer">
+    <li class="menu-parent-item relative cursor-pointer">
       <NuxtLink v-if="!props.noLink" :to="url">{{ props.name }}</NuxtLink>
-      <ul class="menu-drop-down flex flex-col list-none can-toggle">
-        <li v-for="child in children" class="cursor-pointer">
+      <ul
+        class="menu-drop-down absolute top-100 left-0 bg-white list-none border-2 border-gray-300 rounded-b-md shadow-md p-1 flex flex-col gap-3 can-toggle"
+      >
+        <li
+          v-for="child in children"
+          class="menu-child-item cursor-pointer hover:bg-slate-100"
+        >
           <NuxtLink :to="child.link">{{ child.name }}</NuxtLink>
         </li>
       </ul>
@@ -11,7 +16,6 @@
   </EffectShowOnHover>
 </template>
 <script setup>
-import { onClickOutside } from '@vueuse/core';
 const props = defineProps({
   title: String,
   link: String,
@@ -47,21 +51,3 @@ for (let i = 0; i < props.children.length; i++) {
   }
 }
 </script>
-<style>
-.menu-parent-item {
-  position: relative;
-}
-.menu-drop-down {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  background-color: #fff;
-  padding: 0;
-  margin: 0;
-  list-style: none;
-  border: 2px solid #ccc;
-  border-top: none;
-  border-radius: 0 0 5px 5px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-}
-</style>
