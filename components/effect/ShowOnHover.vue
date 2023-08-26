@@ -1,6 +1,6 @@
 <template>
   <div
-    @mouseover="showTime = props.time"
+    @mouseover="showTime = Infinity"
     @mouseleave="showTemp()"
     ref="wrapper"
     :class="id"
@@ -18,11 +18,11 @@ import { onClickOutside } from '@vueuse/core';
 const props = defineProps({
   time: {
     type: Number,
-    default: 1500,
+    default: 500,
   },
   interval: {
     type: Number,
-    default: 500,
+    default: 250,
   },
   forceHide: {
     type: Boolean,
@@ -43,6 +43,7 @@ onMounted(async () => {
 onClickOutside(wrapper, () => (showTime.value = 0));
 
 function showTemp() {
+  showTime.value = props.time;
   if (showInterval) clearInterval(showInterval);
   showInterval = setInterval(() => {
     showTime.value = showTime.value - props.interval;
