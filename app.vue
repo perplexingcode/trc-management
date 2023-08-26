@@ -1,6 +1,6 @@
 <template>
   <main class="main_wrap">
-    <Nav />
+    <Nav class="mt-8" />
     <DataMove>
       <NuxtPage />
     </DataMove>

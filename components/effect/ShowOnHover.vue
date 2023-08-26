@@ -6,7 +6,7 @@
     :class="id"
   >
     <component is="style">
-      .{{ id }} .can-toggle { display: {{ showTime ? 'block' : 'none' }}; }
+      .{{ id }} .can-toggle { display: {{ showTime ? '' : 'none' }}; }
     </component>
     <slot></slot>
   </div>
@@ -27,6 +27,10 @@ const props = defineProps({
   forceHide: {
     type: Boolean,
     default: false,
+  },
+  displayType: {
+    type: String,
+    default: 'block',
   },
 });
 const wrapper = ref(null);
