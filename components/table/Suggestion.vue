@@ -161,7 +161,7 @@ function filterAttr() {
     // Remove unneeded attributes
 
     config.columns.forEach((col) => {
-      if (col.attrs.suggestion === false || noSuggestion.includes(col.key))
+      if (col?.attrs?.suggestion === false || noSuggestion.includes(col.key))
         delete row[col.key];
     });
 
@@ -210,7 +210,7 @@ function sortAttr() {
     let row = suggestions.value[i];
     const sortedRow = {};
     config.columns.forEach((col) => {
-      if (col.attrs.suggestion === false) return;
+      if (col?.attrs?.suggestion === false) return;
       sortedRow[col.key] = row[col.key];
     });
     sortedSuggestions.push(sortedRow);
