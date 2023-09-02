@@ -5,6 +5,9 @@
     ref="wrapper"
     :class="id"
   >
+    <component is="style" v-if="!id">
+      .can-toggle { display: none !important; }
+    </component>
     <component is="style">
       .{{ id }} .can-toggle { display: {{ showTime ? '' : 'none' }}; }
     </component>
