@@ -4,6 +4,7 @@
       <NuxtLink v-if="!props.noLink" :to="url" class="cursor-pointer">{{
         props.name
       }}</NuxtLink>
+      <span v-else class="cursor-pointer">{{ props.name }}</span>
       <ul
         class="menu-drop-down absolute top-8 left-0 z-50 bg-white list-none border-2 border-gray-300 rounded-md shadow-md p-1 flex flex-col gap-2 can-toggle"
       >
