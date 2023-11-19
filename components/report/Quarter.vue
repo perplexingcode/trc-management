@@ -158,11 +158,11 @@ async function getData() {
         sumTime(
           date
             .filter((move) => {
+              if (!move.done) return false;
+              if (props.group === 'All') return true;
               if (props.group === 'MFVN' && move.grp === 'MFVN') {
                 return !move.tags.includes('mf-com');
-              }
-              if (props.group === 'All') return true;
-              else return move.grp == props.group;
+              } else return move.grp == props.group;
             })
             .map((move) => move.duration),
         ),

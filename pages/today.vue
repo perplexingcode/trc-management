@@ -5,10 +5,8 @@
       <p class="text-center">Today's date is {{ today }}</p>
     </header>
     <section>
-      <div class="intellisense-tracking | flex">
-        <IntelliSense />
-        <Tracking />
-      </div>
+      <Tracking />
+      <IntelliSense />
       <DataPanel />
     </section>
   </div>
@@ -19,13 +17,6 @@ const today = moment(new Date()).format('YYYY-MM-DD');
 </script>
 
 <style>
-.section.planning {
-  width: 47%;
-}
-.section.tracking {
-  width: 55%;
-}
-
 .waste-chore input.name {
   width: 12rem;
 }

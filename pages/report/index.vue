@@ -20,18 +20,6 @@
 </template>
 <script setup>
 const index = ref(0);
-const GROUP = ['Personal', 'All', 'MFVN', 'Freelance'];
-const report = ref(null);
-
-const isMonthLoaded = ref(false);
-provide('isMonthLoaded', isMonthLoaded);
-
-function changeMode(event) {
-  const selectedIndex = event.target.value;
-  index.value = selectedIndex;
-  report.value.rerender();
-}
-
 const METRIC = {
   Personal: {
     UNIT: 2,
@@ -63,6 +51,33 @@ const METRIC = {
     PERFECT: 5,
     COLOR: '#0d9488',
   },
+  'The Merchant': {
+    UNIT: 3,
+    LOW: 1,
+    MINIMUM: 3,
+    GREAT: 4,
+    PERFECT: 5,
+    COLOR: '#0d9488',
+  },
+  'Kim Assistant': {
+    UNIT: 3,
+    LOW: 1,
+    MINIMUM: 3,
+    GREAT: 4,
+    PERFECT: 5,
+    COLOR: '#0d9488',
+  },
 };
+const GROUP = Object.keys(METRIC);
+const report = ref(null);
+
+const isMonthLoaded = ref(false);
+provide('isMonthLoaded', isMonthLoaded);
+
+function changeMode(event) {
+  const selectedIndex = event.target.value;
+  index.value = selectedIndex;
+  report.value.rerender();
+}
 </script>
 <style></style>

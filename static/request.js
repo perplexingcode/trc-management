@@ -1,11 +1,11 @@
 export async function request(path, method, data, header, attr) {
-  const { backendUrl } = useRuntimeConfig().public;
+  const { backendUrl, token } = useRuntimeConfig().public;
   let config = {
     method: method,
     body: data,
     headers: {
       'Content-Type': 'application/json',
-      Authorization: 'Bearer ' + attr?.token || sessionToken?.value,
+      Authorization: token,
     },
     data: data,
   };

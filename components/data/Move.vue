@@ -30,6 +30,10 @@ const todayWaste = computed(() => {
   return sumTime(wasteMoves.value.map((move) => move.duration));
 });
 
+const pendingMoves = computed(() => {
+  return queuedMoves.value.filter((move) => move.stt == 'Pending');
+});
+
 const todayChore = computed(() => {
   return sumTime(
     cvTime(sumTime(choreMoves.value.map((move) => move.duration))) -
@@ -45,11 +49,7 @@ const todayDone = computed(() => {
 });
 const todayLeft = computed(() => {
   return sumTime(
-    cvTime('24h') -
-      cvTime(todayDone.value) -
-      cvTime(todayWaste.value) -
-      cvTime(todayChore.value) -
-      cvTime(sleepTimeCurrent.value),
+    cvTime('24h') - cvTime(todaySpent.value) - cvTime(sleepTimeCurrent.value),
   );
 });
 const sleepTimeMax = ref(vars.sleepTime);
@@ -97,28 +97,11 @@ const currentLap = computed(() => {
   return 3;
 });
 
-provide('todayWaste', todayWaste);
-provide('todayChore', todayChore);
-provide('todayDone', todayDone);
-provide('todayDoneMoves', todayDoneMoves);
-provide('todayLeft', todayLeft);
-provide('sleepTimeMax', sleepTimeMax);
-provide('sleepTimeCurrent', sleepTimeCurrent);
-provide('movesToday', movesToday);
-provide('currentLap', currentLap);
-provide('todaySpent', todaySpent);
-provide('currentMoveTime', currentMoveTime);
-
 // Sort alphabetically
 projects.value = projects.value.sort((a, b) => (a.name > b.name ? 1 : -1));
 const projectNames = projects.value.map((p) => p.name);
 
 let moveColumns = [
-  // {
-  //   name: 'ID',
-  //   key: 'id',
-  //   type: 'p',
-  // },
   {
     name: 'Move',
     key: 'name',
@@ -129,10 +112,14 @@ let moveColumns = [
   {
     name: 'Done',
     key: 'done',
-    type: 'checkbox',
+    type: 'boolean',
     disabled: false,
     default: true,
-    attrs: { type: 'checkbox' },
+    transferTable: {
+      triggerOn: false,
+      dbTable: 'queued-move',
+    },
+    attrs: { noSuggestion: true },
   },
   {
     name: 'Description',
@@ -184,7 +171,16 @@ let moveColumns = [
     key: 'grp',
     type: 'select',
     disabled: false,
-    options: ['-', 'TrinityInc', 'Personal', 'MFVN', 'Freelance', 'TCGS'],
+    options: [
+      '-',
+      'TrinityInc',
+      'Personal',
+      'MFVN',
+      'Freelance',
+      'TCGS',
+      'The Merchant',
+      'Kim Assistant',
+    ],
     attrs: { type: 'text', required: true },
   },
   {
@@ -205,6 +201,32 @@ const queuedMoveColumns = [
     attrs: { type: 'text', required: true },
   },
   {
+    name: 'Done',
+    key: 'done',
+    type: 'boolean',
+    disabled: false,
+    default: false,
+    transferTable: {
+      triggerOn: true,
+      dbTable: 'move',
+    },
+    attrs: { noSuggestion: true },
+  },
+  {
+    name: 'Description',
+    key: 'des',
+    type: 'text-area',
+    disabled: false,
+    attrs: { type: 'text' },
+  },
+  {
+    name: 'Duration',
+    key: 'duration',
+    type: 'input',
+    disabled: false,
+    attrs: { type: 'text', required: true, suggestion: false },
+  },
+  {
     name: '⟁',
     key: 'weight',
     type: 'input',
@@ -212,12 +234,14 @@ const queuedMoveColumns = [
     attrs: { type: 'number' },
   },
   {
-    name: 'Done',
-    key: 'done',
-    type: 'checkbox',
+    name: 'Status',
+    key: 'stt',
+    type: 'select',
     disabled: false,
-    default: false,
-    attrs: { type: 'checkbox' },
+    default: 'Pending',
+    hidden: true,
+    options: ['Active', 'Pending', 'Completed', 'Deferred', 'Cancelled'],
+    attrs: { type: 'text', required: true },
   },
   {
     name: 'Priority',
@@ -232,6 +256,61 @@ const queuedMoveColumns = [
       '5-Optional',
     ],
     attrs: { type: 'text' },
+  },
+  {
+    name: 'Category',
+    key: 'cat',
+    type: 'select',
+    disabled: false,
+    options: [
+      'Navigation',
+      'Cosmic Engine',
+      'Engineering',
+      'Aesthetics',
+      'Operation',
+      'Business',
+    ],
+    attrs: { type: 'text', required: true },
+  },
+  {
+    name: 'Project',
+    key: 'prj',
+    type: 'select',
+    disabled: false,
+    options: projectNames,
+    attrs: { type: 'text' },
+  },
+  {
+    name: 'Group',
+    key: 'grp',
+    type: 'select',
+    disabled: false,
+    options: [
+      '-',
+      'TrinityInc',
+      'Personal',
+      'MFVN',
+      'Freelance',
+      'TCGS',
+      'The Merchant',
+    ],
+    attrs: { type: 'text', required: true },
+  },
+  {
+    name: 'Tags',
+    key: 'tags',
+    type: 'input',
+    disabled: false,
+    attrs: { type: 'text' },
+  },
+  {
+    name: 'Date',
+    key: 'date',
+    type: 'input',
+    hidden: true,
+    disabled: false,
+    default: moment().format('YYYY-MM-DD'),
+    attrs: { type: 'text', required: true, suggestion: false },
   },
   // {
   //   name: 'Personnel',
@@ -253,14 +332,6 @@ const queuedMoveColumns = [
   //     'Philosopher',
   //   ],
   // },
-  {
-    name: 'Project',
-    key: 'prj',
-    type: 'select',
-    disabled: false,
-    options: projectNames,
-    attrs: { type: 'text', required: false },
-  },
 ];
 
 function weight(rows) {
@@ -305,11 +376,23 @@ provide('moves', moves);
 provide('moveColumns', moveColumns);
 provide('movesTodayDone', movesTodayDone);
 provide('queuedMoveColumns', queuedMoveColumns);
+provide('pendingMoves', pendingMoves);
 provide('movesTodayQueued', movesTodayQueued);
 provide('movesToday', movesToday);
+provide('todayWaste', todayWaste);
+provide('todayChore', todayChore);
+provide('todayDone', todayDone);
+provide('todayDoneMoves', todayDoneMoves);
+provide('todayLeft', todayLeft);
+provide('sleepTimeMax', sleepTimeMax);
+provide('sleepTimeCurrent', sleepTimeCurrent);
+provide('movesToday', movesToday);
+provide('currentLap', currentLap);
+provide('todaySpent', todaySpent);
+provide('currentMoveTime', currentMoveTime);
 provide('waste', wasteMoves);
 provide('chore', choreMoves);
-provide('queuedMove', queuedMoves);
+provide('queuedMoves', queuedMoves);
 provide('dailyMove', dailyMoves);
 provide('vars', reactive(vars));
 </script>

@@ -4,11 +4,12 @@
       <div class="action-queue">
         <h3>Action queue</h3>
         <Table
-          rows="queuedMove"
+          rows="pendingMoves"
           columns="queuedMoveColumns"
           item-name="queued-move"
           add-row
-          :suggestion-size="-1"
+          :events="events"
+          suggestion-table="move"
         />
       </div>
     </template>
@@ -23,7 +24,26 @@
     <template #step-2><p>danchoi</p></template>
   </Section>
 </template>
-<script setup></script>
+<script setup>
+import { deepClone } from '~~/static/utils';
+const events = reactive({ done: {} });
+const movesToday = inject('movesToday');
+const queuedMoves = inject('queuedMoves');
+watch(
+  () => events.done,
+  (data) => {
+    const item = deepClone(data.item);
+    item.isBeingEdited = false;
+    item.isSelected = false;
+    if (data.value) {
+      const index = queuedMoves.value.findIndex((m) => m.id === item.id);
+      queuedMoves.value.splice(index, 1);
+      movesToday.value.push(item);
+    }
+  },
+  { deep: true },
+);
+</script>
 <style>
 .note-navigation textarea {
   min-height: 360px;

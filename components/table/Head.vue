@@ -6,7 +6,10 @@
       <!-- Select column -->
       <th></th>
       <!-- Index column -->
-      <th v-for="col in config.columns" :key="col">
+      <th
+        v-for="col in config.columns.filter((col) => !col?.hidden)"
+        :key="col"
+      >
         {{ col.name }}
       </th>
     </tr>

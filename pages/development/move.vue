@@ -18,7 +18,14 @@
           :columns="queuedMoveColumns"
           item-name="queued-move"
           init-show-rows
-          dev
+          :events="events"
+        />
+        <Table
+          rows="movesToday"
+          columns="moveColumns"
+          dbTable="move"
+          item-name="move"
+          :events="events"
         />
       </ClientOnly>
     </div>
@@ -27,9 +34,34 @@
 <script setup>
 import { query, getAll } from '~~/static/db';
 import moment from 'moment';
+import { deepClone, removeState } from '~~/static/utils';
 const projectNames = (await getAll('project', 'name')).data.value
   .map((p) => p.name)
   .sort();
+
+const events = reactive({ done: {} });
+
+const movesToday = inject('movesToday');
+const queuedMoves = inject('queuedMoves');
+
+watch(
+  () => events.done,
+  (data) => {
+    const item = deepClone(data.item);
+    item.isBeingEdited = false;
+    item.isSelected = false;
+    if (data.value) {
+      const index = queuedMoves.value.findIndex((m) => m.id === item.id);
+      queuedMoves.value.splice(index, 1);
+      movesToday.value.push(item);
+    } else {
+      const index = movesToday.value.findIndex((m) => m.id === item.id);
+      movesToday.value.splice(index, 1);
+      queuedMoves.value.push(item);
+    }
+  },
+  { deep: true },
+);
 
 //  #MOVES
 let queuedMoveColumns = [
@@ -48,10 +80,10 @@ let queuedMoveColumns = [
   {
     name: 'Done',
     key: 'done',
-    type: 'checkbox',
+    type: 'boolean',
     disabled: false,
     default: false,
-    attrs: { type: 'checkbox' },
+    swapDbTable: ['queued-move', 'move'],
   },
   {
     name: 'Priority',
@@ -73,6 +105,15 @@ let queuedMoveColumns = [
     type: 'input',
     disabled: false,
     attrs: { type: 'number' },
+  },
+  {
+    name: 'Status',
+    key: 'stt',
+    type: 'select',
+    disabled: false,
+    default: 'Pending',
+    options: ['Active', 'Pending', 'Completed', 'Deferred', 'Cancelled'],
+    attrs: { type: 'text', required: true },
   },
   {
     name: 'Description',
@@ -117,7 +158,7 @@ let queuedMoveColumns = [
     type: 'select',
     disabled: false,
     options: projectNames,
-    attrs: { type: 'text', required: true },
+    attrs: { type: 'text' },
   },
   {
     name: 'Group',

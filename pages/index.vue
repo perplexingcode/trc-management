@@ -1,28 +1,16 @@
 <template>
-  <p>{{ data }}</p>
+  <div class="border-2 border-gray-200 p-8 m-8 rounded-md">
+    <h1 class="text-2xl text-center font-bold mb-5">Navigation form</h1>
+    <NoteGroup
+      :name="'Navigation-Form-Novelty-' + today"
+      type="row"
+      group-name="Novelty"
+      group-des="Are there any novel elements in the sphere?"
+    />
+  </div>
 </template>
 
 <script setup>
-const apiUrl =
-  'https://vq4h0iro9k.execute-api.ap-southeast-1.amazonaws.com/locker';
-// Put item into locker
-const data = {
-  order: ['Milk', 'Bread', 'Cheese'],
-};
-
-const lockerId = 'my-locker';
-
-fetch(apiUrl + '/upsert/' + lockerId, {
-  method: 'POST',
-  headers: new Headers({ 'Content-Type': 'application/json' }),
-  body: JSON.stringify(data),
-});
-
-// Get item from locker
-await fetch(apiUrl + '/locker/get/' + lockerId)
-  .then((response) => response.json())
-  .then((data) => {
-    // access data here
-    console.log(data);
-  });
+import moment from 'moment';
+const today = moment().format('YYYY-MM-DD');
 </script>

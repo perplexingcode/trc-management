@@ -1,91 +1,31 @@
 <template>
-  <div class="note flex flex-col h-fit">
-    <div class="note-main rounded">
-      <h3 v-show="!state.showEditTitle" @dblclick="changeTitle">
-        {{ note.title }}
-      </h3>
-      <input
-        v-show="state.showEditTitle"
-        v-model="newTitle"
-        @keydown.enter="updateTitle"
+  <ClientOnly>
+    <div class="note" :id="'t' + note.id" v-if="alive">
+      <NoteCreate
+        v-if="props.isNewNote"
+        @create-note="createNote"
+        :box="props.box"
+        :name="props.name"
+        :type="props.type"
       />
-      <textarea
-        onfocus='this.style.height = "";this.style.height = this.scrollHeight + "px"'
-        v-model="note.text"
-        :class="{ isEditing: state.isEditing }"
-        @input="state.isEditing = true"
-        @keydown="handleKeydown($event)"
-        @blur="applyChange()"
-      />
-    </div>
-    <div class="note-detail" v-if="props.showDetail">
-      <btn-show-hide
-        class="m-auto"
-        @click="state.showMore = !state.showMore"
-        :is-default-show="false"
-      />
-      <div class="detail" v-show="state.showMore">
-        <div class="note-action flex justify-center">
-          <button @click="changeNoteName">Rename</button>
-          <button v-if="!note.title" @click="state.showEditTitle = true">
-            Add title
-          </button>
-        </div>
-        <div class="flex justify-between">
-          <button
-            v-show="state.showMore"
-            @click="state.viewVersion == 0 || state.viewVersion--"
-            class="rounded-full w-8 h-8"
-          >
-            &lt;
-          </button>
-
-          <button
-            v-show="state.showMore"
-            @click="
-              state.viewVersion == note.versionHistory.stack.length - 1 ||
-                state.viewVersion++
-            "
-            class="rounded-full w-8 h-8"
-          >
-            &gt;
-          </button>
-        </div>
-        <div v-show="state.showMore" class="flex p-2 items-center">
-          <div
-            v-for="(item, index) in note.versionHistory.stack"
-            :key="item.id"
-            class="w-4 h-4 bg-gray-500"
-            :class="{
-              'bg-yellow-500': index == state.viewVersion,
-              'mr-2': index != note.versionHistory.stack.length - 1,
-            }"
-          ></div>
-        </div>
-        <textarea
-          v-show="state.showMore"
-          :value="note.versionHistory.stack[state.viewVersion]?.text"
-          disabled
+      <div v-else>
+        <NoteAtom v-if="props.type == 'atomic'" :note-id="note.id" />
+        <NoteDefault
+          v-if="props.type == 'default'"
+          class="flex items-center"
+          :note-id="note.id"
         />
-        <p
-          v-show="
-            state.showMore &&
-            note.versionHistory.stack[state.viewVersion]?.timestamp
-          "
-          class="text-xs text-center"
-        >
-          {{ note.versionHistory.stack[state.viewVersion]?.timestamp }}
-        </p>
+        <NoteRow v-if="props.type == 'row'" :note-id="note.id" />
       </div>
     </div>
-  </div>
+  </ClientOnly>
 </template>
 
 <script setup>
 import { v4 } from 'uuid';
-import { dbDelete, upsert } from '~~/static/db';
+import { dbDelete, query, upsert } from '~~/static/db';
 import { createTimestamp } from '~~/static/time';
-import { syncReactive } from '~~/static/utils';
+import { deepClone, cloudOverride } from '~~/static/utils';
 import FILOArray from '~~/static/class/FILOArrayNote';
 
 // define props
@@ -100,55 +40,85 @@ const props = defineProps({
   },
   showDetail: {
     type: Boolean,
-    default: true,
+    default: false,
+  },
+  showVersionHistory: {
+    type: Boolean,
+    default: false,
   },
   data: {
     type: Object,
     required: false,
   },
+  type: {
+    type: String,
+    default: 'default',
+  },
+  isNewNote: {
+    type: Boolean,
+    default: false,
+  },
+  cluster: {},
+  clusterName: {
+    type: String,
+    default: '',
+  },
 });
 
-const state = reactive({
+const note = reactive({});
+
+function initNote() {
+  note.id = v4();
+  note.name = props.name;
+  note.title = '';
+  note.box = props.box;
+  note.text = '';
+  if (props.cluster !== undefined) note.cluster = props.clusterName;
+  else note.cluster = '';
+  note.lastUpdated = createTimestamp();
+  note.versionHistory = new FILOArray();
+}
+initNote();
+
+const states = reactive({
   isEditing: false,
+  showAction: false,
   showMore: false,
   viewVersion: 0,
   showEditTitle: false,
+  newTitle: note?.title || '',
+  showNote: false,
+  showDetail: props.showDetail,
+  showVersionHistory: props.showVersionHistory,
+  noteInfo: computed(
+    () =>
+      `Title: ${note.title}\nBox: ${note.box}\nName: ${note.name}\nCluster: ${
+        note.cluster || 'none'
+      }\nLast updated: ${note.lastUpdated}\nText: ${note.text}\n`,
+  ),
 });
 
-const note = reactive({
-  id: v4(),
-  text: '',
-  lastUpdated: '',
-  box: props.box,
-  name: props.name,
-  title: '',
-  versionHistory: new FILOArray(),
+const events = reactive({
+  deleteNote: false,
+  applyChange: false,
 });
 
-const newTitle = ref(note?.title || '');
+provide('note-' + note.id, note);
+provide('states-' + note.id, states);
+provide('events-' + note.id, events);
 
-function changeTitle() {
-  state.showEditTitle = true;
-}
-function updateTitle() {
-  state.showEditTitle = false;
-  note.title = newTitle.value;
-  upsert('note', note);
-}
-
-const { backendUrl } = useRuntimeConfig();
 onMounted(async () => {
   await nextTick();
   Object.setPrototypeOf(note.versionHistory, FILOArray.prototype);
   if (props.data) {
-    syncReactive(note, props.data);
+    cloudOverride(note, props.data);
     Object.setPrototypeOf(note.versionHistory, FILOArray.prototype);
-    state.viewVersion = note.versionHistory.stack.length - 1;
+    states.viewVersion = note.versionHistory.stack.length - 1;
     return;
   }
-  let cloudNote = await useFetch(
-    backendUrl + '/query' + '/management_note' + '/name/' + props.name,
-  );
+  if (props.isNewNote) return;
+
+  let cloudNote = await query('note', 'name', props.name);
   cloudNote = cloudNote.data._rawValue?.[0];
   // if (!cloudNote) {
   //   note.id = v4();
@@ -161,9 +131,9 @@ onMounted(async () => {
   //   return;
   // }
   try {
-    syncReactive(note, cloudNote);
+    cloudOverride(note, cloudNote);
     Object.setPrototypeOf(note.versionHistory, FILOArray.prototype);
-    state.viewVersion = note.versionHistory.stack.length - 1;
+    states.viewVersion = note.versionHistory.stack.length - 1;
     // wait 0.5s to make sure all notes are loaded
     await new Promise((resolve) => setTimeout(resolve, 500));
   } catch (error) {
@@ -171,39 +141,57 @@ onMounted(async () => {
   }
 });
 
+const computedEvents = computed(() => {
+  return deepClone(events);
+});
+watch(computedEvents, (oldVal, newVal) => {
+  if (newVal.deleteNote !== oldVal.deleteNote) deleteNote();
+  if (newVal.applyChange !== oldVal.applyChange) applyChange();
+});
+
+function createNote() {
+  props.cluster.push(note);
+  upsert('note', note);
+  note.id = v4();
+}
+
+const alive = ref(true);
+function deleteNote() {
+  if (confirm('Are you sure you want to delete this note?')) {
+    dbDelete('note', note.id);
+    alive.value = false;
+  }
+}
+
 // Alert save changes
 if (process.client) {
-  window.addEventListener('beforeunload', function (event) {
-    if (state.isEditing) {
-      event.preventDefault();
-      event.returnValue = '';
+  window.addEventListener('beforeunload', function (events) {
+    if (states.isEditing) {
+      events.preventDefault();
+      events.returnValue = '';
       return '';
     }
   });
 }
-const handleKeydown = (event) => {
-  if (event.shiftKey && event.keyCode === 13) {
-    event.preventDefault();
-    applyChange();
-  }
-};
 
 const applyChange = () => {
-  if (note.text == note.versionHistory[state.viewVersion]) {
+  if (note.text == note.versionHistory[states.viewVersion]) {
     return;
   }
   upsert('note_backup', {
     id: v4(),
+    noteId: note.id,
     text: note.text,
     name: note.name || v4(),
     box: note.box || v4(),
+    cluster: note.cluster || '',
     timestamp: createTimestamp(),
   });
   note.lastUpdated = createTimestamp();
   note.versionHistory.push(note.text);
   upsert('note', note);
-  state.isEditing = false;
-  state.viewVersion = note.versionHistory.stack.length - 1;
+  states.isEditing = false;
+  states.viewVersion = note.versionHistory.stack.length - 1;
 };
 
 function changeNoteName() {

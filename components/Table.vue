@@ -17,19 +17,20 @@
     </Section>
     <Suspense>
       <template #default>
-        <div class="p-3 table-wrapper" :class="itemName">
+        <div class="p-3 table-wrapper" :class="itemName" :id="'t' + tableId">
           <div class="table--action-panel flex items-center">
             <!-- 
               TODO: Add search and sort
               <div>Search</div>
               <div>Sort</div> -->
-            <btn-show-hide
+            <BtnShowHide
               @click="states.showRows = !states.showRows"
               :is-default-show="states.showRows"
+              class="btn-circle h-6 w-6"
             />
             <img
               @click="downloadCsv"
-              class="cursor-pointer btn-circle"
+              class="cursor-pointer btn-circle w-6 h-6"
               src="https://img.icons8.com/flat-round/64/downloading-updates--v1.png"
               alt="download button"
               title="Download CSV"
@@ -54,7 +55,7 @@
 </template>
 
 <script setup>
-import { deepClone, removeState, deepCompare } from '~/static/utils';
+import { deepClone, removeState } from '~/static/utils';
 import { getAll } from '~~/static/db';
 import { v4 } from 'uuid';
 // >>>----------------------------------------------------------------------------------<<<
@@ -78,6 +79,7 @@ const props = defineProps({
   action: { default: 'delete,copyId' },
   weighted: { default: false },
   dbTable: { type: String, default: null },
+  suggestionTable: { type: String, default: null },
   suggestionSize: {
     type: Number,
     default: 3000,
@@ -103,6 +105,7 @@ const config = reactive({
   dbTable: props.dbTable || props.itemName,
   addRow: props.addRow,
   showSuggestion: props.showSuggestion,
+  suggestionTable: props.suggestionTable,
   suggestionSize: props.suggestionSize,
   maxSuggestionNum: props.maxSuggestionNum,
 });
@@ -120,6 +123,7 @@ const states = reactive({
   isEditing: false,
   selectedRows: [],
   activeRow: null,
+  activeCell: null,
   selectedSuggestion: 0,
   showRows: props.initShowRows,
   showSuggestion: false,
@@ -150,6 +154,10 @@ if (props.rows && typeof props.rows === 'string') {
   rows = inject(props.rows, []);
   initItemState(rows);
 }
+
+let events = props.events ? props.events : reactive({});
+
+provide('events-' + tableId, events);
 
 onMounted(async () => {
   await nextTick();

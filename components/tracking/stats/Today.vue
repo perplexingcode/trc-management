@@ -1,8 +1,29 @@
 <template>
   <div class="stats today">
-    <p>Total waste: {{ todayWaste }}</p>
-    <p>Total chore: {{ todayChore }}</p>
-    <p>Today done: {{ todayDone }}</p>
+    <div class="stats__main mb-3">
+      <div class="flex items-center">
+        <img class="w-6 h-6 mr-1" src="~/assets/img/icon/done.svg" alt="done" />
+        <span class="leading-none pt-1"> Total done: {{ todayDone }} </span>
+      </div>
+      <div class="flex items-center">
+        <img
+          class="w-6 h-6 mr-1"
+          src="https://img.icons8.com/color/48/cleaning-a-surface.png"
+          alt="chore"
+        />
+        <span class="leading-none pt-1"> Total chore: {{ todayChore }} </span>
+      </div>
+      <div class="flex items-center">
+        <div class="w-6 h-6 mr-1">
+          <img
+            class="w-5 h-5 m-auto"
+            src="~/assets/img/icon/trash-short.png"
+            alt="waste"
+          />
+        </div>
+        <span class="leading-none pt-1"> Total waste: {{ todayWaste }} </span>
+      </div>
+    </div>
     <p>Today left: {{ todayLeft }}</p>
     <p>Current move: {{ currentMoveTime }}</p>
     <p>Max time: {{ maxTime }}</p>
@@ -36,7 +57,8 @@ const maxTime = computed(() => {
   return sumTime(
     cvTime(todayDone.value) +
       cvTime(todayLeft.value) -
-      cvTime(sleepTimeLeft.value),
+      cvTime(sleepTimeLeft.value) +
+      cvTime(currentMoveTime.value),
   );
 });
 const maxTimeNoSleep = computed(() => {

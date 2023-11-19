@@ -60,7 +60,7 @@
         </div>
         <div
           class="absolute w-full p-3 cursor-pointer"
-          :style="`bottom:${24 + 20 * PERFECT * UNIT}px`"
+          :style="`bottom:${BASE_HEIGHT + 20 * PERFECT * UNIT}px`"
           :title="'Perfect: ' + PERFECT"
         >
           <span>{{ PERFECT }}</span>
@@ -68,7 +68,7 @@
         </div>
         <div
           class="absolute w-full p-3 cursor-pointer"
-          :style="`bottom:${24 + 20 * GREAT * UNIT}px`"
+          :style="`bottom:${BASE_HEIGHT + 20 * GREAT * UNIT}px`"
           :title="'Great: ' + GREAT"
         >
           <span>{{ GREAT }}</span>
@@ -76,7 +76,7 @@
         </div>
         <div
           class="absolute w-full p-3 cursor-pointer"
-          :style="`bottom:${24 + 20 * MINIMUM * UNIT}px`"
+          :style="`bottom:${BASE_HEIGHT + 20 * MINIMUM * UNIT}px`"
           :title="'Minimum: ' + MINIMUM"
         >
           <span class="absolute left-[-6px] top-[2px]">{{ MINIMUM }}</span>
@@ -84,7 +84,7 @@
         </div>
         <div
           class="absolute w-full p-3 cursor-pointer"
-          :style="`bottom:${24 + 20 * LOW * UNIT}px`"
+          :style="`bottom:${BASE_HEIGHT + 20 * LOW * UNIT}px`"
           :title="'Low: ' + LOW"
         >
           <span>{{ LOW }}</span>
@@ -92,7 +92,7 @@
         </div>
         <div
           class="absolute w-full p-3 cursor-pointer"
-          :style="`bottom:${24 + 20 * average * UNIT}px`"
+          :style="`bottom:${BASE_HEIGHT + 20 * average * UNIT}px`"
           :title="'Avarage: ' + average"
         >
           <span class="absolute left-[-22px] top-[2px]">{{ average }}</span>
@@ -130,6 +130,7 @@ const props = defineProps({
   },
 });
 
+const BASE_HEIGHT = 48;
 const state = reactive({
   showWeekDay: false,
 });
@@ -170,7 +171,7 @@ watch(date, async () => {
 });
 
 let monthDateHours = reactive({ value: {} });
-let monthData = [];
+let monthData = ref([]);
 
 async function getMonthData() {
   // Fetch data from cache
@@ -216,11 +217,11 @@ async function getMonthData() {
         sumTime(
           date
             .filter((move) => {
+              if (!move.done) return false;
+              if (props.group === 'All') return true;
               if (props.group === 'MFVN' && move.grp === 'MFVN') {
                 return !move.tags.includes('mf-com');
-              }
-              if (props.group === 'All') return true;
-              else return move.grp == props.group;
+              } else return move.grp == props.group;
             })
             .map((move) => move.duration),
         ),

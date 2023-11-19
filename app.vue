@@ -3,6 +3,7 @@
     <Nav class="mt-8" />
     <DataMove>
       <NuxtPage />
+      <CronJob />
     </DataMove>
   </main>
 </template>

@@ -92,6 +92,7 @@ async function createRow() {
   const item = deepClone(states.newItem);
   await nextTick();
   item.createdAt = moment().format('YYYY-MM-DD HH:mm:ss');
+  item.tags = item.tags.replace(/lap1;|lap2;|lap3;|lap1|lap2|lap3/g, '');
   item.tags = item.tags + (item.tags === '' ? '' : '; ') + states.newItemTags;
   item.state = new State();
   rows.value.push(item);

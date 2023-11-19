@@ -1,5 +1,5 @@
 <template>
-  <button @click="isShow = !isShow" class="btn-circle">
+  <button @click="isShow = !isShow">
     <svg
       v-if="isShow"
       class="w-3 h-3"
@@ -32,7 +32,19 @@ const props = defineProps({
     required: false,
     default: true,
   },
+  isShow: {
+    type: Boolean,
+    required: false,
+  },
 });
 const isShow = ref(props.isDefaultShow);
+if (props.isShow !== undefined) {
+  watch(
+    () => props.isShow,
+    (val) => {
+      isShow.value = val;
+    },
+  );
+}
 </script>
 <style></style>

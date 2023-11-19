@@ -10,7 +10,8 @@
               columns="moveColumns"
               dbTable="move"
               item-name="move"
-              :new-item-tags="' lap' + currentLap"
+              :new-item-tags="'lap' + currentLap"
+              :events="events"
             />
           </div>
         </template>
@@ -24,7 +25,25 @@
   </Section>
 </template>
 <script setup>
-import { cvTime, sumTime } from '~~/static/time';
+import { deepClone } from '~~/static/utils';
 const currentLap = inject('currentLap');
+const movesToday = inject('movesToday');
+const queuedMoves = inject('queuedMoves');
+const events = reactive({ done: {} });
+
+watch(
+  () => events.done,
+  (data) => {
+    const item = deepClone(data.item);
+    item.isBeingEdited = false;
+    item.isSelected = false;
+    if (!data.value) {
+      const index = movesToday.value.findIndex((m) => m.id === item.id);
+      movesToday.value.splice(index, 1);
+      queuedMoves.value.push(item);
+    }
+  },
+  { deep: true },
+);
 </script>
 <style></style>

@@ -70,6 +70,10 @@ export const getById = async function (table, id, projection) {
   );
 };
 
+export const cache = function (id, value) {
+  upsert('cache', { id, value });
+};
+
 export const dbDelete = async function (table, list) {
   table = rename(table);
   // if list is not an array but a single id, convert it to an array

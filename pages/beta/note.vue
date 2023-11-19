@@ -16,12 +16,14 @@
             class="col-start-1"
           />
           <button
-            class="btn-circle col-start-2 row-start-1"
+            class="btn-circle w6-h-6 col-start-2 row-start-1"
             @click="addNewNote"
           >
             +
           </button>
-          <button class="btn-circle col-start-2" @click="deleteNote">-</button>
+          <button class="btn-circle col-start-2 w-6 h-6" @click="deleteNote">
+            -
+          </button>
           <label class="col-start-3 row-start-1">Create note</label>
           <label class="col-start-3 row-start-2">Delete note</label>
         </div>
@@ -42,14 +44,14 @@
   </main>
 </template>
 <script setup>
-import { upsert } from "~~/static/db";
-import { createTimestamp } from "~~/static/time";
-import { unwrap } from "~~/static/utils";
-import { v4 } from "uuid";
-import { request } from "~~/static/request";
-import FILOArray from "~~/static/class/FILOArrayNote";
+import { upsert } from '~~/static/db';
+import { createTimestamp } from '~~/static/time';
+import { unwrap } from '~~/static/utils';
+import { v4 } from 'uuid';
+import { request } from '~~/static/request';
+import FILOArray from '~~/static/class/FILOArrayNote';
 
-const vars = inject("vars");
+const vars = inject('vars');
 const backendUrl = vars.backendUrl;
 const notes = ref([]);
 // REFACTOR : use class instead of object
@@ -65,14 +67,14 @@ const notes = ref([]);
 // }
 const newNote = reactive({
   id: v4(),
-  text: "",
-  name: "",
-  box: "",
+  text: '',
+  name: '',
+  box: '',
   versionHistory: new FILOArray(),
 });
 onMounted(async () => {
   await nextTick();
-  const cloudNotes = (await useFetch(backendUrl + "/all/management_note")).data
+  const cloudNotes = (await useFetch(backendUrl + '/all/management_note')).data
     ._rawValue;
   notes.value = cloudNotes;
 });
@@ -81,7 +83,7 @@ async function addNewNote() {
   //if note already exists, return
   const noteNames = notes.value.map((note) => note.name);
   if (noteNames.includes(newNote.name)) {
-    alert("Cannot add duplicate note.");
+    alert('Cannot add duplicate note.');
     return;
   }
 
@@ -90,9 +92,9 @@ async function addNewNote() {
     newNote.lastUpdated = createTimestamp();
     notes.value.unshift(unwrap(newNote));
     newNote.id = v4();
-    upsert("note", newNote);
-    newNote.box = "";
-    newNote.name = "";
+    upsert('note', newNote);
+    newNote.box = '';
+    newNote.name = '';
   }
 }
 
@@ -100,7 +102,7 @@ function deleteNote() {
   if (newNote.name) {
     // get note Id
     const noteId = notes.value.find((note) => note.name == newNote.name).id;
-    request(backendUrl + "/delete/management_note", "post", [noteId]);
+    request(backendUrl + '/delete/management_note', 'post', [noteId]);
     notes.value = notes.value.filter((note) => note.name != newNote.name);
   }
 }

@@ -22,21 +22,13 @@ export default defineNuxtConfig({
   },
   components: {
     global: true,
-    dirs: [
-      '~/components',
-      '~/components/table',
-      '~/components/report',
-      '~/components/effect',
-      '~/components/chart',
-      '~/components/tracking',
-      '~/components/tracking/stats',
-      '~/components/nav',
-    ],
+    dirs: ['~/components', { path: '~/components/note/component', prefix: '' }],
   },
   runtimeConfig: {
     public: {
       rootDir: process.env.ASSET_DIR,
       backendUrl: process.env.BACKEND_URL,
+      token: process.env.TOKEN,
     },
   },
 });

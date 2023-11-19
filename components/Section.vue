@@ -6,16 +6,22 @@
     <div class="section header flex justify-between">
       <div class="flex items-center">
         <h2 class="text-xl font-bold text-black">{{ title }}</h2>
-        <btn-show-hide
+        <BtnShowHide
           @click="showSection = !showSection"
           :isDefaultShow="showSection"
+          class="btn-circle h-6 w-6"
         />
       </div>
       <div v-show="showSection" class="action-panel">
         <slot name="action-panel"></slot>
       </div>
       <div v-if="maxStep > 1 && showSection" class="steps flex items-center">
-        <button @click="step == 0 || step--">&lt;</button>
+        <button
+          class="w-6 h-6 flex justify-center"
+          @click="step == 0 || step--"
+        >
+          &lt;
+        </button>
         <div
           v-for="(_, index) in maxStep"
           :key="index"
@@ -25,7 +31,12 @@
             'mr-2': index != maxStep,
           }"
         ></div>
-        <button @click="step == maxStep || step++">&gt;</button>
+        <button
+          class="w-6 h-6 flex justify-center"
+          @click="step == maxStep || step++"
+        >
+          &gt;
+        </button>
       </div>
     </div>
     <div v-show="showSection">
@@ -51,7 +62,7 @@ const props = defineProps({
 });
 const $slots = useSlots();
 const maxStep = ref(
-  Object.keys($slots).filter((slotName) => slotName.includes("step")).length,
+  Object.keys($slots).filter((slotName) => slotName.includes('step')).length,
 );
 const showSection = ref(props.isDefaultShow);
 const step = ref(0);

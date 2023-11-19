@@ -2,18 +2,18 @@
   @apply rounded p-2 m-3 h-fit;
 }
 /* Buttons */
-button {
-  border: 1px solid #ccc;
+button,
+.btn-primary {
   border-radius: 1rem;
   padding: 0.3rem 0.6rem 0.225rem;
-  margin: 0.5rem;
+  margin: 0.35rem;
   line-height: 100%;
   height: 2rem;
   background: #ffdb00;
 }
 
 .btn-circle {
-  @apply rounded-full font-bold h-6 w-6 flex items-center justify-center border border-gray-300;
+  @apply rounded-full flex items-center justify-center border border-gray-300;
 }
 
 .btn-circle:has(svg) {
@@ -22,10 +22,19 @@ button {
 
 button,
 .btn {
+  cursor: pointer;
+  border: 1px solid #ccc;
+
   -moz-user-select: none; /* Firefox */
   -webkit-user-select: none; /* Safari and Chrome */
   -ms-user-select: none; /* IE/Edge */
   user-select: none;
+}
+
+button.outline,
+.btn.outline {
+  border: none;
+  outline: 1px solid #ccc;
 }
 
 /* Input */

@@ -81,7 +81,10 @@ onMounted(async () => {
   await nextTick();
   // Fetch data from cache
   const cloudSuggestion = (
-    await getById('cache', 'suggestion-' + config.dbTable)
+    await getById(
+      'cache',
+      'suggestion-' + (config.suggestionTable || config.dbTable),
+    )
   ).data._rawValue;
   if (cloudSuggestion) {
     const now = moment();
@@ -97,11 +100,14 @@ onMounted(async () => {
   // Fetch data from db
   if (
     !data.suggestionPool.length &&
-    config.dbTable &&
+    (config.dbTable || config.suggestionTable) &&
     config.suggestionSize != -1
   ) {
     data.suggestionPool = (
-      await sample(config.dbTable, config.suggestionSize)
+      await sample(
+        config.suggestionTable || config.dbTable,
+        config.suggestionSize,
+      )
     ).data._rawValue;
     suggestions.value = data.suggestionPool;
   } else {
@@ -164,6 +170,12 @@ function filterAttr() {
       if (col?.attrs?.suggestion === false || noSuggestion.includes(col.key))
         delete row[col.key];
     });
+
+    //Remove unnecessary tags
+    if (row.tags) {
+      console.log(row.tags);
+      row.tags = row.tags.replace(/lap1;|lap2;|lap3;|lap1|lap2|lap3/g, '');
+    }
 
     // Remove state & id columns
     Object.keys(row).forEach((col) => {

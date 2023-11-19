@@ -73,7 +73,8 @@ export const deepCompare = function (obj1, obj2) {
   return true;
 };
 
-export const syncReactive = function (obj, cloudObj) {
+export const cloudOverride = function (obj, cloudObj) {
+  if (!cloudObj) return;
   for (const key in obj) {
     if (obj.hasOwnProperty(key)) {
       if (obj[key] !== cloudObj[key]) {

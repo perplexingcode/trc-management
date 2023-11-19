@@ -63,7 +63,7 @@
           <Note
             name="Navigation-News"
             box="Navigation"
-            :data="getNote('Navigation-New')"
+            :data="getNote('Navigation-News')"
           />
         </div>
       </div>
