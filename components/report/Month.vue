@@ -104,12 +104,35 @@
         <input v-model="date" class="text-center w-[8rem]" />
         <button class="rounded-full" @click="addMonth">&gt;</button>
       </div>
-      <div class="text-center mt-3">
-        <p>Minimum: {{ minimum + (minimum < 2 ? ' day' : ' days') }}</p>
-        <p>Required: {{ required + (required < 2 ? ' day' : ' days') }}</p>
-        <p>Perfect: {{ perfect + (perfect < 2 ? ' day' : ' days') }}</p>
-        <p>Average: {{ average }}</p>
-        <p>Total: {{ total }}</p>
+      <div class="text-center flex flex-col items-center mb-5">
+        <div class="mt-3">
+          <p>Minimum: {{ minimum + (minimum < 2 ? ' day' : ' days') }}</p>
+          <p>Required: {{ required + (required < 2 ? ' day' : ' days') }}</p>
+          <p>Perfect: {{ perfect + (perfect < 2 ? ' day' : ' days') }}</p>
+          <p>Average: {{ average }}</p>
+          <p>Total: {{ total }}</p>
+        </div>
+        <div>
+          <p class="mb-2 mt-3">
+            This week: {{ thisWeekTotal }} - {{ thisWeekAverage }}
+          </p>
+          <p>
+            Week 1: {{ weekTotal[0] }}
+            {{ weekAverage[0] ? '- ' + weekAverage[0] : '' }}
+          </p>
+          <p>
+            Week 2: {{ weekTotal[1] }}
+            {{ weekAverage[1] ? '- ' + weekAverage[1] : '' }}
+          </p>
+          <p>
+            Week 3: {{ weekTotal[2] }}
+            {{ weekAverage[2] ? '- ' + weekAverage[2] : '' }}
+          </p>
+          <p>
+            Week 4: {{ weekTotal[3] }}
+            {{ weekAverage[3] ? '- ' + weekAverage[3] : '' }}
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -159,6 +182,7 @@ const MINIMUM = METRIC[props.group].MINIMUM;
 const GREAT = METRIC[props.group].GREAT;
 const PERFECT = METRIC[props.group].PERFECT;
 
+// Month stuff
 function addMonth() {
   date.value = moment(date.value).add(1, 'month').format('YYYY-MM-DD');
 }
@@ -172,6 +196,23 @@ watch(date, async () => {
 
 let monthDateHours = reactive({ value: {} });
 let monthData = ref([]);
+
+const monthStart = computed(() => moment(date.value).startOf('month'));
+const monthEnd = computed(() => moment(date.value).endOf('month'));
+
+// Week stuff
+const weekNumbers = computed(() => {
+  const weeks = [];
+
+  const monthStartWeek = monthStart.value.isoWeek();
+  const monthEndWeek = monthEnd.value.isoWeek();
+  for (let i = monthStartWeek; i <= monthEndWeek; i++) {
+    weeks.push(i);
+  }
+  return weeks;
+});
+
+const weekDates = reactive({});
 
 async function getMonthData() {
   // Fetch data from cache
@@ -201,15 +242,13 @@ async function getMonthData() {
   monthData = [];
   monthDateHours.value = {};
 
-  const startDate = moment(date.value).startOf('month'); // Get the start date of the month
-  const endDate = moment(date.value).endOf('month'); // Get the end date of the month
+  let currentDate = monthStart.value.clone();
 
-  let currentDate = startDate.clone();
-
-  while (currentDate.isSameOrBefore(endDate)) {
+  while (currentDate.isSameOrBefore(monthEnd.value)) {
     monthDates.push(currentDate.format('YYYY-MM-DD'));
     currentDate.add(1, 'day');
   }
+
   monthData = (await query('move', 'date', monthDates)).data._rawValue;
   monthData.map((date, index) => {
     monthDateHours.value[monthDates[index]] = +(
@@ -227,7 +266,18 @@ async function getMonthData() {
         ),
       ) * 24
     ).toFixed(2);
+
+    //add to week data
+    const weekNum = moment(monthDates[index]).isoWeek();
+    if (weekDates[weekNum - 1] === undefined) {
+      weekDates[weekNum - 1] = [];
+    }
+    weekDates[weekNum - 1].push([
+      monthDates[index],
+      monthDateHours.value[monthDates[index]],
+    ]);
   });
+
   isMonthLoaded.value = true;
   upsert('cache', {
     id: 'monthDateHours',
@@ -236,9 +286,98 @@ async function getMonthData() {
   });
 }
 
+// calculate total hours of each week
+const weekTotal = computed(() => {
+  const weekTotal = [];
+  if (!weekNumbers.value) return [];
+  if (!weekDates[0]) return [];
+
+  weekNumbers.value.forEach((_, i) => {
+    if (weekDates[i].length < 7) return;
+    const weekHours = weekDates[i].map(([_, hour]) => hour);
+    weekTotal.push(weekHours.reduce((acc, hour) => acc + hour, 0).toFixed(2));
+  });
+
+  return weekTotal;
+});
+
+const weekAverage = computed(() => {
+  const weekAverage = [];
+  weekNumbers.value.forEach(async (week, i) => {
+    weekDates[i] = Object.entries(monthDateHours.value).filter(
+      ([date]) => moment(date).isoWeek() === week,
+    );
+    if (weekDates[i].length < 7) return;
+    weekAverage.push((weekTotal.value[i] / 7).toFixed(2));
+  });
+  return weekAverage;
+});
+
+const weekData = ref([]);
+const thisWeekDates = ref([]);
 onMounted(async () => {
   await nextTick();
   await getMonthData(today);
+
+  //
+  thisWeekDates.value = Object.entries(monthDateHours.value).filter(
+    ([date]) => moment(date).isoWeek() === moment().isoWeek(),
+  );
+
+  if (thisWeekDates.value.length < 7) {
+    thisWeekDates.value = [];
+    const startDate = moment().startOf('isoWeek'); // Get the start date of the week /
+    const endDate = moment().endOf('isoWeek'); // Get the end date of the week
+
+    let currentDate = startDate.clone();
+
+    while (currentDate.isSameOrBefore(endDate)) {
+      weekDates.value.push(currentDate.format('YYYY-MM-DD'));
+      currentDate.add(1, 'day');
+    }
+    weekData.value = (
+      await query('move', 'date', weekDates.value)
+    ).data._rawValue;
+  }
+});
+
+// if the current week is not complete, query the week's data from the database
+const thisWeekTotal = computed(() => {
+  if (weekNumbers.value.includes(moment().isoWeek())) {
+    const thisWeekNum = moment().isoWeek();
+    const index = weekNumbers.value.indexOf(thisWeekNum);
+    return weekTotal.value[index];
+  }
+  // don't add the week to the monthDateHours object
+  // just calculate the total hours of the week
+  const weekHours = weekData.value.map((date) => {
+    return +(
+      cvTime(
+        sumTime(
+          date
+            .filter((move) => {
+              if (!move.done) return false;
+              if (props.group === 'All') return true;
+              if (props.group === 'MFVN' && move.grp === 'MFVN') {
+                return !move.tags.includes('mf-com');
+              } else return move.grp == props.group;
+            })
+            .map((move) => move.duration),
+        ),
+      ) * 24
+    ).toFixed(2);
+  });
+  return weekHours.reduce((acc, hour) => acc + hour, 0).toFixed(2);
+});
+
+const thisWeekAverage = computed(() => {
+  // remove today's date from the weekDates array
+  // calculate the average of the week
+
+  const _thisWeekDates = thisWeekDates.value.filter(([date]) => date !== today);
+  const weekHours = _thisWeekDates.map(([_, hour]) => hour);
+  const dayCount = _thisWeekDates.length;
+  return (weekHours.reduce((acc, hour) => acc + hour, 0) / dayCount).toFixed(2);
 });
 
 const minimum = computed(() => {
