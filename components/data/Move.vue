@@ -61,6 +61,14 @@ let sleepTimeCurrent = computed(() => {
   );
 });
 
+const todayService = computed(() => {
+  return sumTime(
+    todayDoneMoves.value
+      .filter((move) => move.grp === 'MFVN' || move.grp === 'Freelance')
+      .map((move) => move.duration),
+  );
+});
+
 const a = ref(0); // create & read a dummy reactive variable to trigger computed updates
 const currentMoveTime = computed(() => {
   a.value;
@@ -86,7 +94,7 @@ const todaySpent = computed(() => {
     cvTime(todayDone.value) +
       cvTime(todayWaste.value) +
       cvTime(todayChore.value) +
-      cvTime(currentMoveTime.value),
+      0 * cvTime(currentMoveTime.value),
   );
 });
 
@@ -124,7 +132,7 @@ let moveColumns = [
   {
     name: 'Description',
     key: 'des',
-    type: 'text-area',
+    type: 'textarea',
     disabled: false,
     attrs: { type: 'text' },
   },
@@ -215,7 +223,7 @@ const queuedMoveColumns = [
   {
     name: 'Description',
     key: 'des',
-    type: 'text-area',
+    type: 'textarea',
     disabled: false,
     attrs: { type: 'text' },
   },
@@ -382,6 +390,7 @@ provide('movesToday', movesToday);
 provide('todayWaste', todayWaste);
 provide('todayChore', todayChore);
 provide('todayDone', todayDone);
+provide('todayService', todayService);
 provide('todayDoneMoves', todayDoneMoves);
 provide('todayLeft', todayLeft);
 provide('sleepTimeMax', sleepTimeMax);

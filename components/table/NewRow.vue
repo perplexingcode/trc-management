@@ -1,13 +1,13 @@
 <template>
   <tr class="new-row" @keydown.enter="handleSubmit">
-    <td></td>
+    <td v-if="config.showSelection"></td>
     <!-- Select column -->
-    <td></td>
+    <td v-if="config.showIndex">+</td>
     <!-- Index column -->
     <TableCell
       v-for="col in config.columns"
       :element="col"
-      :item="states.newItem"
+      :item="state.newItem"
       :key="col.key"
       is-new-cell
       :table-id="props.tableId"
@@ -35,15 +35,15 @@ const props = defineProps({
   },
 });
 
-const states = inject('states-' + props.tableId);
+const state = inject('state-' + props.tableId);
 const rows = inject('rows-' + props.tableId);
 const config = inject('config-' + props.tableId);
 
 watch(
-  () => states.newItem.name,
+  () => state.newItem.name,
   () => {
-    states.showSuggestion = true;
-    states.selectedSuggestion = 0;
+    state.showSuggestion = true;
+    state.selectedSuggestion = 0;
   },
 );
 
@@ -60,7 +60,7 @@ let id = ref(v4());
 
 // >>>----------------------------------------------------------------------------------<<<
 onMounted(() => {
-  states.newItem = createNewItemObj();
+  state.newItem = createNewItemObj();
 });
 
 function createNewItemObj() {
@@ -80,23 +80,22 @@ function createNewItemObj() {
 }
 // >>>----------------------------------------------------------------------------------<<<
 function handleInput(event) {
-  states.showSuggestion = true;
+  state.showSuggestion = true;
 }
 
 function handleSubmit(event) {
-  if (event.key === 'Enter' && !states.isSelectingSuggestion) createRow();
+  if (event.key === 'Enter' && !state.isSelectingSuggestion) createRow();
 }
 
 async function createRow() {
-  if (!validateItem(states.newItem, config.columns)) return;
-  const item = deepClone(states.newItem);
+  if (!validateItem(state.newItem, config.columns)) return;
+  const item = deepClone(state.newItem);
   await nextTick();
   item.createdAt = moment().format('YYYY-MM-DD HH:mm:ss');
-  item.tags = item.tags.replace(/lap1;|lap2;|lap3;|lap1|lap2|lap3/g, '');
-  item.tags = item.tags + (item.tags === '' ? '' : '; ') + states.newItemTags;
+  item.tags = item.tags + (item.tags === '' ? '' : '; ') + state.newItemTags;
   item.state = new State();
   rows.value.push(item);
-  upsert(config.dbTable, states.newItem);
+  upsert(config.dbTable, state.newItem);
   id.value = v4();
   resetNewItem();
 }
@@ -105,9 +104,10 @@ function resetNewItem() {
   config.columns.forEach((col) => {
     if (!col.name || col.isState) return;
     col.default !== null && col.default !== undefined
-      ? (states.newItem[col.key] = col.default)
-      : (states.newItem[col.key] = '');
+      ? (state.newItem[col.key] = col.default)
+      : (state.newItem[col.key] = '');
   });
+  state.newItem.id = v4();
   cellEvent.isReset = !cellEvent.isReset;
 }
 </script>

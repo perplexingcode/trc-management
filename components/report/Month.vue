@@ -34,8 +34,8 @@
             </p>
           </div>
           <div
-            @mouseenter="state.showWeekDay = true"
-            @mouseleave="state.showWeekDay = false"
+            @mouseenter="_state.showWeekDay = true"
+            @mouseleave="_state.showWeekDay = false"
             class="cursor-pointer"
           >
             <p class="text-center date bg-teal-600 text-gray-100">
@@ -43,15 +43,15 @@
             </p>
           </div>
           <div
-            @mouseenter="state.showWeekDay = true"
-            @mouseleave="state.showWeekDay = false"
+            @mouseenter="_state.showWeekDay = true"
+            @mouseleave="_state.showWeekDay = false"
             class="h-6 w-full cursor-pointer"
           >
             <p
               class="text-center text-gray-600"
               :class="{
                 'bg-yellow-100': ['Mon'].includes(moment(date).format('ddd')),
-                hidden: !state.showWeekDay,
+                hidden: !_state.showWeekDay,
               }"
             >
               {{ moment(date).format('ddd') }}
@@ -154,7 +154,7 @@ const props = defineProps({
 });
 
 const BASE_HEIGHT = 48;
-const state = reactive({
+const _state = reactive({
   showWeekDay: false,
 });
 

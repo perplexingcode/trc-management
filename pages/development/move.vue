@@ -118,7 +118,7 @@ let queuedMoveColumns = [
   {
     name: 'Description',
     key: 'des',
-    type: 'text-area',
+    type: 'textarea',
     disabled: false,
     attrs: { type: 'text' },
   },

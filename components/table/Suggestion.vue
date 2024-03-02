@@ -9,7 +9,7 @@
       :key="item[0]"
       class="suggestion flex row cursor-pointer"
       @click="importSuggestion(index)"
-      :class="{ selected: index === states.selectedSuggestion }"
+      :class="{ selected: index === state.selectedSuggestion }"
     >
       <div
         v-for="(col, key) in item"
@@ -46,7 +46,7 @@ const props = defineProps({
 // #SETUP
 const config = inject('config-' + props.tableId);
 const data = inject('data-' + props.tableId);
-const states = inject('states-' + props.tableId);
+const state = inject('state-' + props.tableId);
 const _rows = inject('rows-' + props.tableId);
 
 const isLoaded = ref(false);
@@ -54,11 +54,11 @@ const suggestions = ref([]);
 const colWidths = reactive({});
 
 const filteredSuggestions = computed(() => {
-  // filter by name from states.newItem.name
+  // filter by name from state.newItem.name
   if (!suggestions.value.length) return [];
   return truncateSuggestion(
     suggestions.value.filter((item) =>
-      item.name.toLowerCase().includes(states.newItem.name.toLowerCase()),
+      item.name.toLowerCase().includes(state.newItem.name.toLowerCase()),
     ),
   );
 });
@@ -66,7 +66,7 @@ const showSuggestion = computed(() => {
   return (
     props.newItem.name &&
     filteredSuggestions.value.length &&
-    states.showSuggestion
+    state.showSuggestion
   );
 });
 watch(showSuggestion, async () => {
@@ -85,7 +85,7 @@ onMounted(async () => {
       'cache',
       'suggestion-' + (config.suggestionTable || config.dbTable),
     )
-  ).data._rawValue;
+  )?.data?._rawValue;
   if (cloudSuggestion) {
     const now = moment();
     const cacheDate = moment(cloudSuggestion.timestamp);
@@ -95,6 +95,8 @@ onMounted(async () => {
       isLoaded.value = true;
       return;
     }
+  } else {
+    suggestions.value = [];
   }
 
   // Fetch data from db
@@ -108,7 +110,7 @@ onMounted(async () => {
         config.suggestionTable || config.dbTable,
         config.suggestionSize,
       )
-    ).data._rawValue;
+    )?.data?._rawValue;
     suggestions.value = data.suggestionPool;
   } else {
     rows.value = _rows.value;
@@ -131,33 +133,33 @@ onMounted(async () => {
 async function handleKeyDown(e) {
   if (
     e.key === 'ArrowDown' &&
-    states.selectedSuggestion < filteredSuggestions.value.length - 1
+    state.selectedSuggestion < filteredSuggestions.value.length - 1
   ) {
-    states.isSelectingSuggestion = true;
-    states.selectedSuggestion++;
+    state.isSelectingSuggestion = true;
+    state.selectedSuggestion++;
   }
-  if (e.key === 'ArrowUp' && states.selectedSuggestion > 0) {
-    states.isSelectingSuggestion = true;
-    states.selectedSuggestion--;
+  if (e.key === 'ArrowUp' && state.selectedSuggestion > 0) {
+    state.isSelectingSuggestion = true;
+    state.selectedSuggestion--;
   }
   if (e.key === 'Enter') {
     importSuggestion();
     e.preventDefault();
     e.stopPropagation();
     await nextTick();
-    states.isSelectingSuggestion = false;
-    states.showSuggestion = false;
+    state.isSelectingSuggestion = false;
+    state.showSuggestion = false;
   }
 }
 //
 function importSuggestion(index) {
   if (!showSuggestion.value) return;
   const suggestion =
-    filteredSuggestions.value[index ? index : states.selectedSuggestion];
+    filteredSuggestions.value[index ? index : state.selectedSuggestion];
   Object.keys(suggestion).forEach((key) => {
-    states.newItem[key] = suggestion[key];
+    state.newItem[key] = suggestion[key];
   });
-  states.showSuggestion = false;
+  state.showSuggestion = false;
 }
 //
 const noSuggestion = ['date', 'done'];
@@ -170,12 +172,6 @@ function filterAttr() {
       if (col?.attrs?.suggestion === false || noSuggestion.includes(col.key))
         delete row[col.key];
     });
-
-    //Remove unnecessary tags
-    if (row.tags) {
-      console.log(row.tags);
-      row.tags = row.tags.replace(/lap1;|lap2;|lap3;|lap1|lap2|lap3/g, '');
-    }
 
     // Remove state & id columns
     Object.keys(row).forEach((col) => {

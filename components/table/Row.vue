@@ -1,29 +1,38 @@
 <template>
+  <!-- <div
+    @dblclick="handleDblClick"
+    v-if="!(state.activeRow === item.id && state.isBeingEdited)"
+    class="absolute top-0 left-0 w-full h-full z-50 opacity-0"
+  ></div> -->
   <tr
-    class="row"
+    class="row relative"
     @dblclick="handleDblClick"
     @keydown="handleKeyDown($event)"
-    @click="states.activeRow = props.item.id"
+    @click="state.activeRow = item.id"
     :class="{
-      active: states.activeRow === props.item.id,
-      'is-being-edited':
-        states.activeRow === props.item.id && states.isBeingEdited,
+      active: state?.activeRow === item.id,
+      'is-being-edited': state?.activeRow === item.id && state.isBeingEdited,
     }"
-    :id="'t' + props.item.id"
+    :id="'t' + item.id"
   >
     <TableCell
+      v-if="config.showSelection"
       :element="selectColumn"
-      :item="props.item"
+      :item="item"
       :table-id="props.tableId"
       @delete-row="deleteRows"
     />
-    <td class="index" :title="JSON.stringify(props.item)">
+    <td
+      v-if="config.showIndex"
+      class="index select-none"
+      :title="JSON.stringify(item)"
+    >
       <span>{{ props.index }}</span>
     </td>
     <TableCell
       v-for="col in config.columns"
       :element="col"
-      :item="props.item"
+      :item="item"
       :key="col.key"
       :table-id="props.tableId"
       @upsert-row="handleUpsertRowEvent"
@@ -31,7 +40,7 @@
     />
     <TableCell
       :element="{ type: 'row-action' }"
-      :item="props.item"
+      :item="item"
       :table-id="props.tableId"
       @delete-row="deleteRows"
     />
@@ -42,6 +51,7 @@
 // >>>----------------------------------------------------------------------------------<<<
 import { dbDelete, upsert } from '~/static/db.js';
 import moment from 'moment';
+import { v4 } from 'uuid';
 
 const props = defineProps({
   item: {
@@ -58,7 +68,9 @@ const props = defineProps({
   },
 });
 
-const states = inject('states-' + props.tableId);
+const item = props.item;
+
+const state = inject('state-' + props.tableId);
 const rows = inject('rows-' + props.tableId);
 const config = inject('config-' + props.tableId);
 
@@ -73,53 +85,59 @@ const selectColumn = {
 
 // Handle events
 function handleDblClick(event) {
-  if (props.item.state.isBeingEdited) return;
-  editRow(props.item.id, event.target);
+  if (item.state.isBeingEdited) return;
+  state.activeRow = item.id;
+  editRow(item.id, event.target);
 }
 
 function handleKeyDown(event) {
+  if (!item.state.isBeingEdited) return;
+  if (event.key === 'Enter' || event.key === 'Escape') {
+    event.preventDefault();
+    event.stopPropagation();
+    upsertRow(item.id);
+  }
+
+  /*
   // get parent element then get the second class
   const elementType =
-    states.activeCell.classList[2] &&
-    states.activeCell.classList[2].replace('cell-', '');
-  if (props.item.state.isBeingEdited) {
+    state.activeCell.classList[2] &&
+    state.activeCell.classList[2].replace('cell-', '');
+  if (item.state.isBeingEdited) {
     if (event.key === 'Enter' || event.key === 'Escape') {
       event.preventDefault();
       event.stopPropagation();
-      upsertRow(props.item.id);
+      upsertRow(item.id);
     }
     // Navigate between cells
     if (event.key === 'ArrowUp') {
       if ('text-area'.includes(elementType)) return;
       event.preventDefault();
       event.stopPropagation();
-      upsertRow(props.item.id);
+      upsertRow(item.id);
       goUp();
     }
     if (event.key === 'ArrowDown') {
       if ('text-area'.includes(elementType)) return;
       event.preventDefault();
       event.stopPropagation();
-      upsertRow(props.item.id);
+      upsertRow(item.id);
       goDown();
     }
     if (event.key === 'ArrowLeft') {
       if ('input,input-name,text-area'.includes(elementType)) return;
-      alert('cam mom', elementType, states.activeCell);
-      console.log(elementType, states.activeCell);
       event.preventDefault();
       event.stopPropagation();
       goLeft();
     }
     if (event.key === 'ArrowRight') {
       if ('input,input-name,text-area'.includes(elementType)) return;
-      alert('cam mom', elementType, states.activeCell);
-      console.log(elementType, states.activeCell);
       event.preventDefault();
       event.stopPropagation();
       goRight();
     }
   }
+  */
 }
 
 function handleUpsertRowEvent({ id, table }) {
@@ -131,8 +149,8 @@ function handleDeleteRowEvent(id) {
 
 // Event actions
 function editRow(id, element) {
-  states.isEditing = true;
-  states.rowBeingEdited = id;
+  state.isEditing = true;
+  state.rowBeingEdited = id;
 
   // Find row with item.id = id
   const index = rows.value.findIndex((row) => row.id === id);
@@ -156,9 +174,9 @@ function editRow(id, element) {
 
 // change focus to the next row
 function goUp() {
-  const elementClass = states.activeCell.parentElement.classList[1];
+  const elementClass = state.activeCell.parentElement.classList[1];
   if (!elementClass.includes('cell-')) return;
-  let index = rows.value.findIndex((row) => row.id === props.item.id);
+  let index = rows.value.findIndex((row) => row.id === item.id);
   rows.value[index].state.isBeingEdited = false;
   if (index === 0) index = rows.value.length;
   rows.value[index - 1].state.isBeingEdited = true;
@@ -169,15 +187,15 @@ function goUp() {
     );
     element.classList.add('active');
     element.focus();
-    states.activeCell = element;
+    state.activeCell = element;
   });
 }
 
 // change focus to the previous row
 function goDown() {
-  const elementClass = states.activeCell.parentElement.classList[1];
+  const elementClass = state.activeCell.parentElement.classList[1];
   if (!elementClass.includes('cell-')) return;
-  let index = rows.value.findIndex((row) => row.id === props.item.id);
+  let index = rows.value.findIndex((row) => row.id === item.id);
   rows.value[index].state.isBeingEdited = false;
   if (index + 1 === rows.value.length) index = -1;
   rows.value[index + 1].state.isBeingEdited = true;
@@ -188,12 +206,12 @@ function goDown() {
     );
     element.classList.add('active');
     element.focus();
-    states.activeCell = element;
+    state.activeCell = element;
   });
 }
 
 function goLeft() {
-  const elementClass = states.activeCell.parentElement.classList[1];
+  const elementClass = state.activeCell.parentElement.classList[1];
   if (!elementClass.includes('cell-')) return;
   let index = config.columns.findIndex(
     (col) => col.key === elementClass.replace('cell-', ''),
@@ -206,16 +224,16 @@ function goLeft() {
     break;
   }
   const leftElement = document.querySelector(
-    '#t' + props.item.id + ' .cell-' + config.columns[index].key + ' > *',
+    '#t' + item.id + ' .cell-' + config.columns[index].key + ' > *',
   );
   // leftElement.setAttribute('tabindex', '999');
   leftElement.classList.add('active');
   leftElement.focus();
-  states.activeCell = leftElement;
+  state.activeCell = leftElement;
 }
 
 function goRight() {
-  const elementClass = states.activeCell.parentElement.classList[1];
+  const elementClass = state.activeCell.parentElement.classList[1];
   if (!elementClass.includes('cell-')) return;
   let index = config.columns.findIndex(
     (col) => col.key === elementClass.replace('cell-', ''),
@@ -227,12 +245,12 @@ function goRight() {
     break;
   }
   const rightElement = document.querySelector(
-    '#t' + props.item.id + ' .cell-' + config.columns[index].key + ' > *',
+    '#t' + item.id + ' .cell-' + config.columns[index].key + ' > *',
   );
   rightElement.setAttribute('tabindex', '999');
   rightElement.classList.add('active');
   rightElement.focus();
-  states.activeCell = rightElement;
+  state.activeCell = rightElement;
 }
 
 function upsertRow(id, table) {
@@ -267,7 +285,7 @@ async function deleteRows(id) {
 // >>>----------------------------------------------------------------------------------<<<
 /*<DEV>
 const tableActions = props.action.replaceAll(" ", "").split(",");
-console.log(props.item);
+console.log(item);
 
 
 function focusRow(index, itemsArray, element) {

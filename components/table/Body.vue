@@ -1,7 +1,7 @@
 <template>
-  <tbody v-show="states.showRows">
+  <tbody v-show="state?.showRows">
     <TableRow
-      v-for="item,index in rows"
+      v-for="(item, index) in rows"
       :key="item.id"
       :item="item"
       :table-id="props.tableId"
@@ -19,7 +19,7 @@ const props = defineProps({
   },
 });
 
-const states = inject('states-' + props.tableId);
+const state = inject('state-' + props.tableId);
 const rows = inject('rows-' + props.tableId);
 const config = inject('config-' + props.tableId);
 
@@ -35,7 +35,7 @@ const config = inject('config-' + props.tableId);
 //         _selectedRows.push(row.id);
 //       }
 //     });
-//     states.selectedRows = _selectedRows;
+//     state.selectedRows = _selectedRows;
 //   },
 //   { deep: true },
 // );

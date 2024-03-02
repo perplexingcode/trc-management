@@ -21,7 +21,7 @@ const dataTable = ref(null);
 let rows = ref(null);
 const loadData = async () => {
   if (date.value === '') {
-    rows.value = (await getAll('move')).data.value;
+    rows.value = (await getAll('total')).data.value;
     dataTable.value.rerender();
     isLoadedData.value = true;
     return;

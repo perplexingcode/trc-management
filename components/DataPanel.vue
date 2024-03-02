@@ -10,7 +10,7 @@
               columns="moveColumns"
               dbTable="move"
               item-name="move"
-              :new-item-tags="'lap' + currentLap"
+              :new-item-tags="getLap"
               :events="events"
             />
           </div>
@@ -30,6 +30,10 @@ const currentLap = inject('currentLap');
 const movesToday = inject('movesToday');
 const queuedMoves = inject('queuedMoves');
 const events = reactive({ done: {} });
+
+function getLap() {
+  return 'lap' + currentLap.value;
+}
 
 watch(
   () => events.done,
