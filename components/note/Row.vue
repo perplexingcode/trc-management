@@ -30,11 +30,11 @@
     </div>
     <div class="w-full flex">
       <textarea
-        v-show="states.showNote"
+        v-show="state.showNote"
         v-model="note.text"
         class="w-full min-h-[20rem] overflow-y-scroll"
-        :class="{ isEditing: states.isEditing }"
-        @input="states.isEditing = true"
+        :class="{ isEditing: state.isEditing }"
+        @input="state.isEditing = true"
         @keydown="handleKeydown($event)"
         @blur="events.applyChange = !events.applyChange"
       />
@@ -53,7 +53,7 @@ const props = defineProps({
 });
 
 const note = inject('note-' + props.noteId);
-const states = inject('states-' + props.noteId);
+const state = inject('state-' + props.noteId);
 const events = inject('events-' + props.noteId);
 
 const showHideBtn = ref(null);
@@ -69,17 +69,17 @@ watch(
 
 const wrapper = ref(null);
 onClickOutside(wrapper, () => {
-  states.showNote = false;
-  states.showEditTitle = false;
+  state.showNote = false;
+  state.showEditTitle = false;
   showAction.value = false;
 });
 
 function handleClickRow() {
-  if (!note.title && !states.showEditTitle) {
-    states.showEditTitle = true;
-    if (!states.showNote) return;
+  if (!note.title && !state.showEditTitle) {
+    state.showEditTitle = true;
+    if (!state.showNote) return;
   }
-  states.showNote = !states.showNote;
+  state.showNote = !state.showNote;
 }
 
 const handleKeydown = (e) => {

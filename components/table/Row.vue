@@ -4,6 +4,7 @@
     v-if="!(state.activeRow === item.id && state.isBeingEdited)"
     class="absolute top-0 left-0 w-full h-full z-50 opacity-0"
   ></div> -->
+
   <tr
     class="row relative"
     @dblclick="handleDblClick"
@@ -14,6 +15,7 @@
       'is-being-edited': state?.activeRow === item.id && state.isBeingEdited,
     }"
     :id="'t' + item.id"
+    :draggable="state.isDragging"
   >
     <TableCell
       v-if="config.showSelection"
@@ -22,6 +24,14 @@
       :table-id="props.tableId"
       @delete-row="deleteRows"
     />
+    <td
+      v-if="config.draggable"
+      @mouseenter="state.isDragging = true"
+      @mouseleave="state.isDragging = false"
+      class="grab select-none"
+    >
+      <TableSvgGrab class="grab-icon w-4 h-4" />
+    </td>
     <td
       v-if="config.showIndex"
       class="index select-none"

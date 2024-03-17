@@ -404,5 +404,6 @@ provide('chore', choreMoves);
 provide('queuedMoves', queuedMoves);
 provide('dailyMove', dailyMoves);
 provide('vars', reactive(vars));
+provide('projects', projects);
 </script>
 <style></style>

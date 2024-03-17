@@ -5,32 +5,32 @@
         <h3
           class="cursor-text w-fit"
           @click.stop
-          v-show="!states.showEditTitle"
-          @dblclick="!props.noEditTitle && (states.showEditTitle = true)"
+          v-show="!state.showEditTitle"
+          @dblclick="!props.noEditTitle && (state.showEditTitle = true)"
         >
           {{ note.title }}
         </h3>
       </div>
       <input
         @click.stop
-        v-show="states.showEditTitle"
-        v-model="states.newTitle"
+        v-show="state.showEditTitle"
+        v-model="state.newTitle"
         @keydown.enter="updateTitle"
         @keydown.tab="updateTitle"
         @blur="updateTitle"
-        @keydown.esc="states.showEditTitle = false"
+        @keydown.esc="state.showEditTitle = false"
       />
     </div>
     <div
       v-if="props.showAction"
       class="header__action w-fit min-w-[3.5rem] ml-auto cursor-pointer"
-      @mouseenter="states.showAction = true"
-      @mouseleave="states.showAction = false"
+      @mouseenter="state.showAction = true"
+      @mouseleave="state.showAction = false"
     >
-      <div v-show="states.showAction || props.showAction" class="flex ml-auto">
+      <div v-show="state.showAction || props.showAction" class="flex ml-auto">
         <span
           class="btn btn-cicle flex items-center justify-center text-white bg-primary rounded-full w-6 h-6 ml-auto"
-          :title="states.noteInfo"
+          :title="state.noteInfo"
           >i</span
         >
         <img
@@ -61,14 +61,14 @@ const props = defineProps({
 });
 
 const note = inject('note-' + props.noteId);
-const states = inject('states-' + props.noteId);
+const state = inject('state-' + props.noteId);
 const events = inject('events-' + props.noteId);
 
 watch(
-  () => states.showEditTitle,
+  () => state.showEditTitle,
   () => {
-    if (states.showEditTitle) {
-      states.newTitle = note.title;
+    if (state.showEditTitle) {
+      state.newTitle = note.title;
       nextTick(() => {
         const input = document.querySelector('#t' + props.noteId + ' input');
         input.focus();
@@ -78,9 +78,9 @@ watch(
 );
 
 function updateTitle() {
-  states.showEditTitle = false;
-  if (states.newTitle === note.title) return;
-  note.title = states.newTitle;
+  state.showEditTitle = false;
+  if (state.newTitle === note.title) return;
+  note.title = state.newTitle;
   upsert('note', note);
 }
 </script>

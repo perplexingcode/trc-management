@@ -10,6 +10,7 @@
           add-row
           :events="events"
           suggestion-table="move"
+          draggable
         />
       </div>
     </template>

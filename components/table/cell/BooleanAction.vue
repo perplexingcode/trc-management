@@ -6,9 +6,9 @@
     :class="accent"
   >
     <div class="action w-4 h-4" title="Click to toggle" @click="handleClick">
-      <SvgChecked v-if="item[element.key]" />
-      <SvgLoading v-else-if="item[element.key] === null" />
-      <SvgUnchecked v-else />
+      <TableSvgChecked v-if="item[element.key]" />
+      <TableSvgLoading v-else-if="item[element.key] === null" />
+      <TableSvgUnchecked v-else />
     </div>
     <div
       v-show="showTitle"

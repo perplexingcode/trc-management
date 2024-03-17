@@ -4,7 +4,7 @@
   >
     <span
       class="btn btn-cicle flex items-center justify-center text-white bg-primary rounded-full w-6 h-6 ml-auto"
-      :title="states.noteInfo"
+      :title="state.noteInfo"
       >i</span
     >
     <img
@@ -23,7 +23,7 @@ const props = defineProps({
     required: true,
   },
 });
-const states = inject('states-' + props.noteId);
+const state = inject('state-' + props.noteId);
 const events = inject('events-' + props.noteId);
 </script>
 <style></style>

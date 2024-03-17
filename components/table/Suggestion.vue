@@ -1,7 +1,3 @@
-<!-- 
-  * Give rows a default value
- -->
-
 <template>
   <div v-if="showSuggestion && isLoaded" class="modal suggestions">
     <div
@@ -14,17 +10,20 @@
       <div
         v-for="(col, key) in item"
         :key="key"
-        class="suggestion-col flex"
+        class="suggestion-col"
         :class="key"
       >
-        <div class="name px-[3px] mx-1 bg-[#3333]">{{ key }}</div>
-        <div
-          class="value"
-          :style="{
-            width: `${(colWidths[key] < 20 ? colWidths[key] : 20) * 10}` + 'px',
-          }"
-        >
-          {{ col }}
+        <div v-if="!noSuggestion.includes(key)" class="flex">
+          <div class="name px-[3px] mx-1 bg-[#3333]">{{ key }}</div>
+          <div
+            class="value"
+            :style="{
+              width:
+                `${(colWidths[key] < 20 ? colWidths[key] : 20) * 10}` + 'px',
+            }"
+          >
+            {{ col }}
+          </div>
         </div>
       </div>
     </div>
@@ -34,6 +33,7 @@
 <script setup>
 import { sample, getById, upsert } from '~~/static/db';
 import moment from 'moment';
+
 const props = defineProps({
   tableId: {
     type: String,
@@ -62,6 +62,7 @@ const filteredSuggestions = computed(() => {
     ),
   );
 });
+
 const showSuggestion = computed(() => {
   return (
     props.newItem.name &&
@@ -95,8 +96,6 @@ onMounted(async () => {
       isLoaded.value = true;
       return;
     }
-  } else {
-    suggestions.value = [];
   }
 
   // Fetch data from db
@@ -110,17 +109,17 @@ onMounted(async () => {
         config.suggestionTable || config.dbTable,
         config.suggestionSize,
       )
-    )?.data?._rawValue;
+    ).data._rawValue;
     suggestions.value = data.suggestionPool;
   } else {
     rows.value = _rows.value;
     suggestions.value = rows.value;
   }
   filterAttr();
-  removeDuplicate();
   setAttrWidth();
   sortAttr();
   isLoaded.value = true;
+  removeDuplicate();
   upsert('cache', {
     id: 'suggestion-' + config.dbTable,
     value: suggestions.value,
@@ -163,7 +162,7 @@ function importSuggestion(index) {
 }
 //
 const noSuggestion = ['date', 'done'];
-function filterAttr() {
+async function filterAttr() {
   for (let i = 0; i < suggestions.value.length; i++) {
     let row = suggestions.value[i];
     // Remove unneeded attributes
@@ -172,6 +171,39 @@ function filterAttr() {
       if (col?.attrs?.suggestion === false || noSuggestion.includes(col.key))
         delete row[col.key];
     });
+    //Remove unnecessary tags
+    if (row.tags) {
+      row.tags = row.tags
+        .replace(/,/g, ';')
+        .replace(/;+/g, ';')
+        .trim()
+        .replace(/^;$/, '');
+      row.tags = row.tags
+        .replace(/lap1;|lap2;|lap3;|lap1|lap2|lap3/g, '')
+        .trim();
+      const tags = row.tags.split(';');
+      // remove time tags
+      const timeTags = tags.filter(
+        (tag) => tag.includes('time') && tag.includes('='),
+      );
+      if (timeTags.length) {
+        for (let t = 0; t < timeTags.length; t++) {
+          suggestions.value[i].tags = suggestions.value[i].tags.replace(
+            timeTags[t],
+            '',
+          );
+        }
+      }
+    }
+    // remove unnecessary commas
+    if (row.tags) {
+      suggestions.value[i].tags = row.tags
+        .replace(/^,|,$/g, '') // Removes leading and trailing commas
+        .replace(/,+/g, ',') // Replaces multiple commas with a single comma
+        .trim(); // Trims any whitespace
+    }
+
+    if (row.prj == '-') suggestions.value[i].prj = '';
 
     // Remove state & id columns
     Object.keys(row).forEach((col) => {

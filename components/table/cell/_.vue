@@ -10,9 +10,11 @@
 <script setup>
 import CellBooleanAction from '~~/components/table/cell/BooleanAction.vue';
 import CellInput from '~~/components/table/cell/Input.vue';
+import CellInputName from '~~/components/table/cell/InputName.vue';
 import CellSelect from '~~/components/table/cell/Select.vue';
-import SvgChecked from '~~/components/svg/Checked.vue';
-import SvgUnchecked from '~~/components/svg/Unchecked.vue';
+import SvgChecked from '~~/components/table/svg/Checked.vue';
+import SvgUnchecked from '~~/components/table/svg/Unchecked.vue';
+import SvgDelete from '~~/components/table/svg/Delete.vue';
 // >>>----------------------------------------------------------------------------------<<<
 // << DEV: TODO
 const props = defineProps({
@@ -122,47 +124,11 @@ function renderElement(element, item, isNewRow) {
         state,
       });
     case 'input-name':
-      const innerText = item[element.key] ? item[element.key] : element.default;
-      return hTd('cell-' + element.key + ' cell-' + element.type, 'input', {
-        type: 'text',
-        class: element.key,
-        value: innerText,
-        required: element.attrs.required,
-        title: innerText?.length > 20 ? innerText : null,
-        disabled:
-          element.disabled ||
-          (!(item.state.isBeingEdited && state.isEditing) && !isNewRow),
-        onInput: (e) => {
-          item[element.key] = e.target.value;
-        },
-        // onKeydown(e) {
-
-        //   if (nonTextKeys.includes(e.keyCode)) {
-        //     editRow(
-        //       rows.value.findIndex((i) => (i.id = item.id)),
-        //       rows,
-        //       e
-        //     );
-        //     e.target.focus();
-        //   }
-        // },
-        onClick: (e) => {
-          if (e.target.classList.contains('active')) return;
-          e.target.removeAttribute('disabled');
-          e.target.focus();
-        },
-        onFocus: (e) => {
-          if (e.target.classList.contains('active')) return;
-          e.target.classList.add('active');
-          e.target.setSelectionRange(
-            e.target.value.length,
-            e.target.value.length,
-          );
-        },
-        onBlur: (e) => {
-          e.target.classList.remove('active');
-          if (!isNewRow) e.target.setAttribute('disabled', '');
-        },
+      return h(CellInputName, {
+        item,
+        element,
+        isNewRow,
+        state,
       });
     case 'textarea':
       return hTd(
@@ -202,51 +168,6 @@ function renderElement(element, item, isNewRow) {
           },
         },
       );
-    case 'tags':
-      return hTd(
-        'cell-' +
-          element.key +
-          ' cell-' +
-          element.type +
-          (element?.hidden ? ' hidden' : ''),
-        'div',
-        {
-          class: 'flex',
-        },
-        [
-          h(),
-          h('input', {
-            type: element.attrs.type,
-            class: element.key,
-            value: item[element.key] ? item[element.key] : element.default,
-            required: element.attrs.required,
-            disabled:
-              element.disabled ||
-              (!(item.state.isBeingEdited && state.isEditing) && !isNewRow),
-            onInput: (e) => {
-              if (element.key == 'duration') {
-                e.target.value = durationValidate(e.target.value);
-              }
-              item[element.key] = e.target.value;
-            },
-            onFocus: (e) => {
-              if (e.target.classList.contains('active')) return;
-              state.activeCell = e.target.parentElement;
-              e.target.classList.add('active');
-              if (element.attrs.type == 'number') return;
-              e.target.setSelectionRange(
-                e.target.value.length,
-                e.target.value.length,
-              );
-            },
-            onBlur(e) {
-              e.target.classList.remove('active');
-              state.activeCell = null;
-            },
-          }),
-        ],
-      );
-
     case 'boolean': {
       // use an image to represent boolean, onclick to toggle
       const showTitle = ref(false);
@@ -430,20 +351,22 @@ function renderElement(element, item, isNewRow) {
             class: 'flex',
           },
           [
-            h('img', {
-              // TODO: Update src logic
-              src: 'https://management-img.s3.ap-southeast-1.amazonaws.com/minus.png',
-              title: 'Double click to delete row',
-              class: [
-                'btn action delete cursor-pointer',
-                { 'd-none': !config.action.includes('delete') },
-              ],
-              onDblclick: (e) => {
-                emit('deleteRow', item.id);
-                e.stopPropagation();
-                e.preventDefault();
+            h(
+              'div',
+              {
+                title: 'Double click to delete row',
+                class: [
+                  'btn action delete cursor-pointer w-6 h-6',
+                  { 'd-none': !config.action.includes('delete') },
+                ],
+                onDblclick: (e) => {
+                  emit('deleteRow', item.id);
+                  e.stopPropagation();
+                  e.preventDefault();
+                },
               },
-            }),
+              h(SvgDelete),
+            ),
           ],
         ),
       );

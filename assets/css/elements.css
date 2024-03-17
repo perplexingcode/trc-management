@@ -21,7 +21,7 @@ button,
 }
 
 button,
-.btn {
+.btn:not(:has(svg)) {
   cursor: pointer;
   border: 1px solid #ccc;
 

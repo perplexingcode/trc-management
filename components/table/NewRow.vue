@@ -1,9 +1,11 @@
 <template>
   <tr class="new-row" @keydown.enter="handleSubmit">
-    <td v-if="config.showSelection"></td>
     <!-- Select column -->
-    <td v-if="config.showIndex">+</td>
+    <td v-if="config.showSelection"></td>
+    <!-- Grab column -->
+    <td v-if="config.draggable"></td>
     <!-- Index column -->
+    <td v-if="config.showIndex">+</td>
     <TableCell
       v-for="col in config.columns"
       :element="col"
@@ -92,8 +94,15 @@ async function createRow() {
   const item = deepClone(state.newItem);
   await nextTick();
   item.createdAt = moment().format('YYYY-MM-DD HH:mm:ss');
-  item.tags = item.tags + (item.tags === '' ? '' : '; ') + state.newItemTags;
+  if (item.tags !== undefined) {
+    const newItemTags =
+      typeof state.newItemTags === 'string'
+        ? state.newItemTags
+        : state.newItemTags();
+    item.tags = item.tags + (item.tags === '' ? '' : '; ') + newItemTags;
+  }
   item.state = new State();
+  if (config.draggable) item.index = rows.value.length;
   rows.value.push(item);
   upsert(config.dbTable, state.newItem);
   id.value = v4();

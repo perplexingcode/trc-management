@@ -2,18 +2,18 @@
   <div class="note-detail">
     <BtnShowHide
       class="m-auto btn-circle h-6 w-6"
-      @click="states.showMore = !states.showMore"
+      @click="state.showMore = !state.showMore"
       :is-default-show="false"
     />
-    <div v-show="states.showMore">
+    <div v-show="state.showMore">
       <div class="note-action flex items-center justify-center gap-1">
         <button @click="changeNoteName">Rename</button>
-        <button v-if="!note.title" @click="states.showEditTitle = true">
+        <button v-if="!note.title" @click="state.showEditTitle = true">
           Add title
         </button>
         <span
           class="btn btn-cicle flex items-center justify-center text-white bg-primary rounded-full w-6 h-6"
-          :title="states.noteInfo"
+          :title="state.noteInfo"
           >i</span
         >
         <img
@@ -25,10 +25,10 @@
       </div>
       <div class="flex justify-between">
         <button
-          v-show="states.showMore"
+          v-show="state.showMore"
           @click="
             showOldNote();
-            states.viewVersion == 0 || states.viewVersion--;
+            state.viewVersion == 0 || state.viewVersion--;
           "
           class="rounded-full w-8 h-8"
         >
@@ -36,43 +36,43 @@
         </button>
 
         <button
-          v-show="states.showMore"
+          v-show="state.showMore"
           @click="
             showOldNote();
-            states.viewVersion == note.versionHistory.stack.length - 1 ||
-              states.viewVersion++;
+            state.viewVersion == note.versionHistory.stack.length - 1 ||
+              state.viewVersion++;
           "
           class="rounded-full w-8 h-8"
         >
           &gt;
         </button>
       </div>
-      <div v-show="states.showMore" class="flex p-2 items-center">
+      <div v-show="state.showMore" class="flex p-2 items-center">
         <div
           v-for="(item, index) in note.versionHistory.stack"
           :key="item.id"
           class="w-4 h-4 bg-gray-500"
           :class="{
-            'bg-yellow-500': index == states.viewVersion,
+            'bg-yellow-500': index == state.viewVersion,
             'mr-2': index != note.versionHistory.stack.length - 1,
           }"
         ></div>
       </div>
       <textarea
         ref="oldNote"
-        v-show="states.showMore"
+        v-show="state.showMore"
         class="w-full"
-        :value="note.versionHistory.stack[states.viewVersion]?.text"
+        :value="note.versionHistory.stack[state.viewVersion]?.text"
         disabled
       />
       <p
         v-show="
-          states.showMore &&
-          note.versionHistory.stack[states.viewVersion]?.timestamp
+          state.showMore &&
+          note.versionHistory.stack[state.viewVersion]?.timestamp
         "
         class="text-xs text-center"
       >
-        {{ note.versionHistory.stack[states.viewVersion]?.timestamp }}
+        {{ note.versionHistory.stack[state.viewVersion]?.timestamp }}
       </p>
     </div>
   </div>
@@ -86,7 +86,7 @@ const props = defineProps({
 });
 
 const note = inject('note-' + props.noteId);
-const states = inject('states-' + props.noteId);
+const state = inject('state-' + props.noteId);
 const events = inject('events-' + props.noteId);
 
 const oldNote = ref(null);

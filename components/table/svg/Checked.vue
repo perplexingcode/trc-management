@@ -19,7 +19,7 @@
         cx="12"
         cy="12"
         r="10"
-        style="fill: #eeeeee0f766e"
+        style="fill: #0f766e"
       ></circle>
       <path
         id="secondary"

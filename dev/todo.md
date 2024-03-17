@@ -27,7 +27,7 @@
 - Copy ID
 - Icon tooltip for table row (This move is repeated daily)
 - Action dropdown for table row
-- Hover states: input,
+- Hover state: input,
 - Loading
 - nav : report, today, calendar (today, week, month, quarter, phase, decade), categories
 - strict mode (harder to change move info)

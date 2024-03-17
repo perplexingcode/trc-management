@@ -10,7 +10,7 @@
       tabindex="0"
     />
     <div
-      v-show="states.showNote"
+      v-show="state.showNote"
       class="note-content flex flex-col fixed top-0 left-0 w-screen h-screen"
     >
       <div class="note-content__wrapper w-96 m-auto z-10">
@@ -19,8 +19,8 @@
           <textarea
             onfocus='this.style.height = "";this.style.height = this.scrollHeight + "px"'
             v-model="note.text"
-            :class="{ isEditing: states.isEditing }"
-            @input="states.isEditing = true"
+            :class="{ isEditing: state.isEditing }"
+            @input="state.isEditing = true"
             @keydown="handleKeydown"
             @blur="events.applyChange = !events.applyChange"
           />
@@ -28,7 +28,7 @@
         <div class="note-detail" v-if="props.showDetail">
           <BtnShowHide
             class="m-auto btn-circle h-6 w-6"
-            @click="states.showMore = !states.showMore"
+            @click="state.showMore = !state.showMore"
             :is-default-show="false"
           />
           <NoteCompDetail :note-id="note.id" />
@@ -36,7 +36,7 @@
       </div>
       <div @click="showHideBtn.$el.click()">
         <div
-          v-show="states.showNote"
+          v-show="state.showNote"
           class="fixed top-0 left-0 w-screen h-screen bg-gray-100 bg-opacity-90"
         ></div>
       </div>
@@ -52,7 +52,7 @@ const props = defineProps({
 });
 
 const note = inject('note-' + props.noteId);
-const states = inject('states-' + props.noteId);
+const state = inject('state-' + props.noteId);
 const events = inject('events-' + props.noteId);
 const showHideBtn = ref(null);
 const handleEventShowHideBtn = (e) => {
@@ -60,7 +60,7 @@ const handleEventShowHideBtn = (e) => {
     events.deleteNote = !events.deleteNote;
     return;
   }
-  states.showNote = !states.showNote;
+  state.showNote = !state.showNote;
 };
 const handleKeydown = (e) => {
   if (e.shiftKey && e.keyCode === 13) {

@@ -48,7 +48,7 @@
           {{ option.name || option }}
         </option>
       </select>
-      <GetId
+      <TableGetId
         v-if="copiable"
         :value="item[element.valueKey ? element.valueKey : element.key]"
         :item="item"

@@ -80,7 +80,7 @@ function initNote() {
 }
 initNote();
 
-const states = reactive({
+const state = reactive({
   isEditing: false,
   showAction: false,
   showMore: false,
@@ -104,7 +104,7 @@ const events = reactive({
 });
 
 provide('note-' + note.id, note);
-provide('states-' + note.id, states);
+provide('state-' + note.id, state);
 provide('events-' + note.id, events);
 
 onMounted(async () => {
@@ -113,7 +113,7 @@ onMounted(async () => {
   if (props.data) {
     cloudOverride(note, props.data);
     Object.setPrototypeOf(note.versionHistory, FILOArray.prototype);
-    states.viewVersion = note.versionHistory.stack.length - 1;
+    state.viewVersion = note.versionHistory.stack.length - 1;
     return;
   }
   if (props.isNewNote) return;
@@ -133,7 +133,7 @@ onMounted(async () => {
   try {
     cloudOverride(note, cloudNote);
     Object.setPrototypeOf(note.versionHistory, FILOArray.prototype);
-    states.viewVersion = note.versionHistory.stack.length - 1;
+    state.viewVersion = note.versionHistory.stack.length - 1;
     // wait 0.5s to make sure all notes are loaded
     await new Promise((resolve) => setTimeout(resolve, 500));
   } catch (error) {
@@ -166,7 +166,7 @@ function deleteNote() {
 // Alert save changes
 if (process.client) {
   window.addEventListener('beforeunload', function (events) {
-    if (states.isEditing) {
+    if (state.isEditing) {
       events.preventDefault();
       events.returnValue = '';
       return '';
@@ -175,7 +175,7 @@ if (process.client) {
 }
 
 const applyChange = () => {
-  if (note.text == note.versionHistory[states.viewVersion]) {
+  if (note.text == note.versionHistory[state.viewVersion]) {
     return;
   }
   upsert('note_backup', {
@@ -190,8 +190,8 @@ const applyChange = () => {
   note.lastUpdated = createTimestamp();
   note.versionHistory.push(note.text);
   upsert('note', note);
-  states.isEditing = false;
-  states.viewVersion = note.versionHistory.stack.length - 1;
+  state.isEditing = false;
+  state.viewVersion = note.versionHistory.stack.length - 1;
 };
 
 function changeNoteName() {
