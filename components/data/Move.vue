@@ -5,6 +5,7 @@
 import { getAll, query } from '~~/static/db';
 import moment from 'moment';
 import { cvTime, sumTime } from '~~/static/time';
+import { on } from 'events';
 
 // Modification
 let vars;
@@ -17,21 +18,23 @@ const today = moment(new Date()).format('YYYY-MM-DD');
 
 const moves = (await getAll('move')).data;
 const movesToday = (await query('move', 'date', today)).data;
-const movesTodayDone = movesToday.value.filter((m) => m.done);
+const movesTodayDone = ref([]);
+const queuedMoves = ref([]);
 const movesTodayQueued = movesToday.value.filter((m) => !m.done);
 const wasteMoves = (await query('waste', 'date', today)).data;
 const choreMoves = (await query('chore', 'date', today)).data;
-const queuedMoves = (await getAll('queued-move')).data;
 const dailyMoves = (await getAll('daily-move')).data;
 const projects = (await getAll('project')).data;
+
+onMounted(async () => {
+  await nextTick();
+  movesTodayDone.value = movesToday.value.filter((m) => m.done);
+  queuedMoves.value = moves.value.filter((m) => !m.done);
+});
 
 // Filtered moves
 const todayWaste = computed(() => {
   return sumTime(wasteMoves.value.map((move) => move.duration));
-});
-
-const pendingMoves = computed(() => {
-  return queuedMoves.value.filter((move) => move.stt == 'Pending');
 });
 
 const todayChore = computed(() => {
@@ -40,12 +43,9 @@ const todayChore = computed(() => {
       cvTime(sleepTimeCurrent.value),
   );
 });
-const todayDoneMoves = computed(() => {
-  return movesToday.value.filter((move) => move.done && move.date === today);
-});
 
 const todayDone = computed(() => {
-  return sumTime(todayDoneMoves.value.map((move) => move.duration));
+  return sumTime(movesTodayDone.value.map((move) => move.duration));
 });
 const todayLeft = computed(() => {
   return sumTime(
@@ -63,7 +63,7 @@ let sleepTimeCurrent = computed(() => {
 
 const todayService = computed(() => {
   return sumTime(
-    todayDoneMoves.value
+    movesTodayDone.value
       .filter((move) => move.grp === 'MFVN' || move.grp === 'Freelance')
       .map((move) => move.duration),
   );
@@ -228,6 +228,14 @@ const queuedMoveColumns = [
     attrs: { type: 'text' },
   },
   {
+    name: 'Date',
+    key: 'date',
+    type: 'input',
+    disabled: false,
+    default: moment().format('YYYY-MM-DD'),
+    attrs: { type: 'text', required: true, suggestion: false },
+  },
+  {
     name: 'Duration',
     key: 'duration',
     type: 'input',
@@ -368,30 +376,21 @@ function weight(rows) {
   }
 }
 
-// WATCHERS
-watch(movesTodayDone, () => {
-  movesTodayDone.value = movesToday.value.filter((m) => !m.done);
-  movesTodayQueued.value = movesToday.value.filter((m) => m.done);
-});
-
-watch(movesTodayQueued, () => {
-  movesTodayDone.value = movesToday.value.filter((m) => !m.done);
-  movesTodayQueued.value = movesToday.value.filter((m) => m.done);
-});
-
 // PROVIDE
 provide('moves', moves);
 provide('moveColumns', moveColumns);
-provide('movesTodayDone', movesTodayDone);
-provide('queuedMoveColumns', queuedMoveColumns);
-provide('pendingMoves', pendingMoves);
-provide('movesTodayQueued', movesTodayQueued);
 provide('movesToday', movesToday);
+provide('movesTodayDone', movesTodayDone);
+provide('movesTodayQueued', movesTodayQueued);
+provide('queuedMoves', queuedMoves);
+provide('queuedMoveColumns', queuedMoveColumns);
+provide('waste', wasteMoves);
+provide('chore', choreMoves);
 provide('todayWaste', todayWaste);
 provide('todayChore', todayChore);
 provide('todayDone', todayDone);
 provide('todayService', todayService);
-provide('todayDoneMoves', todayDoneMoves);
+provide('movesTodayDone', movesTodayDone);
 provide('todayLeft', todayLeft);
 provide('sleepTimeMax', sleepTimeMax);
 provide('sleepTimeCurrent', sleepTimeCurrent);
@@ -399,9 +398,7 @@ provide('movesToday', movesToday);
 provide('currentLap', currentLap);
 provide('todaySpent', todaySpent);
 provide('currentMoveTime', currentMoveTime);
-provide('waste', wasteMoves);
-provide('chore', choreMoves);
-provide('queuedMoves', queuedMoves);
+
 provide('dailyMove', dailyMoves);
 provide('vars', reactive(vars));
 provide('projects', projects);

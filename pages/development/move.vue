@@ -14,9 +14,9 @@
     <div class="daily-move">
       <ClientOnly>
         <Table
-          db-table="queued-move"
+          db-table="move"
           :columns="queuedMoveColumns"
-          item-name="queued-move"
+          item-name="move"
           init-show-rows
           :events="events"
         />

@@ -3,12 +3,14 @@
     <template #step-0>
       <div class="action-queue">
         <h3>Action queue</h3>
+
         <Table
-          rows="pendingMoves"
+          rows="queuedMoves"
           columns="queuedMoveColumns"
-          item-name="queued-move"
-          add-row
           :events="events"
+          item-name="move"
+          db-table="move"
+          add-row
           suggestion-table="move"
           draggable
         />
@@ -26,10 +28,11 @@
   </Section>
 </template>
 <script setup>
+import { upsert } from '~~/static/db';
 import { deepClone } from '~~/static/utils';
-const events = reactive({ done: {} });
-const movesToday = inject('movesToday');
 const queuedMoves = inject('queuedMoves');
+const movesTodayDone = inject('movesTodayDone');
+const events = reactive({ done: {} });
 watch(
   () => events.done,
   (data) => {
@@ -39,7 +42,8 @@ watch(
     if (data.value) {
       const index = queuedMoves.value.findIndex((m) => m.id === item.id);
       queuedMoves.value.splice(index, 1);
-      movesToday.value.push(item);
+      movesTodayDone.value.push(item);
+      upsert('move', item);
     }
   },
   { deep: true },

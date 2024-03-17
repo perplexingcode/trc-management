@@ -7,15 +7,26 @@
 
   <tr
     class="row relative"
+    ref="row"
     @dblclick="handleDblClick"
     @keydown="handleKeyDown($event)"
     @click="state.activeRow = item.id"
+    @dragstart="handleDragStart"
+    @dragend="handleDragEnd"
+    @dragover="handleDragOver"
+    @dragenter="handleDragEnter"
+    @dragleave="handleDragLeave"
+    @drop="handleDrop"
     :class="{
       active: state?.activeRow === item.id,
       'is-being-edited': state?.activeRow === item.id && state.isBeingEdited,
+      dragging: item.state?.isDragging,
+      drop: state.draggable.dropRow === item,
+      'opacity-10': _state.dragEnter,
+      'bg-gray-300': !_state.dragEnter,
     }"
     :id="'t' + item.id"
-    :draggable="state.isDragging"
+    :draggable="state.draggable.isDragging"
   >
     <TableCell
       v-if="config.showSelection"
@@ -26,8 +37,8 @@
     />
     <td
       v-if="config.draggable"
-      @mouseenter="state.isDragging = true"
-      @mouseleave="state.isDragging = false"
+      @mouseenter="state.draggable.isDragging = true"
+      @mouseleave="state.draggable.isDragging = false"
       class="grab select-none"
     >
       <TableSvgGrab class="grab-icon w-4 h-4" />
@@ -61,7 +72,7 @@
 // >>>----------------------------------------------------------------------------------<<<
 import { dbDelete, upsert } from '~/static/db.js';
 import moment from 'moment';
-import { v4 } from 'uuid';
+import { deepClone } from '~~/static/utils';
 
 const props = defineProps({
   item: {
@@ -83,6 +94,21 @@ const item = props.item;
 const state = inject('state-' + props.tableId);
 const rows = inject('rows-' + props.tableId);
 const config = inject('config-' + props.tableId);
+
+const _state = reactive({
+  dragEnter: false,
+});
+
+const itemState = {
+  isBeingEdited: false,
+  isSelected: false,
+};
+onMounted(() => {
+  if (!props.item.state) {
+    const index = rows.value.findIndex((row) => row.id === item.id);
+    rows.value[index].state = deepClone(itemState);
+  }
+});
 
 const selectColumn = {
   name: '',
@@ -288,6 +314,51 @@ async function deleteRows(id) {
     }
   }
   dbDelete(config.dbTable, deleteRowList);
+}
+
+const row = ref(null);
+
+function handleDragStart(event) {
+  state.draggable.draggedRow = item;
+  item.state.isDragging = true;
+}
+
+function handleDragEnd(event) {
+  item.state.isDragging = false;
+  state.draggable.draggedRow = null;
+}
+
+function handleDragOver(event) {
+  if (state.draggable.draggedRow === item) return;
+  state.draggable.dropRow = item;
+  event.preventDefault();
+}
+
+function handleDragEnter(event) {
+  _state.dragEnter = true;
+}
+
+function handleDragLeave(event) {
+  _state.dragEnter = false;
+}
+
+function handleDrop(event) {
+  _state.dragEnter = false;
+  const draggedRow = state.draggable.draggedRow;
+  const dropRow = state.draggable.dropRow;
+  const draggedRowIndex = rows.value.findIndex(
+    (row) => row.id === draggedRow.id,
+  );
+  const dropRowIndex = rows.value.findIndex((row) => row.id === dropRow.id);
+  rows.value.splice(draggedRowIndex, 1);
+  rows.value.splice(dropRowIndex, 0, draggedRow);
+  state.draggable.dropRow = null;
+  state.draggable.draggedRow = null;
+  // change index
+  for (let i = 0; i < rows.value.length; i++) {
+    rows.value[i].index = i;
+    upsert(config.dbTable, rows.value[i]);
+  }
 }
 
 // <DEV> TODO

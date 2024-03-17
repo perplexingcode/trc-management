@@ -15,6 +15,7 @@ import CellSelect from '~~/components/table/cell/Select.vue';
 import SvgChecked from '~~/components/table/svg/Checked.vue';
 import SvgUnchecked from '~~/components/table/svg/Unchecked.vue';
 import SvgDelete from '~~/components/table/svg/Delete.vue';
+import { deepClone } from '~~/static/utils';
 // >>>----------------------------------------------------------------------------------<<<
 // << DEV: TODO
 const props = defineProps({
@@ -43,6 +44,7 @@ const props = defineProps({
     default: false,
   },
 });
+
 const key = ref(0);
 
 const emit = defineEmits([

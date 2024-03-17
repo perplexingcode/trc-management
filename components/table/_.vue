@@ -25,18 +25,29 @@
               alt="download button"
               title="Download CSV"
             />
+            <TableBtnShowHide
+              @click="state.showRows = !state.showRows"
+              :is-default-show="state.showRows"
+              class="btn-circle h-6 w-6"
+            />
+            <img
+              @click="downloadCsv"
+              class="cursor-pointer btn-circle w-6 h-6"
+              src="https://img.icons8.com/flat-round/64/downloading-updates--v1.png"
+              alt="download button"
+              title="Download CSV"
+            />
           </div>
           <TableSuggestion
             v-if="config.showSuggestion"
             :newItem="state.newItem"
             :table-id="tableId"
           />
-          <TableEffectRerender ref="table">
-            <table :class="'table-' + itemName" class="draggable">
-              <TableHead :table-id="tableId" />
-              <TableBody :table-id="tableId" />
-            </table>
-          </TableEffectRerender>
+
+          <table :class="'table-' + itemName" class="draggable">
+            <TableHead :table-id="tableId" />
+            <TableBody :table-id="tableId" />
+          </table>
         </div>
       </template>
       <template #fallback>
@@ -61,7 +72,7 @@ const props = defineProps({
   dev: { type: Boolean, default: false },
   addRow: { type: Boolean, default: true },
   events: {},
-  newItemTags: { type: String, default: '' },
+  newItemTags: { default: '' },
   initShowRows: { type: Boolean, default: true },
   showSuggestion: {
     type: Boolean,
@@ -92,6 +103,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  draggable: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const tableId = props.tableId || v4();
@@ -115,6 +130,7 @@ const config = reactive({
   suggestionSize: props.suggestionSize,
   maxSuggestionNum: props.maxSuggestionNum,
   draggable: props.draggable,
+  draggable: props.draggable,
 });
 
 provide('config-' + tableId, config);
@@ -129,6 +145,7 @@ provide('data-' + tableId, data);
 const state = reactive({
   isEditing: false,
   isDragging: false,
+  isDragging: false,
   selectedRows: [],
   activeRow: null,
   activeCell: null,
@@ -138,6 +155,11 @@ const state = reactive({
   showSelection: false,
   newItem: {},
   newItemTags: props.newItemTags,
+  draggable: {
+    isDragging: false,
+    draggedItem: null,
+    dropItem: null,
+  },
   // <Dev>
   events: props.events,
   //
@@ -146,10 +168,6 @@ const state = reactive({
 });
 provide('state-' + tableId, state);
 
-const itemState = {
-  isBeingEdited: false,
-  isSelected: false,
-};
 let rows = inject(props.rows, []);
 
 let events = props.events ? props.events : reactive({});
@@ -160,28 +178,12 @@ onMounted(async () => {
   await nextTick();
   if (!(props.rows && typeof props.rows === 'string'))
     console.error('Table rows must be provided with provide-inject');
-  initItemState(rows);
-  if (config.draggable) {
-    for (let i = 0; i < rows.value.length; i++) {
-      if (rows.value[i].index === undefined) rows.value[i].index = i;
-    }
-    // sort rows by index
-    rows.value.sort((a, b) => a.index - b.index);
-  }
 });
 provide('rows-' + tableId, rows);
 
+const table = ref(null);
 //
 
-function initItemState(rows) {
-  // bug here
-  for (let i = 0; i < rows.value.length; i++) {
-    rows.value[i].state = reactive(deepClone(itemState));
-  }
-}
-const table = ref(null);
-const draggedItem = ref(null);
-//
 onMounted(async () => {
   // Feat: Handle isEditing
   // Save changes
@@ -199,84 +201,6 @@ onMounted(async () => {
       return '';
     }
   });
-
-  if (process.client) {
-    await nextTick();
-
-    const listItems = document.querySelectorAll('.draggable .row');
-
-    for (let i = 0; i < listItems.length; i++) {
-      const item = listItems[i];
-
-      item.addEventListener('dragstart', function () {
-        draggedItem.value = item;
-        draggedItem.value.classList.add('dragging');
-        setTimeout(() => {
-          // item.style.display = 'none';
-        }, 0);
-      });
-
-      item.addEventListener('dragend', function () {
-        draggedItem.value.classList.remove('dragging');
-        setTimeout(() => {
-          // draggedItem.value.style.display = 'inline-block';
-          draggedItem.value = null;
-        }, 0);
-      });
-
-      item.addEventListener('dragover', function (e) {
-        // style drop item
-        const dropItem = this;
-        if (draggedItem.value !== dropItem) {
-          dropItem.classList.add('drop');
-        }
-
-        e.preventDefault();
-      });
-
-      item.addEventListener('dragenter', function (e) {
-        e.preventDefault();
-        this.style.backgroundColor = 'rgba(0,0,0,0.1)';
-      });
-
-      item.addEventListener('dragleave', function (e) {
-        this.style.backgroundColor = '#f9f9f9';
-      });
-
-      item.addEventListener('drop', function (e) {
-        this.style.backgroundColor = '#f9f9f9';
-        // abort
-        if (draggedItem.value === this) {
-          return;
-        }
-        if (this !== draggedItem.value) {
-          let allItems = document.querySelectorAll('.draggable .row');
-          const draggedIndex = Array.from(allItems).indexOf(draggedItem.value);
-          const droppedIndex = Array.from(allItems).indexOf(this);
-
-          if (draggedIndex < droppedIndex) {
-            // change rows
-            const row = rows.value[draggedIndex];
-            rows.value.splice(draggedIndex, 1);
-            rows.value.splice(droppedIndex, 0, row);
-
-            upsert(config.dbTable, row);
-          } else {
-            const row = rows.value[draggedIndex];
-            rows.value.splice(draggedIndex, 1);
-            rows.value.splice(droppedIndex, 0, row);
-            upsert(config.dbTable, row);
-          }
-
-          // change index
-          for (let i = 0; i < rows.value.length; i++) {
-            rows.value[i].index = i;
-            upsert(config.dbTable, rows.value[i]);
-          }
-        }
-      });
-    }
-  }
 });
 </script>
 
@@ -345,6 +269,45 @@ ul#menu-desktop-guest {
   top: 5rem;
   left: 0rem;
   background: #eef2ff10;
+}
+
+/* Draggable */
+
+.draggable .row {
+  margin: 10px;
+  padding: 5px;
+  border: 1px solid #ccc;
+  list-style: none;
+  background-color: #f9f9f9;
+}
+
+.draggable .row.dragging {
+  opacity: 0.5;
+}
+
+/* Style drop item */
+.draggable .row.drop {
+  background-color: #f9f9f9;
+}
+
+.grab {
+  cursor: url('https://www.google.com/intl/en_ALL/mapfiles/openhand.cur'),
+    all-scroll;
+  cursor: -webkit-grab;
+  cursor: -moz-grab;
+  cursor: -o-grab;
+  cursor: -ms-grab;
+  cursor: grab;
+}
+
+.grab:active {
+  cursor: url('https://www.google.com/intl/en_ALL/mapfiles/closedhand.cur'),
+    all-scroll;
+  cursor: -webkit-grabbing;
+  cursor: -moz-grabbing;
+  cursor: -o-grabbing;
+  cursor: -ms-grabbing;
+  cursor: grabbing;
 }
 
 /* Draggable */
