@@ -86,8 +86,8 @@ let queuedMoveColumns = [
     swapDbTable: ['queued-move', 'move'],
   },
   {
-    name: 'Priority',
-    key: 'priority',
+    name: 'Type',
+    key: 'type',
     type: 'select',
     disabled: false,
     options: [
@@ -104,6 +104,7 @@ let queuedMoveColumns = [
     key: 'weight',
     type: 'input',
     disabled: false,
+    hidden: true,
     attrs: { type: 'number' },
   },
   {
@@ -167,6 +168,13 @@ let queuedMoveColumns = [
     disabled: false,
     options: ['Personal', 'MFVN', 'Freelace', 'TCGS', 'TrinityLTD'],
     attrs: { type: 'text', required: true },
+  },
+  {
+    name: 'Tags',
+    key: 'tags',
+    type: 'input',
+    disabled: false,
+    attrs: { type: 'text' },
   },
   {
     name: 'Tags',

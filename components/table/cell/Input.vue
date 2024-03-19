@@ -20,8 +20,20 @@
           }"
           :class="copiable ? 'flex' : ''"
         >
-          <div class="">
+          <div
+            v-if="
+              element.key !== 'date' || element?.attrs?.friendlyDate == false
+            "
+            class=""
+          >
             {{ item[element.key] ? item[element.key] : element.default }}
+          </div>
+          <div v-else>
+            {{
+              item[element.key]
+                ? friendlyDate(item[element.key])
+                : element.default
+            }}
           </div>
           <div v-if="copiable" class="w-1 h-1 select-none"></div>
         </div>
@@ -51,9 +63,9 @@
 </template>
 
 <script setup>
-import { durationValidate } from '~~/static/time';
 import { v4 } from 'uuid';
 import { watchDebounced } from '@vueuse/core';
+import { friendlyDate, durationValidate } from '../format';
 
 const props = defineProps(['item', 'element', 'isNewRow', 'state']);
 const emit = defineEmits(['upsertRow']);

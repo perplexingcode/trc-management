@@ -25,18 +25,6 @@
               alt="download button"
               title="Download CSV"
             />
-            <TableBtnShowHide
-              @click="state.showRows = !state.showRows"
-              :is-default-show="state.showRows"
-              class="btn-circle h-6 w-6"
-            />
-            <img
-              @click="downloadCsv"
-              class="cursor-pointer btn-circle w-6 h-6"
-              src="https://img.icons8.com/flat-round/64/downloading-updates--v1.png"
-              alt="download button"
-              title="Download CSV"
-            />
           </div>
           <TableSuggestion
             v-if="config.showSuggestion"

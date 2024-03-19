@@ -20,7 +20,7 @@ const moves = (await getAll('move')).data;
 const movesToday = (await query('move', 'date', today)).data;
 const movesTodayDone = ref([]);
 const queuedMoves = ref([]);
-const movesTodayQueued = movesToday.value.filter((m) => !m.done);
+const movesTodayQueued = ref([]);
 const wasteMoves = (await query('waste', 'date', today)).data;
 const choreMoves = (await query('chore', 'date', today)).data;
 const dailyMoves = (await getAll('daily-move')).data;
@@ -29,6 +29,7 @@ const projects = (await getAll('project')).data;
 onMounted(async () => {
   await nextTick();
   movesTodayDone.value = movesToday.value.filter((m) => m.done);
+  movesTodayQueued.value = movesToday.value.filter((m) => !m.done);
   queuedMoves.value = moves.value.filter((m) => !m.done);
 });
 
@@ -232,7 +233,7 @@ const queuedMoveColumns = [
     key: 'date',
     type: 'input',
     disabled: false,
-    default: moment().format('YYYY-MM-DD'),
+    default: '',
     attrs: { type: 'text', required: true, suggestion: false },
   },
   {
@@ -246,6 +247,7 @@ const queuedMoveColumns = [
     name: '⟁',
     key: 'weight',
     type: 'input',
+    hidden: true,
     disabled: false,
     attrs: { type: 'number' },
   },
@@ -259,20 +261,20 @@ const queuedMoveColumns = [
     options: ['Active', 'Pending', 'Completed', 'Deferred', 'Cancelled'],
     attrs: { type: 'text', required: true },
   },
-  {
-    name: 'Priority',
-    key: 'priority',
-    type: 'select',
-    disabled: false,
-    options: [
-      '1-Urgent',
-      '2-Necessary',
-      '3-Important',
-      '4-Recommended',
-      '5-Optional',
-    ],
-    attrs: { type: 'text' },
-  },
+  // {
+  //   name: 'Priority',
+  //   key: 'priority',
+  //   type: 'select',
+  //   disabled: false,
+  //   options: [
+  //     '1-Urgent',
+  //     '2-Necessary',
+  //     '3-Important',
+  //     '4-Recommended',
+  //     '5-Optional',
+  //   ],
+  //   attrs: { type: 'text' },
+  // },
   {
     name: 'Category',
     key: 'cat',

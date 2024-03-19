@@ -81,6 +81,31 @@ export const durationValidate = function (duration) {
   return duration;
 };
 
+export const friendlyDate = function (date) {
+  // if date is yesterday
+  if (moment(date).isSame(moment().subtract(1, 'days'), 'd')) {
+    return 'Yesterday';
+  }
+  // if date is today
+  if (moment(date).isSame(moment(), 'd')) {
+    return 'Today';
+  }
+  // if date is tomorrow
+  if (moment(date).isSame(moment().add(1, 'days'), 'd')) {
+    return 'Tomorrow';
+  }
+  // if date is this week
+  if (moment(date).isSame(moment(), 'week')) {
+    return moment(date).format('dddd');
+  }
+  // if date is next week
+  if (moment(date).isSame(moment().add(1, 'week'), 'week')) {
+    return `Next ${moment(date).format('dddd')}`;
+  } else {
+    return date;
+  }
+};
+
 export const createTimestamp = () => {
   return `${
     new Date(new Date().getTime() + 7 * 60 * 60 * 1000)

@@ -3,25 +3,30 @@
     <template #step-0>
       <div class="action-queue">
         <h3>Action queue</h3>
-
-        <Table
-          rows="queuedMoves"
-          columns="queuedMoveColumns"
-          :events="events"
-          item-name="move"
-          db-table="move"
-          add-row
-          suggestion-table="move"
-          draggable
-        />
+        <div class="flex">
+          <Table
+            rows="queuedMoves"
+            columns="queuedMoveColumns"
+            :events="events"
+            item-name="move"
+            db-table="move"
+            add-row
+            suggestion-table="move"
+            draggable
+          />
+          <div class="pt-12 ps-3">
+            <h3 class="font-bold mb-3">Stats</h3>
+            <IntelliSenseStats />
+          </div>
+        </div>
       </div>
     </template>
     <template #step-1>
       <Card>
         <template #header>
-          <h3>Navigation</h3>
+          <h3>Stats</h3>
         </template>
-        <Note name="Navigation" box="navigation" class="note-navigation" />
+        <IntelliSenseStats />
       </Card>
     </template>
     <template #step-2><p>danchoi</p></template>
